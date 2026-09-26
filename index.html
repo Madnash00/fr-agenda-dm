@@ -14,6 +14,8 @@
 @media print{.sidebar,.topbar,.toolbar,.legend{display:none!important}.main{margin:0}.page{padding:0}.calendar-scroll{max-height:none;overflow:visible}.calendar thead th{position:static}.calendar .id-region,.calendar .id-code,.calendar .id-store{position:static}}
 
 
+
+
 /* ===== AGENDA DM · compact professional override ===== */
 :root{--ink:#252a2f;--muted:#687078;--line:#dde1e4;--bg:#f2f3f3;--card:#fff;--accent:#596570;--accent2:#414b54;--sv:#303941;--holiday:#78636a;--rest:#8a795f;--dm:#667180;--note:#67766f;--legacy:#777d82;--danger:#8c3f3b;--ok:#486451;--shadow:0 5px 18px rgba(28,35,40,.06)}
 html,body{font-size:12px;background:var(--bg)}
@@ -38,6 +40,10 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 
 
 
+
+
+
+
 /* === AGENDA DM rev.2: colori giustificativi, negozi e lock === */
 .event-chip.sv,.chip.sv,.event-chip.dm,.chip.dm{background:var(--sv)!important;color:#fff}
 .event-chip.f,.chip.f,.event-chip.r,.chip.r{background:var(--holiday)!important;color:#3c3420}
@@ -58,6 +64,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar td.id-region.store-tint,.calendar td.id-store.store-tint{color:#343434!important}
 .calendar td.id-region.store-tint{border-left:4px solid rgba(0,0,0,.12)}
 @media (max-width:900px){.color-palette{grid-template-columns:repeat(7,24px)}}
+
+
 
 
 /* === AGENDA DM rev.3: Regioni + calendario visuale/zoom === */
@@ -92,8 +100,14 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 
 
 
+
+
+
+
 /* === AGENDA DM rev.4: filtri multipli + densità adattiva leggibile === */
 .multi-filter-wrap{display:grid;gap:2px;min-width:132px;position:relative}.filter-caption{font-size:9px;font-weight:700;color:#54545b}.multi-filter{position:relative}.multi-filter-button{width:100%;min-width:132px;height:30px;border:1px solid #d8dcdf;border-radius:6px;background:#fff;color:#30363a;padding:5px 26px 5px 8px;text-align:left;font-size:10px;font-weight:750;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.multi-filter-button::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-52%);font-size:10px;color:#697178}.multi-filter-button[aria-expanded="true"]{border-color:#7b858e;box-shadow:0 0 0 2px rgba(89,101,112,.10)}.multi-filter-menu{position:fixed;z-index:140;background:#fff;border:1px solid #d7dcdf;border-radius:8px;box-shadow:0 14px 38px rgba(28,35,40,.18);padding:7px;overflow:hidden;display:grid;grid-template-rows:auto auto minmax(80px,1fr);gap:5px}.multi-filter-search{min-height:29px!important;height:29px!important;padding:5px 7px!important;font-size:10px!important}.multi-filter-actions{display:flex;gap:4px;border-bottom:1px solid #eceeef;padding-bottom:5px}.multi-filter-actions button{border:0;background:#f2f4f5;border-radius:4px;padding:4px 7px;font-size:9px;font-weight:800;color:#505960}.multi-filter-actions button:hover{background:#e7ebed}.multi-filter-options{overflow:auto;display:grid;gap:1px;padding-right:2px}.multi-filter-option{display:grid!important;grid-template-columns:16px 14px 1fr!important;align-items:center;gap:5px!important;min-height:27px;padding:4px 5px;border-radius:5px;font-size:10px!important;color:#30363a!important;cursor:pointer}.multi-filter-option:hover{background:#f3f5f5}.multi-filter-option input{width:14px!important;height:14px!important;min-height:0!important;padding:0!important;margin:0}.multi-filter-option strong{display:block;font-size:10px;line-height:1.15}.multi-filter-option small{display:block;font-size:8px;color:#747c82;margin-top:1px}.filter-color{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.10)}.multi-filter-empty{padding:12px;text-align:center;font-size:9px;color:#7a8186}
+
+
 
 
 .calendar{font-size:var(--dyn-cal-font,9px);table-layout:fixed;width:max-content;min-width:100%}.calendar th,.calendar td{padding:0;overflow:hidden}.calendar thead th{font-size:var(--dyn-head-font,8.4px);font-weight:900;white-space:nowrap}.calendar thead tr:nth-child(1) th{height:var(--dyn-head1,18px);top:0}.calendar thead tr:nth-child(2) th{height:var(--dyn-head2,18px);top:var(--dyn-head1,18px)}.calendar thead tr:nth-child(3) th{height:var(--dyn-head3,27px);top:calc(var(--dyn-head1,18px) + var(--dyn-head2,18px))}
@@ -102,13 +116,21 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .event-chip,.event-chip.note,.event-chip.more{width:var(--dyn-chip-w,22px)!important;min-width:var(--dyn-chip-w,22px)!important;max-width:var(--dyn-chip-w,22px)!important;height:var(--dyn-chip-h,16px)!important;min-height:var(--dyn-chip-h,16px)!important;line-height:1!important;padding:0!important;margin:0!important;border:0!important;border-radius:4px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;font-size:8px!important;font-weight:950!important;letter-spacing:-.02em!important;box-shadow:none!important}.event-chip.sv,.event-chip.dm{background:#5f8a72!important;color:#fff!important}.event-chip.f,.event-chip.r{background:#e5cb68!important;color:#493f1d!important}.event-chip.note{background:#bd6666!important;color:#fff!important}.event-chip.more{display:none!important}.event-chip.has-comment::after,.note-mark{display:none!important;content:none!important}
 
 
+
+
 /* Mese e settimana devono essere percepiti come blocchi distinti */
 .calendar thead .month-band{font-size:max(8px,var(--dyn-head-font,8.4px))!important;letter-spacing:.08em!important;text-transform:uppercase;border-left:3px solid #8f9aa1!important;border-right:1px solid #bac2c7!important;box-shadow:inset 0 -2px 0 rgba(74,84,91,.16)}.calendar thead .month-band.band-a{background:#dce1e4!important;color:#30373c}.calendar thead .month-band.band-b{background:#e8ebed!important;color:#394147}.calendar thead .week-band{font-weight:950!important;border-left:2px solid #aeb7bc!important;border-right:1px solid #d1d6d9!important;box-shadow:inset 0 -1px 0 rgba(70,78,84,.10)}.calendar thead .week-band.band-a{background:#f0f2f3!important;color:#465057}.calendar thead .week-band.band-b{background:#e7eaec!important;color:#384147}.calendar .day.week-start{border-left:2px solid #aeb7bc!important}.calendar .day.month-start{border-left:3px solid #8f9aa1!important}.calendar thead tr:nth-child(3) .day{font-size:max(8px,var(--dyn-head-font,8.4px))!important;line-height:1.05!important}.calendar thead tr:nth-child(3) .day strong{font-size:max(8.5px,calc(var(--dyn-head-font,8.4px) + .7px))!important}
+
+
 
 
 /* A zoom molto basso si comprimono gli spazi, non la leggibilità */
 .calendar[data-density="compact"] td.id-region,.calendar[data-density="compact"] td.id-code,.calendar[data-density="compact"] td.id-store{padding-left:2px;padding-right:2px}.calendar[data-density="compact"] .track-label{min-width:21px;height:12px;font-size:6.8px}.calendar[data-density="compact"] .day-cell{padding:0!important}
 @media(max-width:820px){.multi-filter-wrap{min-width:120px}.multi-filter-button{min-width:120px}.calendar .id-store{left:0!important}.calendar .id-track{left:var(--dyn-store-w,126px)!important}.calendar .id-region,.calendar .id-code{display:none!important}}
+
+
+
+
 
 
 
@@ -134,6 +156,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 #calendarWrap.calendar-scroll::-webkit-scrollbar-track{background:#f3f5f5}
 #calendarWrap.calendar-scroll::-webkit-scrollbar-thumb{background:#bcc4c9;border:2px solid #f3f5f5;border-radius:999px}
 #calendarWrap.calendar-scroll::-webkit-scrollbar-thumb:hover{background:#9ea8ae}
+
+
 
 
 .calendar.transposed{
@@ -168,6 +192,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 }
 
 
+
+
 /* Base grid: one thin line system only. */
 .calendar.transposed thead th{
   border-right:1px solid var(--grid);
@@ -183,6 +209,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed thead tr th:last-child,
 .calendar.transposed tbody tr td:last-child{border-right:0}
 .calendar.transposed tbody tr:last-child>td{border-bottom:0}
+
+
 
 
 /* Header geometry and sticky levels. */
@@ -232,6 +260,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed thead .dm-absence-head{left:calc(var(--dyn-month-w,31px) + var(--dyn-week-w,43px) + var(--dyn-date-w,47px) + var(--dyn-track-w,36px))}
 
 
+
+
 /* Column widths and sticky body columns. */
 .calendar.transposed :is(.date-month-head,.date-month){width:var(--dyn-month-w,31px);min-width:var(--dyn-month-w,31px);max-width:var(--dyn-month-w,31px)}
 .calendar.transposed :is(.date-week-head,.date-week){width:var(--dyn-week-w,43px);min-width:var(--dyn-week-w,43px);max-width:var(--dyn-week-w,43px)}
@@ -245,6 +275,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tbody .date-day{left:calc(var(--dyn-month-w,31px) + var(--dyn-week-w,43px));z-index:35;background:#fafbfb}
 .calendar.transposed tbody .id-track{left:calc(var(--dyn-month-w,31px) + var(--dyn-week-w,43px) + var(--dyn-date-w,47px));z-index:36;background:#f6f8f8}
 .calendar.transposed tbody .dm-absence-cell{left:calc(var(--dyn-month-w,31px) + var(--dyn-week-w,43px) + var(--dyn-date-w,47px) + var(--dyn-track-w,36px));z-index:37;background:#eef2f3}
+
+
 
 
 /* Vertical labels: same typography and centering everywhere. */
@@ -278,6 +310,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tbody :is(.date-month,.date-week).has-group-label{z-index:45}
 
 
+
+
 /* Body typography and compact row geometry. */
 .calendar.transposed tbody tr{height:var(--dyn-row-h,13px)}
 .calendar.transposed :is(.store-cell,.dm-absence-cell,.date-month,.date-week,.date-day,.id-track){height:var(--dyn-row-h,13px);text-align:center;vertical-align:middle}
@@ -297,6 +331,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tr.track-note .dm-absence-cell{background:#eef2f3}
 
 
+
+
 /* Month column: one uninterrupted visual block per month.
    No day/week horizontal rules inside the month; only the month boundary remains. */
 .calendar.transposed tbody .date-month{
@@ -307,6 +343,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tbody .date-month.month-end{border-bottom:1px solid var(--grid-day)}
 
 
+
+
 /* WEEK column: one uninterrupted visual block per ISO week.
    Remove all day/track horizontal rules inside the week; keep only the week boundary. */
 .calendar.transposed tbody .date-week{
@@ -315,6 +353,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 }
 .calendar.transposed tbody tr.day-end>.date-week{border-bottom:0}
 .calendar.transposed tbody tr.week-start-row>.date-week{border-top:2px solid var(--grid-week)}
+
+
 
 
 /* KEY POINT: restore the same neutral table treatment used by the structural columns. */
@@ -328,11 +368,15 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tbody tr.week-start-row>.id-track{border-top:2px solid var(--grid-week)}
 
 
+
+
 /* Weekend backgrounds do not affect the grid. */
 .calendar.transposed tr.weekend-row :is(.store-cell,.dm-absence-cell,.id-track),
 .calendar.transposed .date-day.weekend{background:#fff3f3}
 .calendar.transposed tr.sunday-row :is(.store-cell,.dm-absence-cell,.id-track),
 .calendar.transposed .date-day.sunday{background:#ffe7e7}
+
+
 
 
 /* Structural hierarchy: week and region separators are real borders, never shadows. */
@@ -341,8 +385,12 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tbody tr.week-start-row>.store-cell.region-edge{border-top:2px solid var(--grid-week);border-left:2px solid var(--grid-region)}
 
 
+
+
 /* Today: red underline begins at GIORNO and leaves the base grid intact elsewhere. */
 .calendar.transposed tr.today-group.day-end>:is(.date-day,.id-track,.dm-absence-cell,.store-cell){border-bottom:3px solid #dc2626}
+
+
 
 
 /* Interactions never change geometry. */
@@ -350,6 +398,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed .cell-click:hover{background-color:#f3f6f7}
 .calendar.transposed tr.weekend-row .cell-click:hover{background-color:#ffebeb}
 .calendar.transposed tr.sunday-row .cell-click:hover{background-color:#ffdddd}
+
+
 
 
 /* Event symbols. */
@@ -369,9 +419,13 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed .info-flag:hover{background:#5f676c}
 
 
+
+
 /* Report alert preview: preserved from the previous version. */
 #visitAlerts{max-height:145px;overflow:auto;scrollbar-gutter:stable}
 #visitAlerts .data-table thead th{position:sticky;top:0;z-index:3;background:#f1f3f4;box-shadow:0 1px 0 #d9dee1}
+
+
 
 
 /* Report charts: preserved exactly as current behavior. */
@@ -410,6 +464,10 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 }
 .password-current-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
 .password-current-row input[readonly]{background:#f5f6f6;color:#2f373c;font-weight:800}
+
+
+
+
 
 
 
@@ -480,6 +538,10 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 
 
 
+
+
+
+
 /* === Login & multiutente production polish === */
 .login-brand{display:flex;justify-content:center;align-items:center;margin:0 auto 18px;min-height:48px}
 .login-brand img{display:block;width:min(255px,78%);height:auto;max-height:58px;object-fit:contain}
@@ -495,6 +557,10 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 
 
 
+
+
+
+
 /* Accesso NEGOZIO: evidenza visiva della propria colonna */
 .calendar.transposed thead .store-head.own-store-col{
   box-shadow:inset 3px 0 #f2c94c,inset -3px 0 #f2c94c,inset 0 3px #f2c94c;
@@ -505,6 +571,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .calendar.transposed tbody tr:last-child .store-cell.own-store-col{
   box-shadow:inset 3px 0 #f2c94c,inset -3px 0 #f2c94c,inset 0 -3px #f2c94c;
 }
+
+
 
 
 /* Attesa operazioni cloud */
@@ -564,7 +632,7 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 /* CONFIGURAZIONE: dopo il deploy di Apps Script incolla qui l'URL che termina con /exec */
-const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbzLrz9q9LGlpcBWPJ-MImSdGW-50Ac3aG9cOnGzRCottYlpSJL3imQkABprhyV1smhiVg/exec';
+const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbx-ZGO5ucRyCnqAW_54K_ox00f_fWELc_u1QWJQqSGvYBNTIDmYvtpntlykxfUeVudbvQ/exec';
 const EXPECTED_BACKEND_BUILD='2026-09-26-calendar-persistence-r2';
 class AgendaApiError extends Error{constructor(code,message,requestId){super(message||code);this.name='AgendaApiError';this.code=code;this.requestId=requestId||null}}
 const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',getToken(){return sessionStorage.getItem(this.TOKEN_KEY)||''},getUser(){try{return JSON.parse(sessionStorage.getItem(this.USER_KEY)||'null')}catch{return null}},setSession(token,user){sessionStorage.setItem(this.TOKEN_KEY,String(token||''));sessionStorage.setItem(this.USER_KEY,JSON.stringify(user||null))},clearSession(){sessionStorage.removeItem(this.TOKEN_KEY);sessionStorage.removeItem(this.USER_KEY)}};
@@ -607,6 +675,8 @@ function fmtDate(s){const d=typeof s==='string'?parseDate(s):s;return d.toLocale
 function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
 
 
+
+
 function emptyCloudCache(){return {version:1,stores:[],users:[],events:[],audit:[],exports:[],regions:[],regionColors:{},migrationReport:{source:'Google Sheets / Apps Script'},nextIds:{store:1,user:1,event:1,audit:1,export:1},dataRevision:1}}
 function normalizeCurrentUser(u){if(!u)return null;return {id:u.user_id,user_id:u.user_id,username:u.username||u.display_name||'',display_name:u.display_name||u.username||'',role:u.role,admin_id:u.admin_id,store_id:u.store_id||null,active:1,credential_status:'CONFIGURED'}}
 function mapCloudSnapshot(stores,users,regions,calendar,auditRows){const regionById=new Map((regions||[]).map(r=>[String(r.region_id),r]));const legacyStores=(stores||[]).map(st=>({id:String(st.store_id),store_id:String(st.store_id),code:st.store_code||null,name:st.name||'',source_name:null,region:regionById.get(String(st.region_id))?.name||'DA ASSEGNARE',region_id:st.region_id,email:st.email||null,username:st.username||'',password:st.password||'',active:st.active===true||String(st.active)==='true'||String(st.active)==='1'?1:0,credential_status:(st.username&&st.password)?'CONFIGURED':'PENDING_CREDENTIALS',created_at:st.created_at,updated_at:st.updated_at}));const legacyUsers=(users||[]).map(u=>({id:String(u.user_id),user_id:String(u.user_id),username:u.username,display_name:u.display_name||'',role:u.role,store_id:u.store_id?String(u.store_id):null,email:u.email||null,password:u.password||'',active:u.active===true||String(u.active)==='true'||String(u.active)==='1'?1:0,credential_status:u.credential_status||'CONFIGURED',created_at:u.created_at,updated_at:u.updated_at}));const userByStore=new Map(legacyUsers.filter(u=>u.role==='STORE'&&u.store_id).map(u=>[String(u.store_id),u]));legacyStores.forEach(st=>{if(userByStore.has(String(st.id)))return;legacyUsers.push({id:String(st.id),user_id:String(st.id),username:st.username||'',display_name:st.name||'',role:'STORE',store_id:String(st.id),email:st.email||null,password:st.password||'',active:st.active?1:0,credential_status:st.credential_status||'PENDING_CREDENTIALS',created_at:st.created_at,updated_at:st.updated_at})});if(currentUser&&currentUser.role==='ADMIN'&&!legacyUsers.some(u=>String(u.id)===String(currentUser.id)))legacyUsers.unshift(currentUser);const legacyEvents=(calendar?.events||[]).filter(e=>e.event_type!=='DELETED').map(e=>({id:String(e.event_id),event_id:String(e.event_id),event_date:String(e.event_date||'').slice(0,10),end_date:e.end_date?String(e.end_date).slice(0,10):null,event_type:e.event_type,store_id:e.store_id?String(e.store_id):null,user_id:e.user_id?String(e.user_id):null,note:e.note||null,raw_text:e.raw_text||null,date_precision:e.date_precision||'DAY',editable_by_store:e.editable_by_store===true||String(e.editable_by_store)==='true'||String(e.editable_by_store)==='1'?1:0,source_key:e.source_key||null,source_year:e.source_year||null,source_week:e.source_week||null,source_cell:e.source_cell||null,created_at:e.created_at,updated_at:e.updated_at}));const colors={};(regions||[]).forEach(r=>colors[r.name]=r.color||'#E5E7EB');return {...emptyCloudCache(),stores:legacyStores,users:legacyUsers,events:legacyEvents,audit:(auditRows||[]).map(a=>({id:a.audit_id,created_at:a.created_at,username:a.actor_user_id||'',store_id:a.store_id||null,action:a.action,entity_type:a.entity_type,entity_id:a.entity_id,event_type:a.event_type})),regions:regions||[],regionColors:colors}}
@@ -618,12 +688,16 @@ function waitForCloud(){if(window.agendaCloudApi)return Promise.resolve();return
 function allowedStoreIds(){return app.stores.filter(s=>s.active).map(s=>String(s.id))}
 
 
+
+
 function canEditEvent(ev){if(currentUser.role==='ADMIN')return true;if(String(ev.store_id)!==String(currentUser.store_id))return false;return ['SM_HOLIDAY','SM_REST'].includes(ev.event_type)&&ev.editable_by_store!==0}
 function canAddType(type,storeId){if(currentUser.role==='ADMIN')return true;return String(storeId)===String(currentUser.store_id)&&['SM_HOLIDAY','SM_REST'].includes(type)}
 function audit(action,entityType,entityId,storeId,eventType,before,after){app.audit.unshift({id:app.nextIds.audit++,created_at:new Date().toISOString(),user_id:currentUser?.id||null,username:currentUser?.username||'SYSTEM',action,entity_type:entityType,entity_id:String(entityId??''),store_id:storeId??null,event_type:eventType??null,before_json:before?JSON.stringify(before):null,after_json:after?JSON.stringify(after):null});if(app.audit.length>2000)app.audit.length=2000}
 function storeById(id){return app.stores.find(s=>String(s.id)===String(id))}
 function userById(id){return app.users.find(u=>String(u.id)===String(id))}
 function eventDateKey(storeId,date){return `${storeId??'DM'}|${date}`}
+
+
 
 
 const BUSY_LABELS={login:['Accesso in corso…','Sto preparando la tua agenda'],getSession:['Bentornato…','Sto riallineando i dati'],getBootstrap:['Aggiornamento in corso…','Sincronizzo calendario e anagrafiche'],createEvent:['Salvataggio…','Sto aggiornando il calendario'],updateEvent:['Salvataggio…','Applico le modifiche al calendario'],deleteEvent:['Eliminazione…','Aggiorno il calendario'],createStore:['Creazione negozio…','Sto salvando i dati'],updateStore:['Salvataggio negozio…','Aggiorno anagrafica e account'],commitStoreImport:['Importazione…','Sto creando i negozi'],previewStoreImport:['Controllo Excel…','Verifico righe e credenziali'],createAdmin:['Creazione ADMIN…','Sto preparando il nuovo accesso'],resetStorePassword:['Aggiornamento password…','Sto salvando le nuove credenziali'],updateRegion:['Salvataggio colore…','Aggiorno la regione'],recordExport:['Registrazione export…','Sto aggiornando lo storico'],getExportLog:['Caricamento…','Recupero lo storico export'],changeOwnPassword:['Aggiornamento password…','Sto salvando la modifica']};let globalBusyCount=0,globalBusyTimer=null;function showGlobalBusy(action){globalBusyCount++;clearTimeout(globalBusyTimer);const el=$('#globalBusy'),t=$('#globalBusyTitle'),x=$('#globalBusyText'),copy=BUSY_LABELS[action]||['Caricamento…','Un attimo, sto aggiornando i dati'];if(t)t.textContent=copy[0];if(x)x.textContent=copy[1];globalBusyTimer=setTimeout(()=>el?.classList.add('show'),90)}function hideGlobalBusy(){globalBusyCount=Math.max(0,globalBusyCount-1);if(globalBusyCount)return;clearTimeout(globalBusyTimer);$('#globalBusy')?.classList.remove('show')}window.addEventListener('agenda-busy-start',e=>showGlobalBusy(e.detail?.action));window.addEventListener('agenda-busy-end',hideGlobalBusy);
@@ -732,7 +806,11 @@ function renderTransposedDmCell(d,idx,track){
 }
 
 
+
+
 function renderMobileAgenda(dates,idx){if(currentUser.role==='ADMIN'){ $('#mobileAgenda').innerHTML='';return}const st=storeById(currentUser.store_id),today=isoDate(new Date());let h='';for(let w=0;w<dates.length;w+=7){const wi=isoWeekInfo(dates[w]);h+=`<div class="agenda-week card"><h4>W${String(wi.week).padStart(2,'0')} · ${fmtDate(dates[w])} – ${fmtDate(dates[Math.min(w+6,dates.length-1)])}</h4>`;for(let i=w;i<Math.min(w+7,dates.length);i++){const d=dates[i],ds=isoDate(d),ev=idx.get(eventDateKey(st.id,ds))||[];h+=`<div class="agenda-day ${ds===today?'today':''}" data-mobile-cell data-date="${ds}"><strong>${DAYS[d.getDay()]} ${d.getDate()}</strong><div class="agenda-events">${ev.length?ev.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;return `<span class="event-chip ${m.cls}">${m.abbr}</span><span style="font-size:11px">${esc(e.note||e.raw_text||m.label)}</span>`}).join(''):'<span class="muted">—</span>'}</div></div>`}h+='</div>'}$('#mobileAgenda').innerHTML=h;$$('[data-mobile-cell]').forEach(x=>x.onclick=()=>openCell(st.id,x.dataset.date))}
+
+
 
 
 function clampNum(v,min,max){return Math.max(min,Math.min(max,v))}
@@ -770,6 +848,8 @@ function fitCalendarVisual(showToast=true){const wrap=$('#calendarWrap'),table=$
 function setCalendarZoom(value){calendarAutoFit=false;calendarZoom=clampNum(Number(value)||100,20,100);const wrap=$('#calendarWrap');if(wrap)wrap.style.maxHeight='';applyCalendarZoom()}
 
 
+
+
 function tooltipTextForEvents(events,track){if(!events.length)return '';return events.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;const current=(e.note||'').trim(),original=(e.raw_text||'').trim();let txt=m.label;if(current)txt+=`\n${current}`;else if(original)txt+=`\n${original}`;if(e.source_key&&original&&current&&original!==current)txt+=`\nOrigine Excel: ${original}`;return txt}).join('\n\n')}
 function wireHoverTooltip(){if($('#hoverTooltip'))return;const tip=document.createElement('div');tip.id='hoverTooltip';tip.className='hover-tooltip';document.body.appendChild(tip);const place=e=>{const pad=12,w=tip.offsetWidth||260,h=tip.offsetHeight||60;let x=e.clientX+12,y=e.clientY+14;if(x+w>window.innerWidth-pad)x=e.clientX-w-12;if(y+h>window.innerHeight-pad)y=e.clientY-h-12;tip.style.left=Math.max(pad,x)+'px';tip.style.top=Math.max(pad,y)+'px'};document.addEventListener('mouseover',e=>{const el=e.target.closest?.('[data-tooltip]');if(!el||!el.dataset.tooltip)return;tip.textContent=el.dataset.tooltip;tip.classList.add('show');place(e)});document.addEventListener('mousemove',e=>{if(tip.classList.contains('show'))place(e)});document.addEventListener('mouseout',e=>{const el=e.target.closest?.('[data-tooltip]');if(el&&!el.contains(e.relatedTarget))tip.classList.remove('show')})}
 function eventSummary(e){const m=typeMeta[e.event_type]||typeMeta.NOTE;const raw=e.note||e.raw_text||'';return {m,raw}}
@@ -779,6 +859,8 @@ async function createEventFromQuick(e,storeId,infoTrack=null){if(calendarLocked)
 function openEditEvent(id){if(calendarLocked){toast('Calendario bloccato: sblocca il lucchetto per modificare',true);return}const ev=app.events.find(e=>String(e.id)===String(id));if(!ev||!canEditEvent(ev)){toast('Evento non modificabile',true);return}const store=ev.store_id==null?'INFO VARIE':storeById(ev.store_id)?.name;const typeOpts=(ev.store_id==null?['DM_HOLIDAY','NOTE']:currentUser.role==='ADMIN'?['STORE_VISIT','SM_REST','SM_HOLIDAY','NOTE']:['SM_REST','SM_HOLIDAY','NOTE']).map(t=>`<option value="${t}" ${t===ev.event_type?'selected':''}>${typeMeta[t].label}</option>`).join('');showModal(`Modifica · ${store}`,`<form id="editEventForm" class="form-grid"><label>Data<input id="eeDate" type="date" value="${ev.event_date}" required></label><label>Tipo<select id="eeType">${typeOpts}</select></label><label class="full">Nota<textarea id="eeNote" rows="4">${esc(ev.note||ev.raw_text||'')}</textarea></label><div class="full" style="display:flex;gap:8px"><button id="deleteEvent" type="button" class="btn danger">Elimina</button><span class="spacer"></span><button class="btn primary">Salva</button></div></form>`);$('#editEventForm').onsubmit=async e=>{e.preventDefault();try{const oldDate=ev.event_date,updatePayload={event_id:ev.id,event_date:$('#eeDate').value,event_type:$('#eeType').value,note:$('#eeNote').value.trim(),raw_text:$('#eeNote').value.trim()};const saved=await window.agendaCloudApi.request('updateEvent',updatePayload);const savedId=saved?.event_id||saved?.id||ev.id;await syncCalendarDateFromServer(updatePayload.event_date,savedId);if(oldDate!==updatePayload.event_date)await syncCalendarDateFromServer(oldDate);closeModal();toast('Evento aggiornato');renderCalendar()}catch(err){toast(err.message,true)}};$('#deleteEvent').onclick=async()=>{if(!confirm('Eliminare questo evento?'))return;try{await window.agendaCloudApi.request('deleteEvent',{event_id:ev.id});await syncCalendarDateFromServer(ev.event_date);closeModal();toast('Evento eliminato');renderCalendar()}catch(err){toast(err.message,true)}}}
 function showModal(title,body,wide=false){$('#modalRoot').innerHTML=`<div class="modal-backdrop"><div class="modal ${wide?'wide':''}"><div class="modal-head"><h3>${esc(title)}</h3><button id="modalClose" class="icon-btn">×</button></div><div class="modal-body">${body}</div></div></div>`;$('#modalClose').onclick=closeModal;$('.modal-backdrop').onclick=e=>{if(e.target.classList.contains('modal-backdrop'))closeModal()}}
 function closeModal(){$('#modalRoot').innerHTML=''}
+
+
 
 
 function populateReportFilters(){const cur=isoWeekInfo(new Date()), years=[2024,2025,2026,2027,2028];$('#reportYear').innerHTML=years.map(y=>`<option ${y===cur.year?'selected':''}>${y}</option>`).join('');fillReportWeeks(cur.year);const regs=[...new Set(app.stores.filter(s=>s.active).map(s=>s.region))].sort();$('#reportRegion').innerHTML='<option value="">Tutte</option>'+regs.map(r=>`<option>${esc(r)}</option>`).join('');refreshReportStores();$('#reportYear').onchange=()=>fillReportWeeks(Number($('#reportYear').value));$('#reportRegion').onchange=refreshReportStores;$('#trendGranularity').onchange=()=>reportCache&&renderTrend(reportCache.visits,reportCache.start,reportCache.end);loadReport()}
@@ -824,6 +906,8 @@ function renderStoreTable(d){let rows=d.byStore.slice().sort((a,b)=>sortState.di
 function renderRegionTable(d){$('#regionReportTable').innerHTML=`<table class="data-table"><thead><tr><th>Regione</th><th>N. negozi</th><th>N. visite</th><th>% totale</th><th>Media visite/negozio</th><th>Media visite/settimana</th></tr></thead><tbody>${d.regs.map(x=>`<tr><td>${esc(x.region)}</td><td>${x.stores}</td><td>${x.visits}</td><td>${x.pct.toFixed(1)}%</td><td>${x.avgStore.toFixed(2)}</td><td>${x.avgWeek.toFixed(2)}</td></tr>`).join('')}</tbody></table>`}
 
 
+
+
 function canCreateAdmins(){return currentUser?.role==='ADMIN'&&String(currentUser?.id||currentUser?.user_id||'')==='ADM0001'}
 function renderUsers(){if(currentUser?.role!=='ADMIN')return;const adminBtn=$('#createAdminBtn');if(adminBtn)adminBtn.classList.toggle('hidden',!canCreateAdmins());const userRows=app.users.map(u=>{const st=u.store_id?storeById(u.store_id):null;const pending=u.credential_status!=='CONFIGURED'||!u.username;return `<tr><td>${esc(u.role)}</td><td><span class="status ${!u.active?'off':pending?'pending':'ok'}">${!u.active?'DISATTIVO':pending?'CREDENZIALI DA CONFIGURARE':'ATTIVO'}</span></td><td>${esc(u.username||'—')}</td><td>${esc(st?.name||u.display_name||'—')}</td><td>${esc(u.email||'—')}</td><td><button class="btn small edit-user" data-id="${u.id}">Account</button> ${u.role==='STORE'?`<button class="btn small reset-pw" data-id="${u.id}">Password</button>`:''}</td></tr>`}).join('');$('#usersTable').innerHTML=`<table class="data-table"><thead><tr><th>Ruolo</th><th>Stato</th><th>Login</th><th>Utente / Negozio</th><th>Email</th><th>Azioni</th></tr></thead><tbody>${userRows}</tbody></table>`;$$('.edit-user').forEach(b=>b.onclick=()=>editUser(b.dataset.id));$$('.reset-pw').forEach(b=>b.onclick=()=>resetPassword(b.dataset.id))}
 function editUser(id){const u=userById(id);showModal('Account',`<div class="stack"><label>Login<input value="${esc(u?.username||'')}" readonly></label><label>Email<input value="${esc(u?.email||'')}" readonly></label><label>Password<input value="${esc(u?.password||'')}" readonly></label><p class="muted">Le credenziali sono gestite direttamente nel database Google Sheet.</p><div style="display:flex;justify-content:flex-end"><button class="btn" type="button" onclick="closeModal()">Chiudi</button></div></div>`) }
@@ -836,11 +920,15 @@ function editRegionColor(region){const current=regionColor(region);const rec=(ap
 function renderAudit(){if(currentUser?.role!=='ADMIN')return;$('#auditTable').innerHTML=app.audit.length?`<table class="data-table"><thead><tr><th>Data/ora</th><th>Utente</th><th>Negozio</th><th>Azione</th><th>Record</th></tr></thead><tbody>${app.audit.slice(0,500).map(a=>`<tr><td>${new Date(a.created_at).toLocaleString('it-IT')}</td><td>${esc(a.username)}</td><td>${esc(a.store_id?storeById(a.store_id)?.name:'—')}</td><td>${esc(a.action)}</td><td>${esc((a.event_type||a.entity_type)+' '+(a.entity_id||''))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessuna modifica registrata.</div>';$('#exportHistory').innerHTML=app.exports.length?`<table class="data-table"><thead><tr><th>Data</th><th>Utente</th><th>Periodo</th><th>Eventi</th><th>Modalità</th></tr></thead><tbody>${app.exports.slice().reverse().map(x=>`<tr><td>${new Date(x.exported_at).toLocaleString('it-IT')}</td><td>${esc(x.username)}</td><td>${x.year} W${String(x.week_from).padStart(2,'0')}–W${String(x.week_to).padStart(2,'0')}</td><td>${x.event_ids.length}</td><td>${x.only_new?'Solo nuovi':'Tutti'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun export Outlook effettuato.</div>';$('#migrationReport').textContent=JSON.stringify(app.migrationReport,null,2)}
 
 
+
+
 function outlookEvents(year,wf,wt,onlyNew){const start=isoDate(isoMonday(year,wf)),end=isoDate(addDays(isoMonday(year,wt),6));const exported=new Set(app.exports.flatMap(x=>x.event_ids||[]));return app.events.filter(e=>e.event_date>=start&&e.event_date<=end&&(e.event_type==='STORE_VISIT'||e.event_type==='DM_HOLIDAY')&&(!onlyNew||!exported.has(e.id))).map(e=>({event:e,title:e.event_type==='DM_HOLIDAY'?'FERIE':`SV ${storeById(e.store_id)?.name||'NEGOZIO'}`,status:e.event_type==='DM_HOLIDAY'?'OOF':'FREE'}))}
 async function openOutlook(){const cur=isoWeekInfo(new Date()),years=[2024,2025,2026,2027,2028];try{app.exports=normalizeExportLog(await window.agendaCloudApi.request('getExportLog',{}))}catch(err){toast(err.message||'Impossibile leggere lo storico export',true);return}showModal('Esporta Outlook (.ics)',`<div class="form-grid"><label>Anno<select id="icsYear">${years.map(y=>`<option ${y===cur.year?'selected':''}>${y}</option>`).join('')}</select></label><label>Da settimana<select id="icsFrom"></select></label><label>A settimana<select id="icsTo"></select></label><label class="checkbox full"><input id="icsOnly" type="checkbox"> Esporta solo eventi non ancora esportati</label></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button id="icsPreviewBtn" class="btn primary">Genera anteprima</button></div><div id="icsPreview" class="preview" style="margin-top:14px"><p class="muted">L’anteprima è obbligatoria prima del download.</p></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button id="icsDownloadBtn" class="btn primary" disabled>Scarica .ICS</button></div>`,true);const fill=()=>{const y=Number($('#icsYear').value),n=weeksInYear(y);fillWeekSelect($('#icsFrom'),y,1);fillWeekSelect($('#icsTo'),y,y===cur.year?Math.min(cur.week,n):n)};fill();$('#icsYear').onchange=fill;let preview=null;$('#icsPreviewBtn').onclick=()=>{const y=Number($('#icsYear').value),wf=Number($('#icsFrom').value),wt=Number($('#icsTo').value);if(wf>wt){toast('Intervallo non valido',true);return}preview=outlookEvents(y,wf,wt,$('#icsOnly').checked);$('#icsPreview').innerHTML=preview.length?preview.map(x=>`<div class="preview-item"><span>${fmtDate(x.event.event_date)}</span><strong>${esc(x.title)}</strong><span>${x.status}</span><span>${app.exports.some(z=>(z.event_ids||[]).includes(x.event.id))?'Già esportato':'Nuovo'}</span></div>`).join(''):'<div class="empty">Nessun evento da esportare.</div>';$('#icsDownloadBtn').disabled=preview.length===0};$('#icsDownloadBtn').onclick=async()=>{const y=Number($('#icsYear').value),wf=Number($('#icsFrom').value),wt=Number($('#icsTo').value),only=$('#icsOnly').checked;if(!preview)return;const periodFrom=isoDate(isoMonday(y,wf)),periodTo=isoDate(addDays(isoMonday(y,wt),6)),eventIds=preview.map(x=>x.event.id);try{downloadIcs(preview);await window.agendaCloudApi.request('recordExport',{export_type:only?'ICS_OUTLOOK_ONLY_NEW':'ICS_OUTLOOK_ALL',period_from:periodFrom,period_to:periodTo,event_ids:eventIds});app.exports=normalizeExportLog(await window.agendaCloudApi.request('getExportLog',{}));renderAudit();toast('File ICS generato')}catch(err){toast(err.message||'Errore durante la registrazione export',true)}}}
 function icsEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n')}
 function nextDate(s){return isoDate(addDays(parseDate(s),1)).replaceAll('-','')}
 function downloadIcs(items){const now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');let lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AGENDA DM//Fiorella Rubino//IT','CALSCALE:GREGORIAN','METHOD:PUBLISH'];for(const x of items){const e=x.event,ds=e.event_date.replaceAll('-','');lines.push('BEGIN:VEVENT',`UID:agenda-dm-${e.id}-${ds}@local`,`DTSTAMP:${now}`,`DTSTART;VALUE=DATE:${ds}`,`DTEND;VALUE=DATE:${nextDate(e.event_date)}`,`SUMMARY:${icsEscape(x.title)}`,`X-MICROSOFT-CDO-BUSYSTATUS:${x.status}`,x.status==='FREE'?'TRANSP:TRANSPARENT':'TRANSP:OPAQUE');if(e.note)lines.push(`DESCRIPTION:${icsEscape(e.note)}`);lines.push('END:VEVENT')}lines.push('END:VCALENDAR');downloadBlob(lines.join('\r\n'),'AGENDA_DM.ics','text/calendar;charset=utf-8')}
+
+
 
 
 function xmlEsc(s){return String(s??'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]))}
