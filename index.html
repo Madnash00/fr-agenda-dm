@@ -613,6 +613,7 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .nav .nav-sub-btn.active::before{background:#fff}
 .nav-section-placeholder .nav-group-btn{cursor:default;color:#c7cdd1}
 .nav-section-placeholder .nav-group-btn:hover{background:transparent;color:#c7cdd1}
+.nav-external{text-decoration:none;box-sizing:border-box}
 @media(max-width:820px){.nav-group-btn{font-size:10px}.nav .nav-sub-btn{font-size:10px}}
 
 
@@ -709,6 +710,20 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
     <button class="nav-btn nav-sub-btn admin-only" data-page="report">Report Agenda</button>
    </div>
   </div>
+  <div class="nav-section" data-nav-section="store-holidays">
+   <button class="nav-group-btn" type="button" data-nav-group="store-holidays" aria-expanded="false"><span>FERIE NEGOZI</span><span class="nav-chevron">›</span></button>
+   <div class="nav-submenu">
+    <button class="nav-btn nav-sub-btn" data-page="holidays">Planning Ferie</button>
+    <button class="nav-btn nav-sub-btn admin-only" data-page="holidayreport">Report Ferie</button>
+   </div>
+  </div>
+  <div class="nav-section nav-section-placeholder" data-nav-section="action-plans" data-empty="true">
+   <button class="nav-group-btn" type="button" aria-expanded="false"><span>ACTION'S PLANS</span><span class="nav-chevron">›</span></button>
+  </div>
+ </nav>
+ <div class="sidebar-foot">
+  <a class="nav-group-btn nav-external admin-only" href="https://madnash00.github.io/wop-app/"><span>WOP</span></a>
+  <a class="nav-group-btn nav-external admin-only" href="https://madnash00.github.io/frdashboard/"><span>DM DASHBOARD</span></a>
   <div class="nav-section admin-only" data-nav-section="settings">
    <button class="nav-group-btn" type="button" data-nav-group="settings" aria-expanded="false"><span>IMPOSTAZIONI</span><span class="nav-chevron">›</span></button>
    <div class="nav-submenu">
@@ -717,15 +732,9 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
     <button class="nav-btn nav-sub-btn" data-page="audit">Audit &amp; Export</button>
    </div>
   </div>
-  <div class="nav-section" data-nav-section="store-holidays">
-   <button class="nav-group-btn" type="button" data-nav-group="store-holidays" aria-expanded="false"><span>FERIE NEGOZI</span><span class="nav-chevron">›</span></button>
-   <div class="nav-submenu">
-    <button class="nav-btn nav-sub-btn" data-page="holidays">Planning Ferie</button>
-    <button class="nav-btn nav-sub-btn admin-only" data-page="holidayreport">Report Ferie</button>
-   </div>
-  </div>
- </nav>
- <div class="sidebar-foot"><button id="changePasswordBtn" class="nav-btn">Cambia password</button><button id="logoutBtn" class="nav-btn">Esci</button></div>
+  <button id="changePasswordBtn" class="nav-btn">Cambia password</button>
+  <button id="logoutBtn" class="nav-btn">Esci</button>
+ </div>
 </aside>
 <main class="main">
 <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="menuBtn" class="icon-btn mobile-menu">☰</button><div><p id="pageEyebrow" class="eyebrow">AGENDA DM</p><h2 id="pageTitle">Calendario</h2></div></div><div class="top-actions admin-only"><button id="newVisitBtn" class="btn primary">Nuova Store Visit</button><button id="openOutlookBtn" class="btn">Esporta Outlook</button><button id="exportPlanningBtn" class="btn">Export planning Excel</button><button id="backupBtn" class="btn">Backup</button></div></header>
