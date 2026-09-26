@@ -682,7 +682,7 @@ function renderTransposedDmCell(d,idx,track){
   const tip=tooltipTextForEvents(filtered,track);
   const holidays=filtered.filter(e=>e.event_type==='DM_HOLIDAY'),notes=filtered.filter(e=>e.event_type==='NOTE');
   let chips=holidays.map(e=>{const m=typeMeta[e.event_type];return `<button class="event-chip ${m.cls}" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label)}">${m.abbr}</button>`}).join('');
-  if(track==='NOTE')chips+=`<button class="info-flag" data-info-flag data-store="DM" data-date="${ds}" data-track="NOTE" aria-label="Info varie" ${notes.length?`data-tooltip="${esc(tooltipTextForEvents(notes,'NOTE'))}"`:''}>⚑</button>`;
+  if(track==='NOTE'&&notes.length)chips+=`<button class="info-flag" data-info-flag data-store="DM" data-date="${ds}" data-track="NOTE" aria-label="Info varie" data-tooltip="${esc(tooltipTextForEvents(notes,'NOTE'))}">⚑</button>`;
   const weekend=[0,6].includes(d.getDay()),sunday=d.getDay()===0,today=ds===isoDate(new Date());
   return `<td class="dm-absence-cell cell-click ${weekend?'weekend':''} ${sunday?'sunday':''} ${today?'today':''}" data-cell data-store="DM" data-date="${ds}" data-track="${track}" ${tip?`data-tooltip="${esc(tip)}"`:''}><div class="day-cell">${chips}</div></td>`
 }
