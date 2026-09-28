@@ -640,6 +640,7 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 .holiday-summary-table .metric-negative{color:#c62828!important}
 .holiday-summary-table input.metric-negative{color:#c62828!important;font-weight:900}
 .holiday-summary-table td.metric-negative,.holiday-summary-table span.metric-negative{color:#c62828!important}
+.holiday-summary-table .holiday-overview-total td{background:#eef1f2;border-top:2px solid #7f8a91;font-weight:900}
 .holiday-summary-table .holiday-delete{padding:4px 7px}
 .holiday-planning-card{overflow:hidden}
 .holiday-planning-scroll{overflow:auto;max-height:calc(100vh - 350px);min-height:260px;scrollbar-gutter:stable}
@@ -763,7 +764,7 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 
 /* === rev.11: SUPER ADMIN + Call Distretto === */
 .chip.info-general,.calendar.transposed .info-flag{background:#737b80!important;color:#fff!important}
-.chip.call-district,.calendar.transposed .event-chip.call-district{background:#5f8a72!important;color:#fff!important;border:0!important}
+.chip.call-district,.calendar.transposed .event-chip.call-district{background:#5f8a72!important;color:#fff!important;border:0!important;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Arial Unicode MS",sans-serif!important}
 .calendar.transposed .event-chip.call-district{font-size:9px!important;font-weight:950!important}
 .nav-section-placeholder.admin-only .nav-group-btn{opacity:.92}
 
@@ -851,7 +852,7 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="menuBtn" class="icon-btn mobile-menu">☰</button><div><p id="pageEyebrow" class="eyebrow">AGENDA DM</p><h2 id="pageTitle">Calendario</h2></div></div><div class="top-actions admin-only"><button id="newVisitBtn" class="btn primary">Nuova Store Visit</button><button id="openOutlookBtn" class="btn">Esporta Outlook</button><button id="exportPlanningBtn" class="btn">Export planning Excel</button><button id="backupBtn" class="btn">Backup</button></div></header>
 <section id="page-calendar" class="page active">
  <div class="toolbar card"><div class="toolbar-group"><button id="todayBtn" class="btn primary">Oggi</button></div><div class="toolbar-group"><label>Anno<select id="yearSelect"></select></label><label>Settimana<select id="weekSelect"></select></label><label>Vista<select id="weeksView"><option value="4">4 settimane</option><option value="8">8 settimane</option><option value="12">12 settimane</option><option value="all">Tutto</option></select></label><div class="admin-only multi-filter-wrap"><span class="filter-caption">Regioni</span><div id="calendarRegionFilter" class="multi-filter"><button id="calendarRegionButton" class="multi-filter-button" type="button" aria-expanded="false">Tutte le regioni</button><div id="calendarRegionMenu" class="multi-filter-menu hidden"><input id="calendarRegionSearch" class="multi-filter-search" type="search" placeholder="Cerca regione…" autocomplete="off"><div class="multi-filter-actions"><button type="button" data-filter-action="all" data-filter-kind="region">Tutte</button><button type="button" data-filter-action="clear" data-filter-kind="region">Azzera</button></div><div id="calendarRegionOptions" class="multi-filter-options"></div></div></div></div><div class="admin-only multi-filter-wrap"><span class="filter-caption">Negozi</span><div id="calendarStoreFilter" class="multi-filter"><button id="calendarStoreButton" class="multi-filter-button" type="button" aria-expanded="false">Tutti i negozi</button><div id="calendarStoreMenu" class="multi-filter-menu hidden"><input id="calendarStoreSearch" class="multi-filter-search" type="search" placeholder="Cerca negozio o codice…" autocomplete="off"><div class="multi-filter-actions"><button type="button" data-filter-action="all" data-filter-kind="store">Tutti</button><button type="button" data-filter-action="clear" data-filter-kind="store">Azzera</button></div><div id="calendarStoreOptions" class="multi-filter-options"></div></div></div></div><label class="zoom-label">Zoom<div class="zoom-control"><input id="calendarZoom" type="range" min="20" max="100" step="5" value="100"><span id="calendarZoomValue">100%</span></div></label><button id="fitCalendarBtn" class="btn" type="button" title="Adatta automaticamente la larghezza delle colonne per visualizzare tutti i negozi">Adatta visuale</button><button id="calendarLockBtn" class="btn lock-btn" type="button" aria-pressed="true" title="Blocca o sblocca le modifiche al calendario">🔒 Bloccato</button></div></div>
- <div class="legend card"><span><i class="chip sv">SV</i> Store Visit</span><span><i class="chip dm">F</i> Ferie DM</span><span><i class="chip f">F</i> Ferie SM</span><span><i class="chip r">R</i> Riposo SM</span><span><i class="chip note">N</i> Nota</span><span><i class="chip info-general">⚑</i> Nota generale</span><span><i class="chip call-district">☎</i> Call Distretto</span></div>
+ <div class="legend card"><span><i class="chip sv">SV</i> Store Visit</span><span><i class="chip dm">F</i> Ferie DM</span><span><i class="chip f">F</i> Ferie SM</span><span><i class="chip r">R</i> Riposo SM</span><span><i class="chip note">N</i> Nota</span><span><i class="chip info-general">⚑</i> Nota generale</span><span><i class="chip call-district">📞︎</i> Call Distretto</span></div>
  <div id="calendarCard" class="calendar-card card"><div id="calendarWrap" class="calendar-scroll"><div class="empty">Caricamento…</div></div></div><div id="mobileAgenda" class="mobile-agenda"></div>
 </section>
 <section id="page-report" class="page">
@@ -996,7 +997,7 @@ let app=null, currentUser=null, anchorMonday=null, sortState={key:'visits',dir:-
 const PASTEL_COLORS=['#E7DDE7','#DCE7F0','#DDE9DF','#F1E4CC','#EADBD5','#D8E8E5','#E4DEF0','#EFDBDF','#D9E3EA','#E7E3D7','#D4E7E0','#EADCCF','#D9DFE9','#E1E8D4','#EFDDD2','#DCE4D2','#E4D9EB','#D5E5E9','#EDE1C9','#E1DCDD','#D8E7D3','#EFD8D0','#D7E1EF','#E6E1CE','#DAD5E7','#D4E5DC','#EAD9D1','#D9E6F2','#E9E0D4','#DDE0D5','#E8DADF','#D4E0E7'];
 const MONTHS=['GENNAIO','FEBBRAIO','MARZO','APRILE','MAGGIO','GIUGNO','LUGLIO','AGOSTO','SETTEMBRE','OTTOBRE','NOVEMBRE','DICEMBRE'];
 const DAYS=['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
-const typeMeta={STORE_VISIT:{abbr:'SV',cls:'sv',label:'Store Visit'},SM_HOLIDAY:{abbr:'F',cls:'f',label:'Ferie Store Manager'},SM_REST:{abbr:'R',cls:'r',label:'Riposo Store Manager'},DM_HOLIDAY:{abbr:'F',cls:'dm',label:'Ferie / Assenza District Manager'},CALL_DISTRICT:{abbr:'☎',cls:'call-district',label:'Call Distretto'},NOTE:{abbr:'N',cls:'note',label:'Nota'}};
+const typeMeta={STORE_VISIT:{abbr:'SV',cls:'sv',label:'Store Visit'},SM_HOLIDAY:{abbr:'F',cls:'f',label:'Ferie Store Manager'},SM_REST:{abbr:'R',cls:'r',label:'Riposo Store Manager'},DM_HOLIDAY:{abbr:'F',cls:'dm',label:'Ferie / Assenza District Manager'},CALL_DISTRICT:{abbr:'📞︎',cls:'call-district',label:'Call Distretto'},NOTE:{abbr:'N',cls:'note',label:'Nota'}};
 function cloneSeed(){return JSON.parse(JSON.stringify(SEED))}
 function ensureRegionColors(){if(!app)return;app.regionColors=app.regionColors||{};const regs=[...new Set((app.stores||[]).map(s=>String(s.region||'').trim()).filter(Boolean))].sort();regs.forEach((r,i)=>{if(!app.regionColors[r]){const first=(app.stores||[]).find(s=>s.region===r&&s.color);app.regionColors[r]=first?.color||PASTEL_COLORS[i%PASTEL_COLORS.length]}})}
 function regionColor(region){ensureRegionColors();const r=String(region||'').trim();if(!r)return '#ECEFF1';if(!app.regionColors[r])app.regionColors[r]=PASTEL_COLORS[Object.keys(app.regionColors).length%PASTEL_COLORS.length];return app.regionColors[r]}
@@ -1172,7 +1173,7 @@ function renderTransposedDmCell(d,idx,track){
   const tip=tooltipTextForEvents(filtered,track);
   const holidays=filtered.filter(e=>e.event_type==='DM_HOLIDAY'),calls=filtered.filter(e=>e.event_type==='CALL_DISTRICT'),notes=filtered.filter(e=>e.event_type==='NOTE');
   let chips=holidays.map(e=>{const m=typeMeta[e.event_type];return `<button class="event-chip ${m.cls}" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label)}">${m.abbr}</button>`}).join('');
-  if(track==='SM'&&calls.length)chips+=calls.map(e=>`<button class="event-chip call-district" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="SM" aria-label="Call Distretto" ${e.note?`data-tooltip="${esc(tooltipTextForEvents([e],'SM'))}"`:''}>☎</button>`).join('');
+  if(track==='SM'&&calls.length)chips+=calls.map(e=>`<button class="event-chip call-district" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="SM" aria-label="Call Distretto" ${e.note?`data-tooltip="${esc(tooltipTextForEvents([e],'SM'))}"`:''}>${typeMeta.CALL_DISTRICT.abbr}</button>`).join('');
   if(track==='NOTE'&&notes.length)chips+=`<button class="info-flag" data-info-flag data-store="DM" data-date="${ds}" data-track="NOTE" aria-label="Info varie" data-tooltip="${esc(tooltipTextForEvents(notes,'NOTE'))}">⚑</button>`;
   const weekend=[0,6].includes(d.getDay()),sunday=d.getDay()===0,today=ds===isoDate(new Date());
   return `<td class="dm-absence-cell cell-click ${weekend?'weekend':''} ${sunday?'sunday':''} ${today?'today':''}" data-cell data-store="DM" data-date="${ds}" data-track="${track}" ${tip?`data-tooltip="${esc(tip)}"`:''}><div class="day-cell">${chips}</div></td>`
@@ -1342,13 +1343,14 @@ function initHolidayControls(){
  const fill=(sel)=>{if(!sel)return;const prev=sel.value;sel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');sel.value=years.includes(Number(prev))?prev:String(cur)};
  fill($('#holidayYear'));fill($('#holidayReportYear'));
  const storeSel=$('#holidayStore');
- if(storeSel&&app){const prev=storeSel.value,stores=app.stores.filter(s=>s.active).slice().sort((a,b)=>a.region.localeCompare(b.region)||a.name.localeCompare(b.name));storeSel.innerHTML=stores.map(s=>`<option value="${s.id}">${esc(s.name)} · ${esc(s.region)}</option>`).join('');if(stores.some(s=>String(s.id)===String(prev)))storeSel.value=prev;else if(stores.length)storeSel.value=String(stores[0].id)}
+ if(storeSel&&app){const prev=storeSel.value,stores=app.stores.filter(s=>s.active).slice().sort((a,b)=>a.region.localeCompare(b.region)||a.name.localeCompare(b.name));storeSel.innerHTML='<option value="__ALL__">TUTTI</option>'+stores.map(s=>`<option value="${s.id}">${esc(s.name)} · ${esc(s.region)}</option>`).join('');if(prev==='__ALL__'||stores.some(s=>String(s.id)===String(prev)))storeSel.value=prev;else if(stores.length)storeSel.value=String(stores[0].id);else storeSel.value='__ALL__'}
  const conSel=$('#holidayConsolidatedStore');
  if(conSel&&app){const prev=conSel.value,stores=app.stores.filter(s=>s.active).slice().sort((a,b)=>a.region.localeCompare(b.region)||a.name.localeCompare(b.name));conSel.innerHTML='<option value="">Tutti i negozi</option>'+stores.map(s=>`<option value="${s.id}">${esc(s.code||'—')} · ${esc(s.name)}</option>`).join('');if(stores.some(s=>String(s.id)===String(prev)))conSel.value=prev}
  const regSel=$('#holidayReportRegion');
  if(regSel&&app){const prev=regSel.value,regs=[...new Set(app.stores.filter(s=>s.active).map(s=>s.region))].sort((a,b)=>a.localeCompare(b,'it'));regSel.innerHTML='<option value="">Tutte le regioni</option>'+regs.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('');if(regs.includes(prev))regSel.value=prev}
 }
 function holidayCurrentStoreId(){return currentUser?.role==='STORE'?String(currentUser.store_id||''):String($('#holidayStore')?.value||'')}
+function holidayPlanningAllStoresSelected(){return currentUser?.role==='ADMIN'&&holidayCurrentStoreId()==='__ALL__'}
 function holidayHours(v){const n=Number(String(v??0).replace(',','.'));return Number.isFinite(n)?Math.round(n*100)/100:0}
 function holidayHoursFmt(v){const n=holidayHours(v);return n.toLocaleString('it-IT',{minimumFractionDigits:Number.isInteger(n)?0:1,maximumFractionDigits:2})}
 function holidayPlanCellValue(v){const s=String(v??'').trim();if(/^r$/i.test(s))return 'R';if(!s)return 0;const n=Number(s.replace(',','.'));return Number.isFinite(n)?Math.round(n*100)/100:NaN}
@@ -1371,15 +1373,34 @@ async function loadHolidayPlanning(){
  const storeId=holidayCurrentStoreId(),year=Number($('#holidayYear')?.value)||new Date().getFullYear();
  if(!storeId){$('#holidayEmployeeSummary').innerHTML='<div class="empty">Nessun negozio disponibile.</div>';$('#holidayPlanningGrid').innerHTML='<div class="empty">Nessun negozio disponibile.</div>';return}
  try{
+  if(holidayPlanningAllStoresSelected()){
+   const data=await window.agendaCloudApi.request('getHolidayReport',{year});
+   holidayPlanningCache={all_stores:true,year:data.year||year,read_only:true,kpis:data.kpis||{},stores:data.stores||[]};
+   renderHolidayPlanning();
+   return;
+  }
   const data=await window.agendaCloudApi.request('getHolidayPlanning',{store_id:storeId,year});
   holidayPlanningCache=data;indexHolidayPlanningCache();renderHolidayPlanning();
  }catch(err){toast(err.message||'Impossibile caricare il planning ferie',true)}
 }
 function renderHolidayPlanning(){
  if(!holidayPlanningCache)return;
+ if(holidayPlanningCache.all_stores){renderHolidayPlanningAllStores();return}
  const st=holidayPlanningCache.store,readOnly=!!holidayPlanningCache.read_only,year=holidayPlanningCache.year;
  $('#holidayPlanningMeta').textContent=`${st?.name||'Negozio'} · ${year}${readOnly?' · sola visualizzazione DM':''}`;
  renderHolidaySummary();renderHolidayGrid();
+}
+function renderHolidayPlanningAllStores(){
+ const year=holidayPlanningCache?.year||new Date().getFullYear(),rows=(holidayPlanningCache?.stores||[]).slice().sort((a,b)=>b.disposal_pct-a.disposal_pct||String(a.region||'').localeCompare(String(b.region||''),'it')||String(a.name||'').localeCompare(String(b.name||''),'it')),k=holidayPlanningCache?.kpis||{};
+ $('#holidayPlanningMeta').textContent=`TUTTI I NEGOZI · ${year} · smaltimento programmato complessivo`;
+ const host=$('#holidayEmployeeSummary');
+ if(host){
+  const body=rows.map(x=>`<tr><td>${esc(x.region||'—')}</td><td>${esc(x.code||'—')}</td><td><strong>${esc(x.name||'—')}</strong></td><td>${Number(x.employees||0)}</td><td class="metric-strong ${holidayHours(x.total_hours)<0?'metric-negative':''}">${holidayHoursFmt(x.total_hours)}</td><td class="metric-strong ${holidayHours(x.planned_hours)<0?'metric-negative':''}">${holidayHoursFmt(x.planned_hours)}</td><td class="metric-strong ${holidayHours(x.residual_hours)<0?'metric-negative':''}">${holidayHoursFmt(x.residual_hours)}</td><td><span class="holiday-pct ${holidayPctClass(Number(x.disposal_pct)||0)}">${(Number(x.disposal_pct)||0).toFixed(1)}%</span></td></tr>`).join('');
+  const totalPct=Number(k.disposal_pct)||0;
+  const foot=`<tr class="holiday-overview-total"><td colspan="3"><strong>TOTALE DISTRETTO</strong></td><td><strong>${Number(k.employees||0)}</strong></td><td class="metric-strong ${holidayHours(k.total_hours)<0?'metric-negative':''}"><strong>${holidayHoursFmt(k.total_hours)}</strong></td><td class="metric-strong ${holidayHours(k.planned_hours)<0?'metric-negative':''}"><strong>${holidayHoursFmt(k.planned_hours)}</strong></td><td class="metric-strong ${holidayHours(k.residual_hours)<0?'metric-negative':''}"><strong>${holidayHoursFmt(k.residual_hours)}</strong></td><td><span class="holiday-pct ${holidayPctClass(totalPct)}">${totalPct.toFixed(1)}%</span></td></tr>`;
+  host.innerHTML=rows.length?`<table class="holiday-summary-table"><thead><tr><th>Regione</th><th>Codice</th><th>Negozio</th><th>Dipendenti</th><th>Ore Totali AC+AP</th><th>Ore Programmate/Godute AC</th><th>Ore Residue AC+AP</th><th>Smaltimento Ferie</th></tr></thead><tbody>${body}${foot}</tbody></table>`:'<div class="empty">Nessun dato di planning ferie disponibile per i negozi.</div>';
+ }
+ const grid=$('#holidayPlanningGrid');if(grid)grid.innerHTML='<div class="empty">Vista TUTTI: seleziona un singolo negozio dal menu per consultare il planning giornaliero dei dipendenti.</div>';
 }
 function renderHolidaySummary(){
  const host=$('#holidayEmployeeSummary');if(!host||!holidayPlanningCache)return;
