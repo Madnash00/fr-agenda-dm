@@ -963,12 +963,6 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 
 
 /* === ACCOUNT NEGOZIO · distretto DM contestuale r26 === */
-.calendar.transposed.store-view .store-head.other-store-col{opacity:.68;filter:saturate(.58) brightness(1.05);border-color:#e8ecee!important}
-.calendar.transposed.store-view .store-cell.other-store-col{opacity:.66;border-right-color:#eef1f2!important;border-bottom-color:#f0f2f3!important}
-.calendar.transposed.store-view .store-cell.other-store-col.region-edge{border-left-color:#cbd1d5!important}
-.calendar.transposed.store-view .store-cell.other-store-col .event-chip{opacity:.76;filter:saturate(.58) brightness(1.16)}
-.calendar.transposed.store-view .store-head.own-store-col,.calendar.transposed.store-view .store-cell.own-store-col{opacity:1;filter:none}
-.calendar.transposed.store-view .store-head.own-store-col .store-name-vertical{color:#1f2529;font-weight:950}
 
 /* === AGENDA DM · Agenda ADMIN/SUPER ADMIN r22 === */
 .login-brand{min-height:88px;margin-bottom:14px}
@@ -1258,8 +1252,8 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 <script>
 /* CONFIGURAZIONE: dopo il deploy di Apps Script incolla qui l'URL che termina con /exec */
 const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbx-ZGO5ucRyCnqAW_54K_ox00f_fWELc_u1QWJQqSGvYBNTIDmYvtpntlykxfUeVudbvQ/exec';
-const EXPECTED_BACKEND_BUILD='2026-10-05-store-dm-visibility-r26';
-const STORE_CALENDAR_POLICY=Object.freeze({id:'STORE_DM_CONTEXT_OWN_SM_WRITE_V5',scope:'DM_FULL',view:'STORE_DM_OTHER_STORES_V2',contractVersion:5,editableTrack:'SM',hideOtherStoreStoreAuthored:true,protected:true});
+const EXPECTED_BACKEND_BUILD='2026-10-05-store-dm-only-r27';
+const STORE_CALENDAR_POLICY=Object.freeze({id:'STORE_DM_CONTEXT_OWN_SM_WRITE_V6',scope:'DM_FULL',view:'STORE_DM_ONLY_OTHER_STORES_V3',contractVersion:6,editableTrack:'SM',hideOtherStoreStoreAuthored:true,protected:true});
 class AgendaApiError extends Error{constructor(code,message,requestId){super(message||code);this.name='AgendaApiError';this.code=code;this.requestId=requestId||null}}
 const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',getToken(){return sessionStorage.getItem(this.TOKEN_KEY)||''},getUser(){try{return JSON.parse(sessionStorage.getItem(this.USER_KEY)||'null')}catch{return null}},setSession(token,user){sessionStorage.setItem(this.TOKEN_KEY,String(token||''));sessionStorage.setItem(this.USER_KEY,JSON.stringify(user||null))},clearSession(){sessionStorage.removeItem(this.TOKEN_KEY);sessionStorage.removeItem(this.USER_KEY)}};
 const AGENDA_READ_CACHE_TTL=Object.freeze({
@@ -1282,7 +1276,7 @@ const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
 });
 const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
 function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSessionExpired=()=>{}}={}){
- const responseCache=new Map(),inflight=new Map(),PERSIST_PREFIX='agenda.dm.fastcache.r26.';
+ const responseCache=new Map(),inflight=new Map(),PERSIST_PREFIX='agenda.dm.fastcache.r27.';
  const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig']);
  const stableKey=(action,payload)=>action+'|'+JSON.stringify(payload,Object.keys(payload).sort());
  const smallHash=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
@@ -1500,7 +1494,7 @@ function isOwnStore(storeId){return isStoreCalendarUser()&&String(storeId||'')==
 function isStoreSmType(type){return ['SM_HOLIDAY','SM_REST'].includes(String(type||''))}
 function storeCanEditCalendarCell(storeId,track){return isStoreCalendarUser()&&isOwnStore(storeId)&&String(track||'')===STORE_CALENDAR_POLICY.editableTrack}
 function eventAuthoredByStore(ev){if(!isStoreCalendarUser())return false;const author=String(ev?.user_id||'');return !!author&&allowedStoreIds().includes(author)}
-function eventVisibleToCalendarViewer(ev){if(!isStoreCalendarUser())return true;if(!eventAuthoredByStore(ev))return true;const author=String(ev?.user_id||''),sid=String(ev?.store_id||'');return author===String(currentUser.store_id||'')&&sid===String(currentUser.store_id||'')}
+function eventVisibleToCalendarViewer(ev){if(!isStoreCalendarUser())return true;const sid=String(ev?.store_id||''),own=String(currentUser.store_id||''),type=String(ev?.event_type||''),storeAuthored=eventAuthoredByStore(ev);if(!sid)return true;if(sid===own){if(isStoreSmType(type))return String(ev?.user_id||'')===own;return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}
 function eventTextVisibleToCalendarViewer(ev){return eventVisibleToCalendarViewer(ev)}
 function canEditEvent(ev){if(currentUser.role==='ADMIN')return true;if(!isStoreCalendarUser())return false;return isOwnStore(ev.store_id)&&isStoreSmType(ev.event_type)}
 function canAddType(type,storeId){if(currentUser.role==='ADMIN')return true;return isOwnStore(storeId)&&isStoreSmType(type)}
@@ -1585,7 +1579,7 @@ function renderCalendar(){
   h+='<tr><th class="date-month-head" rowspan="2"><span class="axis-head-vertical">MESE</span></th><th class="date-week-head" rowspan="2"><span class="axis-head-vertical">SETTIMANA</span></th><th class="date-day-head" rowspan="2"><span class="axis-head-vertical">GIORNO</span></th><th class="key-point-head" rowspan="2"><span class="axis-head-vertical">KEY POINT</span></th>';
   h+='<th class="dm-absence-head" rowspan="2"><span class="store-name-vertical info-varie-vertical">INFO VARIE</span></th>';
   h+=regionSpans.map((x,i)=>`<th class="region-band band-${i%2?'b':'a'}" colspan="${x.span}" style="--region-tint:${esc(x.color)}">${esc(x.region||'—')}</th>`).join('')+'</tr>';
-  h+='<tr>'+stores.map(st=>{const own=currentUser.role==='STORE'&&String(st.id)===String(currentUser.store_id),dim=currentUser.role==='STORE'&&!own;return `<th class="store-head store-tint ${regionStartIds.has(st.id)?'region-edge':''} ${own?'own-store-col':''} ${dim?'other-store-col':''}" style="--region-tint:${esc(regionColor(st.region))}" ${currentUser.role==='ADMIN'?`data-store-stats-id="${esc(st.id)}"`:`title="${esc(st.name)}${own?' · Il tuo negozio':' · Attività DM'}"`}><span class="store-name-vertical">${esc(st.name)}</span></th>`}).join('')+'</tr></thead><tbody>';
+  h+='<tr>'+stores.map(st=>{const own=currentUser.role==='STORE'&&String(st.id)===String(currentUser.store_id);return `<th class="store-head store-tint ${regionStartIds.has(st.id)?'region-edge':''} ${own?'own-store-col':''}" style="--region-tint:${esc(regionColor(st.region))}" ${currentUser.role==='ADMIN'?`data-store-stats-id="${esc(st.id)}"`:`title="${esc(st.name)}${own?' · Il tuo negozio':' · Attività DM'}"`}><span class="store-name-vertical">${esc(st.name)}</span></th>`}).join('')+'</tr></thead><tbody>';
   dates.forEach((d,di)=>{
     const ds=isoDate(d),isWeekend=[0,6].includes(d.getDay()),isSunday=d.getDay()===0,isToday=ds===today;
     const monthRun=monthForDay.get(di),weekRun=weekForDay.get(di),isWeekStart=di===weekRun.start;
@@ -1621,8 +1615,8 @@ function renderTransposedStoreCell(st,d,idx,track,regionEdge=false){
   if(track==='NOTE')chips=filtered.length?`<button class="event-chip note" data-event="${filtered[0].id}" data-store="${st.id}" data-date="${ds}" data-track="NOTE" aria-label="Nota">N</button>`:'';
   else chips=filtered.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;return `<button class="event-chip ${m.cls}" data-event="${e.id}" data-store="${st.id}" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label)}">${m.abbr}</button>`}).join('');
   const weekend=[0,6].includes(d.getDay()),sunday=d.getDay()===0,today=ds===isoDate(new Date());
-  const own=currentUser.role==='STORE'&&String(st.id)===String(currentUser.store_id),dim=currentUser.role==='STORE'&&!own;
-  return `<td class="store-cell cell-click ${regionEdge?'region-edge':''} ${own?'own-store-col':''} ${dim?'other-store-col':''} ${weekend?'weekend':''} ${sunday?'sunday':''} ${today?'today':''} ${track==='NOTE'&&filtered.length?'has-note':''}" data-cell data-store="${st.id}" data-date="${ds}" data-track="${track}" ${tip?`data-tooltip="${esc(tip)}"`:''}><div class="day-cell">${chips}</div></td>`
+  const own=currentUser.role==='STORE'&&String(st.id)===String(currentUser.store_id);
+  return `<td class="store-cell cell-click ${regionEdge?'region-edge':''} ${own?'own-store-col':''} ${weekend?'weekend':''} ${sunday?'sunday':''} ${today?'today':''} ${track==='NOTE'&&filtered.length?'has-note':''}" data-cell data-store="${st.id}" data-date="${ds}" data-track="${track}" ${tip?`data-tooltip="${esc(tip)}"`:''}><div class="day-cell">${chips}</div></td>`
 }
 function renderTransposedDmCell(d,idx,track){
   const ds=isoDate(d),events=idx.get(eventDateKey(null,ds))||[];
