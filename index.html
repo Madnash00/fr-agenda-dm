@@ -1390,8 +1390,11 @@ function firstEnabledStorePage(){return STORE_MENU_ELIGIBLE_PAGES.find(storePage
 function applyStoreMenuVisibility(){
  const isStore=currentUser?.role==='STORE';
  $$('[data-store-menu-key]').forEach(el=>el.classList.toggle('hidden',isStore&&!storePageEnabled(el.dataset.storeMenuKey)));
+ if(!isStore){
+  ['store-overtime','action-plans'].forEach(name=>$(`.nav-section[data-nav-section="${name}"]`)?.classList.remove('hidden'));
+  return
+ }
  $$('.nav-section').forEach(section=>{
-  if(!isStore)return;
   if(section.classList.contains('admin-only')||section.classList.contains('super-admin-only')){section.classList.add('hidden');return}
   const visible=[...section.querySelectorAll('.nav-btn[data-page]')].some(btn=>!btn.classList.contains('hidden')&&!btn.classList.contains('admin-only')&&!btn.classList.contains('super-admin-only'));
   section.classList.toggle('hidden',!visible)
