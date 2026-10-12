@@ -1013,6 +1013,36 @@ input,select,textarea{border-color:#d8dcdf;border-radius:6px;padding:6px 8px;fon
 body.agenda-store-profile .nav-btn[data-page="agenda"],
 body.agenda-store-profile .nav-btn[data-page="report"],
 body.agenda-store-profile .nav-btn[data-page="holidayreport"]{display:none!important}
+/* ===== r39 · PERIODO FERIE e totali quadro ferie ===== */
+.holiday-summary-table .holiday-employees-total td{background:#eef1f2;font-weight:900;border-top:2px solid #7f8a91;white-space:nowrap}
+.holiday-period-toolbar{padding:11px;display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+.holiday-period-toolbar label{font-weight:800;font-size:10px;display:grid;gap:4px}
+.holiday-period-toolbar input[type=number]{max-width:115px;font-size:12px}
+.holiday-period-modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.holiday-period-mode{display:inline-flex;gap:6px;align-items:center;border:1px solid #cbd1d4;background:#fff;padding:8px 11px;border-radius:7px;font-size:10px;font-weight:850}
+.holiday-period-mode.selected{outline:2px solid #505d65;outline-offset:1px}
+.holiday-period-swatch{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.16);display:inline-block}
+.holiday-period-swatch.high{background:#f5dc64}.holiday-period-swatch.full{background:#e98b8b}.holiday-period-swatch.none{background:#f3f5f6}
+.holiday-period-status{font-size:10px;color:#59636a;flex:1 1 100%;line-height:1.4}
+.holiday-period-status.error{color:#a32521}
+.holiday-period-summary{display:flex;gap:12px;flex-wrap:wrap;padding:7px 11px;font-size:10px}
+.holiday-period-months{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px}
+.holiday-period-month{min-width:0;border:1px solid #dfe3e5;border-radius:9px;background:#fff;overflow:hidden}
+.holiday-period-month h3{font-size:11px;font-weight:900;color:#39434a;text-align:center;background:#edf0f2;margin:0;padding:8px}
+.holiday-period-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;padding:7px}
+.holiday-period-weekday{text-align:center;font-size:9px;font-weight:850;color:#626c71;padding:4px 0}
+.holiday-period-day{border:1px solid transparent;border-radius:5px;min-width:0;min-height:31px;background:#f5f6f6;font-size:10px;color:#262d31;font-weight:760;touch-action:none;user-select:none}
+.holiday-period-day.weekend:not(.holiday-alert-high):not(.holiday-alert-full){background:#f4ebeb}
+.holiday-period-day.holiday-alert-high{background:#f5dc64!important;color:#40370d!important}
+.holiday-period-day.holiday-alert-full{background:#e98b8b!important;color:#4b1515!important}
+.holiday-period-day.period-preview{outline:2px solid #3b5566;outline-offset:-2px}
+.holiday-period-day:focus-visible{outline:2px solid #162c42;outline-offset:1px}
+.holiday-period-legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:10px;padding:10px 12px;margin-top:9px}
+.holiday-period-legend span{display:inline-flex;align-items:center;gap:5px}
+.holiday-plan-table .day-head.holiday-alert-high{background:#f5dc64!important;color:#40370d!important}
+.holiday-plan-table .day-head.holiday-alert-full{background:#e98b8b!important;color:#4b1515!important}
+@media(max-width:1080px){.holiday-period-months{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.holiday-period-months{grid-template-columns:1fr}.holiday-period-toolbar{gap:8px}}
 </style>
 </head>
 <body>
@@ -1046,6 +1076,7 @@ body.agenda-store-profile .nav-btn[data-page="holidayreport"]{display:none!impor
    <button class="nav-group-btn" type="button" data-nav-group="store-holidays" aria-expanded="false"><span>FERIE NEGOZI</span><span class="nav-chevron">›</span></button>
    <div class="nav-submenu">
     <button class="nav-btn nav-sub-btn" data-page="holidays" data-store-menu-key="holidays">Planning Ferie</button>
+    <button class="nav-btn nav-sub-btn super-admin-only hidden" data-page="holidayperiods">PERIODI FERIE</button>
     <button class="nav-btn nav-sub-btn" data-page="holidayconsolidated" data-store-menu-key="holidayconsolidated">Ferie Consolidate</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="holidayreport">Report Ferie</button>
    </div>
@@ -1199,6 +1230,24 @@ body.agenda-store-profile .nav-btn[data-page="holidayreport"]{display:none!impor
   <div id="holidayPlanningGrid" class="holiday-planning-scroll"><div class="empty">Nessun dato caricato.</div></div>
  </div>
 </section>
+<section id="page-holidayperiods" class="page super-admin-only hidden">
+ <div class="holiday-period-toolbar card">
+  <button id="holidayPeriodPrevYear" type="button" class="btn" aria-label="Anno precedente">‹</button>
+  <label>Anno<input id="holidayPeriodYear" type="number" min="2000" max="2100" step="1"></label>
+  <button id="holidayPeriodNextYear" type="button" class="btn" aria-label="Anno successivo">›</button>
+  <div class="holiday-period-modes" role="group" aria-label="Tipo allerta da assegnare">
+   <button class="holiday-period-mode selected" type="button" data-holiday-period-level="high" aria-pressed="true"><span class="holiday-period-swatch high"></span>GIALLO · Suggerito alto presidio</button>
+   <button class="holiday-period-mode" type="button" data-holiday-period-level="full" aria-pressed="false"><span class="holiday-period-swatch full"></span>ROSSO · Suggerito team completo</button>
+   <button class="holiday-period-mode" type="button" data-holiday-period-level="none" aria-pressed="false"><span class="holiday-period-swatch none"></span>Rimuovi allerta</button>
+  </div>
+  <button id="holidayPeriodSave" class="btn primary" type="button">Salva periodi</button>
+  <button id="holidayPeriodReload" class="btn" type="button">Ricarica</button>
+  <div id="holidayPeriodStatus" class="holiday-period-status" role="status" aria-live="polite">Seleziona un livello e trascina sui giorni per assegnare l’allerta.</div>
+ </div>
+ <div id="holidayPeriodSummary" class="holiday-period-summary card"></div>
+ <div id="holidayPeriodCalendar" class="holiday-period-months card"></div>
+ <div class="holiday-period-legend card"><strong>LEGENDA</strong><span><i class="holiday-period-swatch high"></i>Suggerito ALTO PRESIDIO</span><span><i class="holiday-period-swatch full"></i>Suggerito TEAM COMPLETO</span><span><i class="holiday-period-swatch none"></i>Nessuna allerta</span></div>
+</section>
 <section id="page-holidayconsolidated" class="page">
  <div class="holiday-toolbar card">
   <div class="holiday-toolbar-group">
@@ -1321,27 +1370,27 @@ const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',_toke
  setSession(token,user){this._token=String(token||'');this._user=user||null;try{sessionStorage.setItem(this.TOKEN_KEY,this._token);sessionStorage.setItem(this.USER_KEY,JSON.stringify(this._user))}catch(e){console.warn('Memoria Safari non disponibile: sessione valida fino alla chiusura della pagina.')}},
  clearSession(){this._token='';this._user=null;try{sessionStorage.removeItem(this.TOKEN_KEY);sessionStorage.removeItem(this.USER_KEY)}catch(_){}}};
 const AGENDA_READ_CACHE_TTL=Object.freeze({
- getAgendaEvents:45000,getReportData:45000,getHolidayPlanning:60000,getHolidayReport:90000,getHolidayConsolidated:90000,getHolidayConsolidatedReport:120000,
+ getAgendaEvents:45000,getReportData:45000,getHolidayPlanning:60000,getHolidayPeriods:30000,getHolidayReport:90000,getHolidayConsolidated:90000,getHolidayConsolidatedReport:120000,
  getStoreOvertimeCheck:120000,getActionPlans:90000,getActionPlanReport:90000,getAuditBundle:45000,listStores:120000,listUsers:120000,getRegions:120000,
  getCalendar:30000,getStoreCalendarContext:30000,getStoreMenuConfig:120000,getProfileMenuConfig:120000,getProfileDirectory:120000,getRMCalendar:45000,getRMHolidayPlanning:60000,getRMHolidayReport:90000,getRMHolidayConsolidated:90000,getRMHolidayConsolidatedReport:120000,getRMOvertime:120000,getRMActionPlans:90000,getRMActionPlanReport:90000
 });
 const AGENDA_CACHE_STALE_FACTOR=6;
 const AGENDA_CACHE_DOMAIN_BY_READ=Object.freeze({
  getCalendar:'calendar',getStoreCalendarContext:'calendar',getAgendaEvents:'calendar',getReportData:'calendar',
- getHolidayPlanning:'holiday',getHolidayReport:'holiday',getHolidayConsolidated:'holidayConsolidated',getHolidayConsolidatedReport:'holidayConsolidated',
+ getHolidayPlanning:'holiday',getHolidayPeriods:'holidayPeriods',getHolidayReport:'holiday',getHolidayConsolidated:'holidayConsolidated',getHolidayConsolidatedReport:'holidayConsolidated',
  getStoreOvertimeCheck:'overtime',getActionPlans:'actionPlan',getActionPlanReport:'actionPlan',
  getAuditLog:'audit',getExportLog:'audit',getAuditBundle:'audit',listStores:'directory',listUsers:'directory',getRegions:'directory',getStoreMenuConfig:'directory',getProfileDirectory:'directory',getRMCalendar:'calendar',getRMHolidayPlanning:'holiday',getRMHolidayReport:'holiday',getRMHolidayConsolidated:'holidayConsolidated',getRMHolidayConsolidatedReport:'holidayConsolidated',getRMOvertime:'overtime',getRMActionPlans:'actionPlan',getRMActionPlanReport:'actionPlan',getBootstrap:'directory'
 });
 const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
  createEvent:['calendar','audit'],updateEvent:['calendar','audit'],deleteEvent:['calendar','audit'],
- createHolidayEmployee:['holiday','audit'],updateHolidayEmployee:['holiday','audit'],deleteHolidayEmployee:['holiday','audit'],saveHolidayPlanBatch:['holiday','audit'],
+ saveHolidayPeriods:['holidayPeriods','audit'],createHolidayEmployee:['holiday','audit'],updateHolidayEmployee:['holiday','audit'],deleteHolidayEmployee:['holiday','audit'],saveHolidayPlanBatch:['holiday','audit'],
  importHolidayConsolidated:['holidayConsolidated','audit'],importStoreOvertimeCheck:['overtime','audit'],saveActionPlan:['actionPlan','audit'],recordExport:['audit'],
  createAdmin:['directory','audit'],saveStoreMenuConfig:['directory','audit'],saveProfileMenuConfig:['directory','audit'],setProfileAdminFlag:['directory','audit'],createStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],updateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],deactivateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],resetStorePassword:['directory','audit'],updateRegion:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],commitStoreImport:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit']
 });
-const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
+const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
 function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSessionExpired=()=>{}}={}){
  const responseCache=new Map(),inflight=new Map(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';
- const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
+ const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
  const stableKey=(action,payload)=>action+'|'+JSON.stringify(payload,Object.keys(payload).sort());
  const smallHash=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
  const tokenScope=()=>smallHash(String(getToken()||'guest'));
@@ -1398,6 +1447,9 @@ window.AgendaSession=AgendaSession;window.parseStoreWorkbook=parseStoreWorkbook;
 const SEED=JSON.parse(document.getElementById('seed-data').textContent);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let calendarRangeFreshUntil=new Map();
+// r39 · periodi ferie condivisi dal backend, mai salvati come configurazione locale autoritativa.
+const holidayPeriodYears=new Map(),holidayPeriodLoads=new Map();
+let holidayPeriodEditingYear=null,holidayPeriodLevel='high',holidayPeriodDirty=false,holidayPeriodSaving=false,holidayPeriodDragging=null;
 let rmAdminOriginalUser=null;let rmAdminSelectedDmId='';let profileMenuConfig=null; let app=null, currentUser=null, anchorMonday=null, sortState={key:'visits',dir:-1}, alertSortState={key:'daysSinceLastVisit',dir:-1}, reportCache=null, calendarLocked=true, calendarZoom=100, calendarAutoFit=false, calendarRegionSelection=new Set(), calendarStoreSelection=new Set(), holidayPlanningCache=null, holidayReportCache=null, holidayConsolidatedCache=null, holidayConsolidatedReportCache=null, overtimeCheckCache=null, holidayPlanQueue=new Map(), holidayPlanTimer=null, actionPlanCache=null, actionPlanReportCache=null, actionPlanDraftObjectives=[], actionPlanDraftStoreId=null, storeCalendarDirectory=[], storeCalendarContract=null, agendaPrefetchStarted=false, calendarStoreStatsYear=null, calendarStoreStatsByStore=new Map(), calendarStoreStatsLoading=null, calendarStoreStatsRefreshTimer=null, calendarInitialTodayFocusPending=true, storeMenuConfig=null, profileDirectory=null, rmSelectedDmId='', rmCalendarDmId='', rmCalendarView='week', rmCalendarAnchorDate='', rmCalendarCache=null, rmHolidayReportCache=null, rmHolidayConsolidatedCache=null, rmHolidayConsolidatedReportCache=null, rmHolidayPlanningCache=null, rmOvertimeCache=null, rmActionPlansCache=null, rmActionReportCache=null;
 const PASTEL_COLORS=['#E7DDE7','#DCE7F0','#DDE9DF','#F1E4CC','#EADBD5','#D8E8E5','#E4DEF0','#EFDBDF','#D9E3EA','#E7E3D7','#D4E7E0','#EADCCF','#D9DFE9','#E1E8D4','#EFDDD2','#DCE4D2','#E4D9EB','#D5E5E9','#EDE1C9','#E1DCDD','#D8E7D3','#EFD8D0','#D7E1EF','#E6E1CE','#DAD5E7','#D4E5DC','#EAD9D1','#D9E6F2','#E9E0D4','#DDE0D5','#E8DADF','#D4E0E7'];
 const MONTHS=['GENNAIO','FEBBRAIO','MARZO','APRILE','MAGGIO','GIUGNO','LUGLIO','AGOSTO','SETTEMBRE','OTTOBRE','NOVEMBRE','DICEMBRE'];
@@ -1961,6 +2013,8 @@ function holidayMetrics(emp){
  return {total,planned,residual,pct}
 }
 async function loadHolidayPlanning(force=false){
+ const requestedYear=Number($('#holidayYear')?.value)||new Date().getFullYear();
+ void loadHolidayPeriodYear(requestedYear,force).then(()=>{if(Number($('#holidayYear')?.value)===requestedYear&&holidayPlanningCache&&!holidayPlanningCache.all_stores&&Number(holidayPlanningCache.year)===requestedYear)renderHolidayGrid()}).catch(()=>{});
  const storeId=holidayCurrentStoreId(),year=Number($('#holidayYear')?.value)||new Date().getFullYear();
  if(!storeId){$('#holidayEmployeeSummary').innerHTML='<div class="empty">Nessun negozio disponibile.</div>';$('#holidayPlanningGrid').innerHTML='<div class="empty">Nessun negozio disponibile.</div>';return}
  try{
@@ -2005,7 +2059,11 @@ function renderHolidaySummary(){
   <td class="metric-strong ${m.total<0?'metric-negative':''}">${holidayHoursFmt(m.total)}</td><td class="metric-strong ${m.planned<0?'metric-negative':''}">${holidayHoursFmt(m.planned)}</td><td class="metric-strong ${m.residual<0?'metric-negative':''}">${holidayHoursFmt(m.residual)}</td>
   <td><span class="holiday-pct ${holidayPctClass(m.pct)}">${m.pct.toFixed(1)}%</span></td>
   ${!readOnly?`<td><button class="btn danger holiday-delete" data-delete-holiday-employee="${id}" title="Elimina dipendente">Elimina</button></td>`:''}</tr>`}).join('');
- host.innerHTML=`<table class="holiday-summary-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+ const totals=emps.reduce((sum,emp)=>{const m=holidayMetrics(emp);sum.residualAP+=holidayHours(emp.residual_ap_hours);sum.projectedAC+=holidayHours(emp.projected_ac_hours);sum.total+=m.total;sum.planned+=m.planned;sum.residual+=m.residual;return sum},{residualAP:0,projectedAC:0,total:0,planned:0,residual:0});
+ const totalPct=totals.total>0?totals.planned/totals.total*100:0;
+ const num=(v)=>`<td class="metric-strong ${v<0?'metric-negative':''}">${holidayHoursFmt(v)}</td>`;
+ const foot=`<tr class="holiday-employees-total"><td>TOTALE</td>${num(totals.residualAP)}${num(totals.projectedAC)}${num(totals.total)}${num(totals.planned)}${num(totals.residual)}<td><span class="holiday-pct ${holidayPctClass(totalPct)}">${totalPct.toFixed(1)}%</span></td>${!readOnly?'<td></td>':''}</tr>`;
+ host.innerHTML=`<table class="holiday-summary-table"><thead>${head}</thead><tbody>${body}${foot}</tbody></table>`;
  if(!readOnly){
   $$('[data-holiday-emp-field]').forEach(el=>el.onchange=()=>saveHolidayEmployeeField(el));
   $$('[data-delete-holiday-employee]').forEach(b=>b.onclick=()=>deleteHolidayEmployee(b.dataset.deleteHolidayEmployee));
@@ -2020,6 +2078,91 @@ async function saveHolidayEmployeeField(el){
  try{const saved=await window.agendaCloudApi.request('updateHolidayEmployee',{employee_id:id,[field]:value,__silent:true});Object.assign(emp,saved);renderHolidaySummary();setHolidaySaveStatus('Salvato','ok')}
  catch(err){emp[field]=before;renderHolidaySummary();setHolidaySaveStatus('Errore salvataggio','error');toast(err.message,true)}
 }
+/* ===== r39 · PERIODI FERIE shared calendar ===== */
+function holidayPeriodLabel(level){return level==='high'?'Suggerito ALTO PRESIDIO':level==='full'?'Suggerito TEAM COMPLETO':''}
+function holidayPeriodLevelForDate(ds){const year=Number(String(ds).slice(0,4));return holidayPeriodYears.get(year)?.days?.[ds]||''}
+function setHolidayPeriodStatus(msg,error=false){const el=$('#holidayPeriodStatus');if(el){el.textContent=msg;el.classList.toggle('error',!!error)}}
+function holidayPeriodNormalizeDays(obj,year){const days={};if(obj&&typeof obj==='object'&&!Array.isArray(obj))for(const [date,level] of Object.entries(obj)){if(/^\d{4}-\d\d-\d\d$/.test(date)&&Number(date.slice(0,4))===year&&['high','full'].includes(level))days[date]=level}return days}
+async function loadHolidayPeriodYear(year,force=false){
+ year=Number(year);if(!Number.isInteger(year)||year<2000||year>2100)throw Error('Anno non valido');
+ const cached=holidayPeriodYears.get(year);
+ if(!force&&cached&&Date.now()-(cached.fetchedAt||0)<60000)return cached;
+ if(holidayPeriodLoads.has(year))return holidayPeriodLoads.get(year);
+ const task=(async()=>{
+  const response=await window.agendaCloudApi.request('getHolidayPeriods',{year,__force:true,__silent:true});
+  const entry={days:holidayPeriodNormalizeDays(response?.days||{},year),revision:response?.revision??0,fetchedAt:Date.now()};
+  // Non sovrascrivere una selezione non ancora salvata dall'amministratore.
+  if(!(holidayPeriodDirty&&holidayPeriodEditingYear===year))holidayPeriodYears.set(year,entry);
+  return holidayPeriodYears.get(year)||entry;
+ })();
+ holidayPeriodLoads.set(year,task);
+ try{return await task}finally{holidayPeriodLoads.delete(year)}
+}
+function holidayPeriodYear(){const year=Number($('#holidayPeriodYear')?.value);return Number.isInteger(year)&&year>=2000&&year<=2100?year:null}
+function holidayPeriodSelectLevel(level){if(!['high','full','none'].includes(level))return;holidayPeriodLevel=level;$$('[data-holiday-period-level]').forEach(b=>{const selected=b.dataset.holidayPeriodLevel===level;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected))})}
+function holidayPeriodDayButtons(){return $$('#holidayPeriodCalendar [data-period-date]')}
+function holidayPeriodPreview(a,b){if(!a||!b)return;const first=a<=b?a:b,last=a<=b?b:a;holidayPeriodDayButtons().forEach(el=>el.classList.toggle('period-preview',el.dataset.periodDate>=first&&el.dataset.periodDate<=last))}
+function holidayPeriodClearPreview(){holidayPeriodDayButtons().forEach(el=>el.classList.remove('period-preview'))}
+function holidayPeriodPaint(a,b){
+ const year=holidayPeriodYear();if(!year||String(a).slice(0,4)!==String(year)||String(b).slice(0,4)!==String(year))return;
+ const entry=holidayPeriodYears.get(year)||{days:{},revision:0},days={...entry.days},first=a<=b?a:b,last=a<=b?b:a;
+ for(const date of holidayYearDates(year)){const d=isoDate(date);if(d<first||d>last)continue;if(holidayPeriodLevel==='none')delete days[d];else days[d]=holidayPeriodLevel}
+ holidayPeriodYears.set(year,{...entry,days});holidayPeriodDirty=true;
+ renderHolidayPeriodCalendar();setHolidayPeriodStatus('Modifiche da salvare · premi Salva periodi.');
+}
+function holidayPeriodPointerDay(e){const el=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('[data-period-date]');return el&&$('#holidayPeriodCalendar').contains(el)?el.dataset.periodDate:null}
+function holidayPeriodPointerDown(e){if(!isSuperAdmin()||e.button!==0)return;const el=e.target.closest('[data-period-date]');if(!el)return;e.preventDefault();holidayPeriodDragging={id:e.pointerId,start:el.dataset.periodDate,end:el.dataset.periodDate};holidayPeriodPreview(holidayPeriodDragging.start,holidayPeriodDragging.end)}
+function holidayPeriodPointerMove(e){if(!holidayPeriodDragging||holidayPeriodDragging.id!==e.pointerId)return;const d=holidayPeriodPointerDay(e);if(d&&d!==holidayPeriodDragging.end){holidayPeriodDragging.end=d;holidayPeriodPreview(holidayPeriodDragging.start,d)}}
+function holidayPeriodPointerUp(e){if(!holidayPeriodDragging||holidayPeriodDragging.id!==e.pointerId)return;const d=holidayPeriodPointerDay(e)||holidayPeriodDragging.end,a=holidayPeriodDragging.start;holidayPeriodDragging=null;holidayPeriodClearPreview();holidayPeriodPaint(a,d)}
+function holidayPeriodPointerCancel(){holidayPeriodDragging=null;holidayPeriodClearPreview()}
+function renderHolidayPeriodCalendar(){
+ const year=holidayPeriodYear(),host=$('#holidayPeriodCalendar');if(!host||!year)return;
+ const days=holidayPeriodYears.get(year)?.days||{},weekdays=['L','M','M','G','V','S','D'];
+ host.innerHTML=MONTHS.map((month,index)=>{
+  const first=new Date(year,index,1),last=new Date(year,index+1,0).getDate(),empty=(first.getDay()+6)%7;
+  let cells=weekdays.map(d=>`<span class="holiday-period-weekday">${d}</span>`).join('');
+  cells+='<span aria-hidden="true"></span>'.repeat(empty);
+  for(let d=1;d<=last;d++){const date=isoDate(new Date(year,index,d)),level=days[date]||'',weekend=[0,6].includes(new Date(year,index,d).getDay());cells+=`<button type="button" data-period-date="${date}" class="holiday-period-day ${level==='high'?'holiday-alert-high':level==='full'?'holiday-alert-full':''} ${weekend?'weekend':''}" aria-label="${date}${level?' · '+holidayPeriodLabel(level):''}" title="${date}${level?' · '+holidayPeriodLabel(level):''}">${d}</button>`}
+  return `<div class="holiday-period-month"><h3>${esc(month)} ${year}</h3><div class="holiday-period-days">${cells}</div></div>`
+ }).join('');
+ const vals=Object.values(days),high=vals.filter(v=>v==='high').length,full=vals.filter(v=>v==='full').length;
+ $('#holidayPeriodSummary').innerHTML=`<span><strong>${year}</strong></span><span>🟨 Alto presidio: <strong>${high} giorni</strong></span><span>🟥 Team completo: <strong>${full} giorni</strong></span>`;
+}
+async function loadHolidayPeriodsEditor(force=false){
+ if(!isSuperAdmin())return;
+ const year=holidayPeriodYear();if(!year){setHolidayPeriodStatus('Inserisci un anno tra 2000 e 2100.',true);return}
+ if(holidayPeriodDirty&&holidayPeriodEditingYear!==null&&holidayPeriodEditingYear!==year){const ok=confirm('Le modifiche non salvate andranno perse cambiando anno. Continuare?');if(!ok){$('#holidayPeriodYear').value=holidayPeriodEditingYear;return}holidayPeriodDirty=false}
+ holidayPeriodEditingYear=year;
+ if(!holidayPeriodYears.has(year))holidayPeriodYears.set(year,{days:{},revision:0});
+ renderHolidayPeriodCalendar();setHolidayPeriodStatus(`Caricamento alert ${year}…`);
+ const editor=$('#holidayPeriodCalendar');editor.style.pointerEvents='none';editor.setAttribute('aria-busy','true');
+ try{await loadHolidayPeriodYear(year,force);if(holidayPeriodEditingYear===year){renderHolidayPeriodCalendar();setHolidayPeriodStatus('Seleziona un livello e trascina sui giorni. Salva per condividere gli alert con i negozi.')}}
+ catch(e){setHolidayPeriodStatus('Impossibile caricare i periodi ferie condivisi. '+String(e?.message||''),true)}
+ finally{editor.style.pointerEvents='';editor.removeAttribute('aria-busy')}
+}
+async function saveHolidayPeriodsEditor(){
+ if(!isSuperAdmin()||holidayPeriodSaving)return;
+ const year=holidayPeriodYear();if(!year)return;
+ const entry=holidayPeriodYears.get(year);if(!entry)return;
+ if(!entry.fetchedAt){setHolidayPeriodStatus('Carica prima i periodi ferie condivisi per evitare sovrascritture.',true);return}
+ holidayPeriodSaving=true;$('#holidayPeriodSave').disabled=true;setHolidayPeriodStatus('Salvataggio condiviso…');
+ try{const saved=await window.agendaCloudApi.request('saveHolidayPeriods',{year,days:entry.days,expected_revision:entry.revision,__silent:true});
+  const updated={days:holidayPeriodNormalizeDays(saved?.days||entry.days,year),revision:saved?.revision??entry.revision,fetchedAt:Date.now()};holidayPeriodYears.set(year,updated);holidayPeriodDirty=false;renderHolidayPeriodCalendar();setHolidayPeriodStatus('Periodi ferie salvati e condivisi con il distretto.');if(Number(holidayPlanningCache?.year)===year&&!holidayPlanningCache?.all_stores)renderHolidayGrid();
+ }catch(e){setHolidayPeriodStatus('Periodi NON salvati. '+(e?.message||'Verificare Code.gs e riprovare.'),true)}
+ finally{holidayPeriodSaving=false;$('#holidayPeriodSave').disabled=false}
+}
+function wireHolidayPeriodsEditor(){
+ const host=$('#holidayPeriodCalendar');if(!host)return;
+ $('#holidayPeriodYear').value=String(new Date().getFullYear());
+ $('#holidayPeriodYear').onchange=()=>loadHolidayPeriodsEditor();
+ $('#holidayPeriodPrevYear').onclick=()=>{const y=holidayPeriodYear();if(y&&y>2000){$('#holidayPeriodYear').value=y-1;loadHolidayPeriodsEditor()}};
+ $('#holidayPeriodNextYear').onclick=()=>{const y=holidayPeriodYear();if(y&&y<2100){$('#holidayPeriodYear').value=y+1;loadHolidayPeriodsEditor()}};
+ $('#holidayPeriodReload').onclick=()=>{if(holidayPeriodDirty&&!confirm('Scartare le modifiche non salvate?'))return;holidayPeriodDirty=false;loadHolidayPeriodsEditor(true)};
+ $('#holidayPeriodSave').onclick=saveHolidayPeriodsEditor;
+ $$('[data-holiday-period-level]').forEach(b=>b.onclick=()=>holidayPeriodSelectLevel(b.dataset.holidayPeriodLevel));
+ host.addEventListener('pointerdown',holidayPeriodPointerDown);document.addEventListener('pointermove',holidayPeriodPointerMove);document.addEventListener('pointerup',holidayPeriodPointerUp);document.addEventListener('pointercancel',holidayPeriodPointerCancel);
+ host.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-period-date]')){e.preventDefault();holidayPeriodPaint(e.target.dataset.periodDate,e.target.dataset.periodDate)}});
+}
 function renderHolidayGrid(){
  const host=$('#holidayPlanningGrid');if(!host||!holidayPlanningCache)return;
  const emps=holidayPlanningCache.employees||[],readOnly=!!holidayPlanningCache.read_only,year=holidayPlanningCache.year;
@@ -2028,7 +2171,7 @@ function renderHolidayGrid(){
  let h='<table class="holiday-plan-table"><thead><tr><th class="holiday-employee-head" rowspan="3">Dipendente</th>';
  h+=months.map(x=>`<th class="month-head" colspan="${x.span}">${esc(x.label)}</th>`).join('')+'</tr><tr>';
  h+=weeks.map(x=>`<th class="week-head" colspan="${x.span}">${esc(x.label)}</th>`).join('')+'</tr><tr>';
- h+=dates.map(d=>{const ds=isoDate(d),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0;return `<th class="day-head ${weekend?'weekend':''} ${sun?'sunday':''} ${ds===today?'today':''}" title="${esc(fmtDate(ds))}">${DAYS[d.getDay()]}<br><strong>${d.getDate()}</strong></th>`}).join('')+'</tr></thead><tbody>';
+ h+=dates.map(d=>{const ds=isoDate(d),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0,level=holidayPeriodLevelForDate(ds);return `<th class="day-head ${level==='high'?'holiday-alert-high':level==='full'?'holiday-alert-full':''} ${weekend?'weekend':''} ${sun?'sunday':''} ${ds===today?'today':''}" title="${esc(fmtDate(ds))}${level?' · '+holidayPeriodLabel(level):''}">${DAYS[d.getDay()]}<br><strong>${d.getDate()}</strong></th>`}).join('')+'</tr></thead><tbody>';
  for(const [ri,emp] of emps.entries()){const id=String(emp.employee_id);h+=`<tr><td class="holiday-employee-cell" title="${esc(emp.employee_name)}">${esc(emp.employee_name)}</td>`;for(const [ci,d] of dates.entries()){const ds=isoDate(d),key=`${id}|${ds}`,val=holidayPlanningCache.planMap?.get(key)||0,display=String(val).toUpperCase()==='R'?'R':(holidayPlanCellHours(val)>0?holidayHoursFmt(val):''),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0;h+=`<td class="${weekend?'weekend':''} ${sun?'sunday':''} ${holidayPlanHasValue(val)?'has-hours':''}" data-holiday-cell="${key}">${readOnly?(display?`<span class="hours-value">${display}</span>`:''):`<input class="holiday-hours-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${display}" data-holiday-hours data-employee-id="${id}" data-date="${ds}" data-row="${ri}" data-col="${ci}" aria-label="${esc(emp.employee_name)} ${ds}">`}</td>`}h+='</tr>'}
  h+='</tbody></table>';host.innerHTML=h;
  if(!readOnly)$$('[data-holiday-hours]').forEach(inp=>{inp.oninput=()=>updateHolidayPlanCell(inp,false);inp.onblur=()=>updateHolidayPlanCell(inp,true);inp.onkeydown=e=>holidayPlanKeydown(e,inp)});
@@ -2340,12 +2483,13 @@ async function loadRMActionPlans(force=false){if(!isRetailManager()||!rmSelected
 function renderRMActionPlans(){const r=rmActionReportCache||{},k=r.kpis||{},dm=rmSelectedDm(),storeMap=new Map((dm?.stores||[]).map(st=>[String(st.store_id),st])),year=String($('#rmActionYear')?.value||''),fraction=String($('#rmActionFraction')?.value||'');$('#rmActionKpis').innerHTML=[['Action Plan',k.plans||0],['OBJ',k.objectives||0],['Raggiunti',k.achieved||0],['In corso',k.in_progress||0],['Raggiungimento',rmPct(k.achievement_pct)]].map(([l,v])=>`<div class="card kpi-card"><span>${l}</span><strong>${v}</strong></div>`).join('');$('#rmActionStores').innerHTML=(r.stores||[]).length?`<table class="data-table"><thead><tr><th>Regione</th><th>Codice</th><th>Negozio</th><th>Piani</th><th>OBJ</th><th>Raggiunti</th><th>In corso</th><th>Raggiungimento</th></tr></thead><tbody>${r.stores.map(x=>`<tr><td>${esc(x.region)}</td><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${x.plan_count||0}</td><td>${x.objectives||0}</td><td>${x.achieved||0}</td><td>${x.in_progress||0}</td><td>${rmPct(x.achievement_pct)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun Action Plan.</div>';const plans=(rmActionPlansCache?.plans||[]).filter(p=>(!year||String(p.period_year)===year)&&(!fraction||String(p.period_fraction)===fraction));$('#rmActionPlans').innerHTML=plans.length?plans.map(p=>{const st=storeMap.get(String(p.store_id)),storeLabel=st?[st.store_code,st.name].filter(Boolean).join(' · '):(p.store_id||'Negozio');return `<article class="rm-plan-card"><h4>${esc(`${String(p.plan_date||'').slice(0,10)} · ${storeLabel} · ${p.period_year||''} ${p.period_fraction||''}`)}</h4><div class="rm-plan-meta">${esc(p.premise||'')}</div>${(p.objectives||[]).map((o,i)=>`<div class="rm-plan-obj"><strong>OBJ ${i+1} · ${esc(actionPlanStatusLabel(o.status))}</strong><div>${esc(o.objective_text||'')}</div><div class="muted">Azioni: ${esc(o.actions||'—')} · Strumenti: ${esc(o.tools||'—')}</div></div>`).join('')}</article>`}).join(''):'<div class="empty">Nessun Action Plan disponibile per i filtri selezionati.</div>'}
 
 
-const PAGE_NAV_GROUP={calendar:'agenda',agenda:'agenda',report:'agenda',stores:'settings',users:'settings',audit:'settings',storemenu:'settings',holidays:'store-holidays',holidayconsolidated:'store-holidays',holidayreport:'store-holidays',overtimecheck:'store-overtime',actionplans:'action-plans',actionplanreport:'action-plans',rmcalendar:'rm-calendar',rmholidays:'rm-supervision',rmovertime:'rm-supervision',rmactionplans:'rm-supervision'};
+const PAGE_NAV_GROUP={calendar:'agenda',agenda:'agenda',report:'agenda',stores:'settings',users:'settings',audit:'settings',storemenu:'settings',holidays:'store-holidays',holidayperiods:'store-holidays',holidayconsolidated:'store-holidays',holidayreport:'store-holidays',overtimecheck:'store-overtime',actionplans:'action-plans',actionplanreport:'action-plans',rmcalendar:'rm-calendar',rmholidays:'rm-supervision',rmovertime:'rm-supervision',rmactionplans:'rm-supervision'};
 function setNavGroupOpen(name,open){const section=$(`.nav-section[data-nav-section="${name}"]`);if(!section||section.dataset.empty==='true')return;section.classList.toggle('open',!!open);const button=section.querySelector('[data-nav-group]');if(button)button.setAttribute('aria-expanded',String(!!open))}
 function toggleNavGroup(name){const section=$(`.nav-section[data-nav-section="${name}"]`);if(!section||section.dataset.empty==='true')return;setNavGroupOpen(name,!section.classList.contains('open'))}
 function syncNavGroupForPage(page){const group=PAGE_NAV_GROUP[page];$$('.nav-section').forEach(section=>section.classList.toggle('active',section.dataset.navSection===group));if(group)setNavGroupOpen(group,true)}
-function switchPage(page){if(isRetailManager()&&!['rmcalendar','rmholidays','rmovertime','rmactionplans','storemenu'].includes(page))return;if(!profileMenuAllowed(page)&&page!=='storemenu')return;if(currentUser.role==='STORE'&&!storePageEnabled(page))return;if(page==='storemenu'&&!isSuperAdmin())return;const target=$(`#page-${page}`);if(!target)return;if(page!=='holidays'&&holidayPlanQueue.size)flushHolidayPlanQueue();$$('.page').forEach(x=>x.classList.remove('active'));target.classList.add('active');$$('.nav-btn[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===page));syncNavGroupForPage(page);const titles={calendar:['AGENDA DM','Calendario'],agenda:['AGENDA DM','Agenda'],report:['AGENDA DM','Report Agenda'],stores:['IMPOSTAZIONI','Negozi'],users:['IMPOSTAZIONI','Account'],audit:['IMPOSTAZIONI','Audit & Export'],storemenu:['IMPOSTAZIONI','Gestione Profili'],holidays:['FERIE NEGOZI','Planning Ferie'],holidayconsolidated:['FERIE NEGOZI','Ferie Consolidate'],holidayreport:['FERIE NEGOZI','Report Ferie'],overtimecheck:['STRAORDINARI NEGOZI','Check Straordinari Negozi'],actionplans:['ACTION PLAN','Action Plan'],actionplanreport:['ACTION PLAN','Report Action Plan'],rmcalendar:['RETAIL MANAGER','Calendario DM'],rmholidays:['SUPERVISIONE','Ferie'],rmovertime:['SUPERVISIONE','Straordinari'],rmactionplans:['SUPERVISIONE','Action Plan']};$('#pageEyebrow').textContent=titles[page][0];$('#pageTitle').textContent=titles[page][1];$('#sidebar').classList.remove('open');if(page==='agenda')loadAgendaDm();if(page==='report')loadReport();if(page==='stores')renderStoresRegions();if(page==='users'){renderUsers();ensureAdminUsers(false)}if(page==='holidays'){initHolidayControls();if(currentUser?.role==='ADMIN'&&$('#holidayStore'))$('#holidayStore').value='__ALL__';loadHolidayPlanning()}if(page==='holidayconsolidated'){initHolidayControls();loadHolidayConsolidated()}if(page==='holidayreport'){initHolidayControls();loadHolidayReport()}if(page==='overtimecheck'){initOvertimeControls();loadOvertimeCheck()}if(page==='actionplans'){initActionPlanControls();loadActionPlans()}if(page==='actionplanreport'){initActionPlanControls();loadActionPlanReport()}if(page==='storemenu')renderStoreMenuSettings();if(page==='rmcalendar')loadRMCalendar();if(page==='rmholidays')loadRMHolidays();if(page==='rmovertime')loadRMOvertime();if(page==='rmactionplans')loadRMActionPlans();if(page==='audit'){renderAudit();window.agendaCloudApi.request('getAuditBundle',{audit_limit:500,export_limit:500}).then(bundle=>{const auditRows=bundle?.audit||[],exportRows=bundle?.exports||[];app.audit=auditRows.map(a=>({id:a.audit_id,created_at:a.created_at,username:a.actor_user_id||'',store_id:a.store_id||null,action:a.action,entity_type:a.entity_type,entity_id:a.entity_id,event_type:a.event_type}));app.exports=normalizeExportLog(exportRows);renderAudit()}).catch(err=>toast(err.message,true))}}
+function switchPage(page){if(isRetailManager()&&!['rmcalendar','rmholidays','rmovertime','rmactionplans','storemenu'].includes(page))return;if(!profileMenuAllowed(page)&&page!=='storemenu')return;if(currentUser.role==='STORE'&&!storePageEnabled(page))return;if(page==='storemenu'&&!isSuperAdmin())return;if(page==='holidayperiods'&&!isSuperAdmin())return;const target=$(`#page-${page}`);if(!target)return;if(page!=='holidays'&&holidayPlanQueue.size)flushHolidayPlanQueue();$$('.page').forEach(x=>x.classList.remove('active'));target.classList.add('active');$$('.nav-btn[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===page));syncNavGroupForPage(page);const titles={calendar:['AGENDA DM','Calendario'],agenda:['AGENDA DM','Agenda'],report:['AGENDA DM','Report Agenda'],stores:['IMPOSTAZIONI','Negozi'],users:['IMPOSTAZIONI','Account'],audit:['IMPOSTAZIONI','Audit & Export'],storemenu:['IMPOSTAZIONI','Gestione Profili'],holidays:['FERIE NEGOZI','Planning Ferie'],holidayperiods:['FERIE NEGOZI','PERIODI FERIE'],holidayconsolidated:['FERIE NEGOZI','Ferie Consolidate'],holidayreport:['FERIE NEGOZI','Report Ferie'],overtimecheck:['STRAORDINARI NEGOZI','Check Straordinari Negozi'],actionplans:['ACTION PLAN','Action Plan'],actionplanreport:['ACTION PLAN','Report Action Plan'],rmcalendar:['RETAIL MANAGER','Calendario DM'],rmholidays:['SUPERVISIONE','Ferie'],rmovertime:['SUPERVISIONE','Straordinari'],rmactionplans:['SUPERVISIONE','Action Plan']};$('#pageEyebrow').textContent=titles[page][0];$('#pageTitle').textContent=titles[page][1];$('#sidebar').classList.remove('open');if(page==='agenda')loadAgendaDm();if(page==='report')loadReport();if(page==='stores')renderStoresRegions();if(page==='users'){renderUsers();ensureAdminUsers(false)}if(page==='holidays'){initHolidayControls();if(currentUser?.role==='ADMIN'&&$('#holidayStore'))$('#holidayStore').value='__ALL__';loadHolidayPlanning()}if(page==='holidayconsolidated'){initHolidayControls();loadHolidayConsolidated()}if(page==='holidayperiods')loadHolidayPeriodsEditor();if(page==='holidayreport'){initHolidayControls();loadHolidayReport()}if(page==='overtimecheck'){initOvertimeControls();loadOvertimeCheck()}if(page==='actionplans'){initActionPlanControls();loadActionPlans()}if(page==='actionplanreport'){initActionPlanControls();loadActionPlanReport()}if(page==='storemenu')renderStoreMenuSettings();if(page==='rmcalendar')loadRMCalendar();if(page==='rmholidays')loadRMHolidays();if(page==='rmovertime')loadRMOvertime();if(page==='rmactionplans')loadRMActionPlans();if(page==='audit'){renderAudit();window.agendaCloudApi.request('getAuditBundle',{audit_limit:500,export_limit:500}).then(bundle=>{const auditRows=bundle?.audit||[],exportRows=bundle?.exports||[];app.audit=auditRows.map(a=>({id:a.audit_id,created_at:a.created_at,username:a.actor_user_id||'',store_id:a.store_id||null,action:a.action,entity_type:a.entity_type,entity_id:a.entity_id,event_type:a.event_type}));app.exports=normalizeExportLog(exportRows);renderAudit()}).catch(err=>toast(err.message,true))}}
 function wire(){
+ wireHolidayPeriodsEditor();
  wireHoverTooltip();
  wireActionPlanPdfDownload();
  if($('#reloadAgendaDmBtn'))$('#reloadAgendaDmBtn').onclick=()=>loadAgendaDm(true);if($('#saveStoreMenuBtn'))$('#saveStoreMenuBtn').onclick=saveStoreMenuSettings;if($('#rmAdminProfileBtn'))$('#rmAdminProfileBtn').onclick=toggleRMAdminMode;
