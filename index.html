@@ -1041,6 +1041,11 @@ body.agenda-store-profile .nav-btn[data-page="holidayreport"]{display:none!impor
 .holiday-period-legend span{display:inline-flex;align-items:center;gap:5px}
 .holiday-plan-table .day-head.holiday-alert-high{background:#f5dc64!important;color:#40370d!important}
 .holiday-plan-table .day-head.holiday-alert-full{background:#e98b8b!important;color:#4b1515!important}
+/* r41 · Colonne del planning ferie: tinta attenuata degli alert ADMIN, su tutte le righe dipendenti. */
+.holiday-plan-table tbody td.holiday-alert-high{background:#fff9dc!important}
+.holiday-plan-table tbody td.holiday-alert-full{background:#fde7e7!important}
+/* SFS DASHBOARD: tutti i profili, escluso NEGOZIO. */
+body.agenda-store-profile .nav-launch-btn.sfs-dashboard{display:none!important}
 @media(max-width:1080px){.holiday-period-months{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.holiday-period-months{grid-template-columns:1fr}.holiday-period-toolbar{gap:8px}}
 </style>
@@ -1113,6 +1118,7 @@ body.agenda-store-profile .nav-btn[data-page="holidayreport"]{display:none!impor
   <button class="nav-launch-btn store-only hidden" type="button" data-external-url="https://madnash00.github.io/wop-app/?mode=store-calendar" aria-label="WOP - Calendario in sola lettura"><span>WOP</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <button class="nav-launch-btn admin-only" type="button" data-external-url="https://madnash00.github.io/frdashboard/"><span>DM DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <button class="nav-launch-btn admin-only" type="button" data-external-url="https://app.powerbi.com/groups/ea1ed400-1748-413c-8517-1d1a1158e7b4/reports/3e1a94fe-36b3-4412-800d-89383506b2c8/c1f41119ab8a60ee9b36?ctid=a4686ffb-cd82-4914-8e33-a15c84a0beea&amp;experience=power-bi"><span>VISUAL DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
+  <button class="nav-launch-btn sfs-dashboard" type="button" data-external-url="https://app.powerbi.com/groups/me/reports/d874d997-eb7a-43d7-b9b6-d97bd2d72cf7/75110907b457354757a3?ctid=a4686ffb-cd82-4914-8e33-a15c84a0beea&amp;experience=power-bi"><span>SFS DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <div class="nav-section admin-only" data-nav-section="settings">
    <button class="nav-group-btn" type="button" data-nav-group="settings" aria-expanded="false"><span>IMPOSTAZIONI</span><span class="nav-chevron">›</span></button>
    <div class="nav-submenu">
@@ -2172,7 +2178,7 @@ function renderHolidayGrid(){
  h+=months.map(x=>`<th class="month-head" colspan="${x.span}">${esc(x.label)}</th>`).join('')+'</tr><tr>';
  h+=weeks.map(x=>`<th class="week-head" colspan="${x.span}">${esc(x.label)}</th>`).join('')+'</tr><tr>';
  h+=dates.map(d=>{const ds=isoDate(d),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0,level=holidayPeriodLevelForDate(ds);return `<th class="day-head ${level==='high'?'holiday-alert-high':level==='full'?'holiday-alert-full':''} ${weekend?'weekend':''} ${sun?'sunday':''} ${ds===today?'today':''}" title="${esc(fmtDate(ds))}${level?' · '+holidayPeriodLabel(level):''}">${DAYS[d.getDay()]}<br><strong>${d.getDate()}</strong></th>`}).join('')+'</tr></thead><tbody>';
- for(const [ri,emp] of emps.entries()){const id=String(emp.employee_id);h+=`<tr><td class="holiday-employee-cell" title="${esc(emp.employee_name)}">${esc(emp.employee_name)}</td>`;for(const [ci,d] of dates.entries()){const ds=isoDate(d),key=`${id}|${ds}`,val=holidayPlanningCache.planMap?.get(key)||0,display=String(val).toUpperCase()==='R'?'R':(holidayPlanCellHours(val)>0?holidayHoursFmt(val):''),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0;h+=`<td class="${weekend?'weekend':''} ${sun?'sunday':''} ${holidayPlanHasValue(val)?'has-hours':''}" data-holiday-cell="${key}">${readOnly?(display?`<span class="hours-value">${display}</span>`:''):`<input class="holiday-hours-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${display}" data-holiday-hours data-employee-id="${id}" data-date="${ds}" data-row="${ri}" data-col="${ci}" aria-label="${esc(emp.employee_name)} ${ds}">`}</td>`}h+='</tr>'}
+ for(const [ri,emp] of emps.entries()){const id=String(emp.employee_id);h+=`<tr><td class="holiday-employee-cell" title="${esc(emp.employee_name)}">${esc(emp.employee_name)}</td>`;for(const [ci,d] of dates.entries()){const ds=isoDate(d),key=`${id}|${ds}`,val=holidayPlanningCache.planMap?.get(key)||0,display=String(val).toUpperCase()==='R'?'R':(holidayPlanCellHours(val)>0?holidayHoursFmt(val):''),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0,alertLevel=holidayPeriodLevelForDate(ds);h+=`<td class="${weekend?'weekend':''} ${sun?'sunday':''} ${holidayPlanHasValue(val)?'has-hours':''} ${alertLevel==='high'?'holiday-alert-high':alertLevel==='full'?'holiday-alert-full':''}" data-holiday-cell="${key}">${readOnly?(display?`<span class="hours-value">${display}</span>`:''):`<input class="holiday-hours-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${display}" data-holiday-hours data-employee-id="${id}" data-date="${ds}" data-row="${ri}" data-col="${ci}" aria-label="${esc(emp.employee_name)} ${ds}">`}</td>`}h+='</tr>'}
  h+='</tbody></table>';host.innerHTML=h;
  if(!readOnly)$$('[data-holiday-hours]').forEach(inp=>{inp.oninput=()=>updateHolidayPlanCell(inp,false);inp.onblur=()=>updateHolidayPlanCell(inp,true);inp.onkeydown=e=>holidayPlanKeydown(e,inp)});
 }
