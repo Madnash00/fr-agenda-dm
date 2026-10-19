@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {readFileSync, existsSync, statSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const read = p => readFileSync(p, 'utf8');
+function fp(v) {
+ let h=0xcbf29ce484222325n;
+ for(let i=0;i<v.length;i++){h^=BigInt(v.charCodeAt(i));h=BigInt.asUintN(64,h*0x100000001b3n)}
+ return h.toString(16).padStart(16,'0');
+}
+const html=read('index.html');
+assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
+assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
+const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+assert.equal(scripts.length,3,'Expected two ordered external scripts and one data-only seed script');
+for(const i of [0,1]) {
+ assert.match(scripts[i][1],/\bdefer\b/,'Application script must use defer');
+ assert.equal(scripts[i][2].trim(),'','Inline executable JS is forbidden');
+}
+assert.ok(scripts[0][1].includes('cloud-api.js') && scripts[1][1].includes('app.js'),'Cloud API must execute before app');
+assert.match(scripts[2][1],/type="application\/json"/,'Expected inline JSON-only seed script');
+const seed=JSON.parse(scripts[2][2]);
+for(const key of ['stores','users','events','audit','exports']) assert.ok(Array.isArray(seed[key]),'Missing seed field: '+key);
+for(const path of ['assets/css/app.css','assets/js/cloud-api.js','assets/js/app.js']) {
+ assert.ok(existsSync(path),'Missing resource: '+path);
+ assert.ok(statSync(path).size>100,'Empty asset: '+path);
+ assert.ok(html.includes('./'+path+'?v='+fp(read(path))),'Stale cache version: '+path+'; run node scripts/bump-asset-versions.mjs');
+}
+for(const path of ['assets/js/cloud-api.js','assets/js/app.js'])execFileSync(process.execPath,['--check',path],{stdio:'pipe'});
+const api=read('assets/js/cloud-api.js'),app=read('assets/js/app.js');
+for(const feature of ['function createAgendaApi(', 'window.agendaCloudApi=createAgendaApi('])assert.ok(api.includes(feature),'Cloud API feature missing: '+feature);
+for(const feature of ['async function boot()', 'function renderRMCalendar()', 'function renderHolidayConsolidated()', 'function applyRoleNavigation()', 'function showApp()'])assert.ok(app.includes(feature),'Existing app feature missing: '+feature);
+assert.match(app,/boot\(\);\s*$/,'Application boot must remain the last operation');
+assert.ok(html.includes('mode=store-calendar'),'Missing store-only WOP link');
+assert.ok(html.includes('claude.ai/artifact/K9MFsMHmYkw8yFqw8h4qc4'),'DM Dashboard link missing');
+for(const m of html.matchAll(/(?:href|src)="\.\/([^"?#]+)(?:\?[^"]*)?"/g)) assert.ok(existsSync(m[1]),'Broken local resource: '+m[1]);
+const manifest=JSON.parse(read('manifest.webmanifest'));
+for(const icon of manifest.icons||[])if(icon.src?.startsWith('./'))assert.ok(existsSync(icon.src.slice(2)),'PWA icon missing: '+icon.src);
+console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
