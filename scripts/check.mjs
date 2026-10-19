@@ -30,6 +30,12 @@ const api=read('assets/js/cloud-api.js'),app=read('assets/js/app.js');
 for(const feature of ['function createAgendaApi(', 'window.agendaCloudApi=createAgendaApi('])assert.ok(api.includes(feature),'Cloud API feature missing: '+feature);
 for(const feature of ['async function boot()', 'function renderRMCalendar()', 'function renderHolidayConsolidated()', 'function applyRoleNavigation()', 'function showApp()'])assert.ok(app.includes(feature),'Existing app feature missing: '+feature);
 assert.match(app,/boot\(\);\s*$/,'Application boot must remain the last operation');
+// RM login regression: navigation lists require $$(), not the single-element $() helper.
+const rmNavigation = app.split('\n').find(line => line.startsWith('function applyRoleNavigation(){'));
+assert.ok(rmNavigation, 'RM navigation entrypoint missing');
+assert.ok(rmNavigation.includes("$$('.admin-only,.store-only,.super-admin-only').forEach("), 'RM role buttons must use $$');
+assert.ok(rmNavigation.includes("$$('.nav-launch-btn.rm-launch-access').forEach("), 'RM shortcut buttons must use $$');
+
 assert.ok(html.includes('mode=store-calendar'),'Missing store-only WOP link');
 assert.ok(html.includes('claude.ai/artifact/K9MFsMHmYkw8yFqw8h4qc4'),'DM Dashboard link missing');
 for(const m of html.matchAll(/(?:href|src)="\.\/([^"?#]+)(?:\?[^"]*)?"/g)) assert.ok(existsSync(m[1]),'Broken local resource: '+m[1]);
