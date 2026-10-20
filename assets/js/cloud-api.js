@@ -29,7 +29,7 @@ const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
 });
 const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
 function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSessionExpired=()=>{}}={}){
- const responseCache=new Map(),inflight=new Map(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';
+ const responseCache=new Map(),inflight=new Map(),inflightControllers=new Set(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';let requestEpoch=0;
  const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
  const stableKey=(action,payload)=>action+'|'+JSON.stringify(payload,Object.keys(payload).sort());
  const smallHash=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
@@ -40,14 +40,16 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
  const prunePersistent=()=>{try{const prefix=PERSIST_PREFIX+tokenScope()+'.',items=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k&&k.startsWith(prefix)){try{const x=JSON.parse(sessionStorage.getItem(k)||'null');items.push([k,Number(x?.storedAt)||0])}catch(_){items.push([k,0])}}}items.sort((a,b)=>b[1]-a[1]);items.slice(48).forEach(([k])=>sessionStorage.removeItem(k))}catch(_){}};
  const writePersistent=(key,action,value,freshUntil,staleUntil)=>{try{const raw=JSON.stringify({value,freshUntil,staleUntil,domain:domainOf(action),storedAt:Date.now()});if(raw.length>850000)return;sessionStorage.setItem(persistentKey(key),raw);prunePersistent()}catch(_){}};
  const clearPersistent=domain=>{try{const prefix=PERSIST_PREFIX+tokenScope()+'.',keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(!k||!k.startsWith(prefix))continue;if(!domain){keys.push(k);continue}try{const x=JSON.parse(sessionStorage.getItem(k)||'null');if(x?.domain===domain)keys.push(k)}catch(_){keys.push(k)}}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
- const clearCache=domain=>{if(!domain){responseCache.clear();clearPersistent();return}for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
+ const clearAllPersistent=()=>{try{const keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k?.startsWith(PERSIST_PREFIX))keys.push(k)}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
+ const clearCache=domain=>{if(!domain){requestEpoch++;inflightControllers.forEach(c=>c.abort());inflightControllers.clear();inflight.clear();responseCache.clear();clearAllPersistent();return}for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
  const invalidateForWrite=action=>(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]).forEach(clearCache);
  const remember=(action,key,value,ttl)=>{const freshUntil=Date.now()+ttl,staleUntil=freshUntil+Math.max(30000,ttl*(AGENDA_CACHE_STALE_FACTOR-1)),entry={value,freshUntil,staleUntil,domain:domainOf(action)};responseCache.set(key,entry);writePersistent(key,action,value,freshUntil,staleUntil);return value};
  async function request(action,data={}){
   if(!endpoint||endpoint.includes('INCOLLA_URL_'))throw new AgendaApiError('API_UNAVAILABLE','Configura AGENDA_API_ENDPOINT nell\'index.html.');
-  const silent=!!data.__silent,force=!!data.__force,background=!!data.__background,explicitTtl=Number(data.__cacheTtl),payload={...data};
+  const silent=!!data.__silent,force=!!data.__force,background=!!data.__background,explicitTtl=Number(data.__cacheTtl),payload={...data},sessionToken=String(getToken()||''),startedEpoch=requestEpoch;
+  const assertCurrentSession=()=>{if(startedEpoch!==requestEpoch||String(getToken()||'')!==sessionToken)throw new AgendaApiError('STALE_SESSION','Richiesta della sessione precedente ignorata.')};
   delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;if(window.AgendaAdminContext?.admin_mode){payload.admin_mode=true;payload.target_dm_id=window.AgendaAdminContext.target_dm_id;}
-  const isRead=readActions.has(action),ttl=Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0),key=stableKey(action,payload),now=Date.now();
+  const isRead=readActions.has(action),ttl=Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0),key=smallHash(sessionToken)+'|'+stableKey(action,payload),now=Date.now();
   if(isRead&&force)payload.__server_force=true;
   if(isRead&&!force&&ttl>0){
    const hit=responseCache.get(key);if(hit){if(hit.freshUntil>now)return hit.value;if(hit.staleUntil>now){if(!inflight.has(key))setTimeout(()=>request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{}),0);return hit.value}}
@@ -55,21 +57,22 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
   }
   if(isRead&&inflight.has(key))return inflight.get(key);
   const emitBusy=!silent&&!background&&!AGENDA_SOFT_BUSY_ACTIONS.has(action);
+  const controller=isRead&&typeof AbortController!=='undefined'?new AbortController():null;if(controller)inflightControllers.add(controller);
   const task=(async()=>{
    if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-start',{detail:{action}}));
    try{
-    let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:getToken()||'',...payload}),redirect:'follow'})}catch(_){throw new AgendaApiError('API_UNAVAILABLE','Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.')}
-    let body;try{body=await response.json()}catch(_){throw new AgendaApiError('API_UNAVAILABLE','Risposta API non valida.')}
+    let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})})}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.')}
+    assertCurrentSession();let body;try{body=await response.json()}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Risposta API non valida.')}assertCurrentSession();
     if(!body?.ok){const err=new AgendaApiError(body?.error?.code||'API_ERROR',body?.error?.message||'Errore API.',body?.requestId);if(err.code==='SESSION_EXPIRED'){clearCache();onSessionExpired()}throw err}
     if(isRead&&ttl>0)remember(action,key,body.data,ttl);
     if(!isRead&&action!=='login')invalidateForWrite(action);
     return body.data;
-   }finally{if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}))}
+   }finally{if(controller)inflightControllers.delete(controller);if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}))}
   })();
   if(isRead)inflight.set(key,task);
   try{return await task}finally{if(isRead&&inflight.get(key)===task)inflight.delete(key)}
  }
- function prime(action,data,value,ttlOverride){if(value===undefined||value===null)return;const payload={...(data||{})};delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;const ttl=Math.max(1000,Number(ttlOverride)||AGENDA_READ_CACHE_TTL[action]||60000),key=stableKey(action,payload);remember(action,key,value,ttl)}
+ function prime(action,data,value,ttlOverride){if(value===undefined||value===null)return;const payload={...(data||{})};delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;const ttl=Math.max(1000,Number(ttlOverride)||AGENDA_READ_CACHE_TTL[action]||60000),key=tokenScope()+'|'+stableKey(action,payload);remember(action,key,value,ttl)}
  return{request,prime,clearCache,clearDomain:clearCache,login:(username,password)=>request('login',{username,password}),logout:()=>request('logout',{})}
 }
 const XLSX_CDN_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';

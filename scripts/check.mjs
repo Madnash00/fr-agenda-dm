@@ -41,4 +41,10 @@ assert.ok(html.includes('claude.ai/artifact/K9MFsMHmYkw8yFqw8h4qc4'),'DM Dashboa
 for(const m of html.matchAll(/(?:href|src)="\.\/([^"?#]+)(?:\?[^"]*)?"/g)) assert.ok(existsSync(m[1]),'Broken local resource: '+m[1]);
 const manifest=JSON.parse(read('manifest.webmanifest'));
 for(const icon of manifest.icons||[])if(icon.src?.startsWith('./'))assert.ok(existsSync(icon.src.slice(2)),'PWA icon missing: '+icon.src);
+
+// Session lifecycle regression invariants.
+assert.ok(app.includes("$('.nav-section:not(.rm-only):not(.admin-only):not(.super-admin-only)').forEach("), 'Menus must be rebuilt for every role');
+assert.ok(app.includes('const prefetchActive=()'), 'Idle work must retain session identity');
+assert.ok(cloud.includes('assertCurrentSession()'), 'Old session API replies must be discarded');
+assert.ok(cloud.includes('requestEpoch++'), 'Logout must invalidate pending requests');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
