@@ -11,21 +11,22 @@ const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
 const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
-assert.equal(scripts.length,3,'Expected two ordered external scripts and one data-only seed script');
-for(const i of [0,1]) {
+assert.equal(scripts.length,4,'Expected three ordered external scripts and one data-only seed script');
+for(const i of [0,1,2]) {
  assert.match(scripts[i][1],/\bdefer\b/,'Application script must use defer');
  assert.equal(scripts[i][2].trim(),'','Inline executable JS is forbidden');
 }
 assert.ok(scripts[0][1].includes('cloud-api.js') && scripts[1][1].includes('app.js'),'Cloud API must execute before app');
-assert.match(scripts[2][1],/type="application\/json"/,'Expected inline JSON-only seed script');
-const seed=JSON.parse(scripts[2][2]);
+assert.ok(scripts[2][1].includes('personnel-hours.js'),'Personnel module must execute after app.js');
+assert.match(scripts[3][1],/type="application\/json"/,'Expected inline JSON-only seed script');
+const seed=JSON.parse(scripts[3][2]);
 for(const key of ['stores','users','events','audit','exports']) assert.ok(Array.isArray(seed[key]),'Missing seed field: '+key);
-for(const path of ['assets/css/app.css','assets/js/cloud-api.js','assets/js/app.js']) {
+for(const path of ['assets/css/app.css','assets/css/personnel-hours.css','assets/js/cloud-api.js','assets/js/app.js','assets/js/personnel-hours.js']) {
  assert.ok(existsSync(path),'Missing resource: '+path);
  assert.ok(statSync(path).size>100,'Empty asset: '+path);
  assert.ok(html.includes('./'+path+'?v='+fp(read(path))),'Stale cache version: '+path+'; run node scripts/bump-asset-versions.mjs');
 }
-for(const path of ['assets/js/cloud-api.js','assets/js/app.js'])execFileSync(process.execPath,['--check',path],{stdio:'pipe'});
+for(const path of ['assets/js/cloud-api.js','assets/js/app.js','assets/js/personnel-hours.js'])execFileSync(process.execPath,['--check',path],{stdio:'pipe'});
 const api=read('assets/js/cloud-api.js'),app=read('assets/js/app.js');
 for(const feature of ['function createAgendaApi(', 'window.agendaCloudApi=createAgendaApi('])assert.ok(api.includes(feature),'Cloud API feature missing: '+feature);
 for(const feature of ['async function boot()', 'function renderRMCalendar()', 'function renderHolidayConsolidated()', 'function applyRoleNavigation()', 'function showApp()'])assert.ok(app.includes(feature),'Existing app feature missing: '+feature);

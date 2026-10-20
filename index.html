@@ -16,8 +16,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
 <link rel="stylesheet" href="./assets/css/app.css?v=a2b4f6a7958ccfc7">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
-<script defer src="./assets/js/cloud-api.js?v=fdc766c2b41c775e"></script>
-<script defer src="./assets/js/app.js?v=abf45a166338cb50"></script>
+<script defer src="./assets/js/cloud-api.js?v=bb004dfb32387f6e"></script>
+<script defer src="./assets/js/app.js?v=5e717a58175b99ad"></script>
+<link rel="stylesheet" href="./assets/css/personnel-hours.css?v=8ab166acd9b7b68e">
+<script defer src="./assets/js/personnel-hours.js?v=d8afd0991492693b"></script>
 </head>
 <body>
 <div id="toast" class="toast"></div><div id="globalBusy" class="global-busy" aria-live="polite"><div class="global-busy-card"><div class="global-busy-spinner"></div><strong id="globalBusyTitle">Operazione in corso…</strong><span id="globalBusyText" class="muted">Sto aggiornando i dati</span><div class="global-busy-dots"><i></i><i></i><i></i></div></div></div>
@@ -86,7 +88,7 @@
   <button class="nav-launch-btn admin-only rm-launch-access" type="button" data-external-url="https://madnash00.github.io/wop-app/"><span>WOP</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <button class="nav-launch-btn store-only hidden" type="button" data-external-url="https://madnash00.github.io/wop-app/?mode=store-calendar" aria-label="WOP - Calendario in sola lettura"><span>WOP</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <button class="nav-launch-btn admin-only rm-launch-access" type="button" data-external-url="https://claude.ai/artifact/K9MFsMHmYkw8yFqw8h4qc4?sk=CqVPcQL8kgBrSEtxwyWK4Q"><span>DM DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
-  <button class="nav-launch-btn admin-only" type="button" data-external-url="https://app.powerbi.com/groups/ea1ed400-1748-413c-8517-1d1a1158e7b4/reports/3e1a94fe-36b3-4412-800d-89383506b2c8/c1f41119ab8a60ee9b36?ctid=a4686ffb-cd82-4914-8e33-a15c84a0beea&amp;experience=power-bi"><span>VISUAL DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
+  <button class="nav-launch-btn admin-only rm-launch-access" type="button" data-external-url="https://app.powerbi.com/groups/ea1ed400-1748-413c-8517-1d1a1158e7b4/reports/3e1a94fe-36b3-4412-800d-89383506b2c8/c1f41119ab8a60ee9b36?ctid=a4686ffb-cd82-4914-8e33-a15c84a0beea&amp;experience=power-bi"><span>VISUAL DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <button class="nav-launch-btn sfs-dashboard" type="button" data-external-url="https://app.powerbi.com/groups/me/reports/d874d997-eb7a-43d7-b9b6-d97bd2d72cf7/75110907b457354757a3?ctid=a4686ffb-cd82-4914-8e33-a15c84a0beea&amp;experience=power-bi"><span>SFS DASHBOARD</span><span class="nav-launch-icon" aria-hidden="true">↗</span></button>
   <div class="nav-section admin-only" data-nav-section="settings">
    <button class="nav-group-btn" type="button" data-nav-group="settings" aria-expanded="false"><span>IMPOSTAZIONI</span><span class="nav-chevron">›</span></button>
@@ -281,11 +283,14 @@
    <label class="admin-only">Negozio<select id="overtimeStore"><option value="">TUTTI I NEGOZI</option></select></label>
    <button id="reloadOvertimeBtn" class="btn">Aggiorna</button>
    <button id="importOvertimeBtn" class="btn primary admin-only">IMPORTA FILE STRAORDINARI</button>
+   <button id="importPersonnelHoursBtn" class="btn primary admin-only" type="button">IMPORTA ORE PERSONALE</button>
+   <input id="personnelHoursFile" class="overtime-file-input" type="file" accept=".xlsx">
    <input id="overtimeFile" class="overtime-file-input" type="file" accept=".xlsx,.xls,.csv">
   </div>
   <div id="overtimeMeta" class="overtime-meta"></div>
  </div>
  <div id="overtimeSourceNote" class="overtime-source-note hidden"></div>
+ <div id="personnelIncidencePanel" class="card overtime-section admin-only" aria-live="polite"><div class="section-head"><div><h3>Incidenza ore straordinarie sulle ore lavorate</h3><p class="muted">Budget previsto: 3% delle ore lavorate, su periodo YTD comparabile.</p></div></div><div id="personnelIncidenceContent" class="table-scroll"></div></div>
  <div id="overtimeKpis" class="kpi-grid overtime-kpis"></div>
  <div class="overtime-charts">
   <div class="card overtime-chart-card"><h3>Andamento mensile</h3><p>Straordinario, malattia e infortunio in ore sul periodo importato.</p><div class="overtime-legend"><span><i class="overtime-dot ot"></i>Straordinario</span><span><i class="overtime-dot sick"></i>Malattia</span><span><i class="overtime-dot injury"></i>Infortunio</span></div><div id="overtimeMonthlyChart"></div></div>

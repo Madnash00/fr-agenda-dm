@@ -1,0 +1,18 @@
+
+/* Scoped extension. Store users must never see Report Action Plan. */
+body.agenda-store-profile .nav-btn[data-page="actionplanreport"]{display:none!important}
+#importPersonnelHoursBtn:not(.personnel-ready),#personnelIncidencePanel:not(.personnel-ready){display:none!important}
+.personnel-summary{display:flex;gap:12px;flex-wrap:wrap;padding:12px 0}
+.personnel-stat{padding:12px 14px;border:1px solid #e8e6e2;border-radius:9px;min-width:145px;flex:1;background:#fbfaf9}
+.personnel-stat .muted{display:block;font-size:11px;margin-bottom:5px}
+.personnel-stat strong{font-size:17px}
+.personnel-budget{font-size:12px;padding:9px 12px;background:#f4f6f7;border-radius:7px;margin:8px 0 14px}
+.personnel-budget.warn{background:#fff2e5;color:#8b440d}
+.personnel-rate{display:inline-block;border-radius:20px;padding:4px 9px;font-weight:800;font-size:11px;white-space:nowrap}
+.personnel-rate.ok{background:#edf6ef;color:#21633c}
+.personnel-rate.over{background:#fbe6e6;color:#a51e1e}
+.personnel-rate.na{background:#edf0f3;color:#57616b}
+.personnel-excess{font-size:11px;font-weight:800;color:#a51e1e;white-space:nowrap}
+.personnel-over-row{background:#fff2f2!important}
+.personnel-incidence-table td,.personnel-incidence-table th{text-align:left}
+.personnel-incidence-table td.num,.personnel-incidence-table th.num{text-align:right}
