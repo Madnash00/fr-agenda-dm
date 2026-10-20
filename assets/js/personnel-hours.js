@@ -99,16 +99,17 @@ function render(){
   if(!data||typeof data.available!=='boolean'){host.innerHTML='<div class="empty">Il report delle ore lavorate non è disponibile al momento. Puoi comunque utilizzare IMPORTA ORE PERSONALE.</div>';return;}
   if(!data.available){host.innerHTML='<div class="empty">Non sono state ancora importate ore lavorate YTD. Utilizza IMPORTA ORE PERSONALE.</div>';return;}
   const fmt=x=>Number(x||0).toLocaleString('it-IT',{maximumFractionDigits:2});
-  const fmtPct=x=>x===null||x===undefined?'N/D':fmt(x)+'%';
+  const fmt2=x=>Number(x).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtPct=x=>x===null||x===undefined?'N/D':fmt2(x)+'%';
   const state=x=>x===null||x===undefined?'na':Number(x)>3?'over':'ok';
   const missing=(data.months_missing||[]).map(m=>String(m).padStart(2,'0')).join(', ');
   const info=data.coverage_complete?'Gennaio–'+String(data.through_month).padStart(2,'0')+'/'+data.year+' · Budget 3%.':'Confronto incompleto: mancano gli straordinari dei mesi '+missing+'. Incidenze non calcolate.';
-  const stats=[['Ore lavorate YTD',fmt(data.work_hours)],['Ore straordinarie YTD',fmt(data.overtime_hours)],['Incidenza',fmtPct(data.incidence_pct)],['Scostamento',data.excess_pp===null||data.excess_pp===undefined?'N/D':(data.excess_pp>0?'+':'')+fmt(data.excess_pp)+' pp'],['Budget previsto','3%']].map(v=>'<div class="personnel-stat"><span class="muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong></div>').join('');
+  const stats=[['Ore lavorate YTD',fmt(data.work_hours)],['Ore straordinarie YTD',fmt(data.overtime_hours)],['Incidenza',fmtPct(data.incidence_pct)],['Scostamento',data.excess_pp===null||data.excess_pp===undefined?'N/D':(data.excess_pp>0?'+':'')+fmt2(data.excess_pp)+' pp'],['Budget previsto','3%']].map(v=>'<div class="personnel-stat"><span class="muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong></div>').join('');
   const employee=overtimeCheckCache?.scope==='STORE',rows=(employee?data.employees:data.stores)||[];
   const head='<thead><tr>'+(employee?'<th>Venditrice</th>':'<th>Codice</th><th>Negozio</th>')+'<th class="num">Ore lavorate</th><th class="num">Straordinario</th><th class="num">Incidenza</th><th class="num">Scostamento dal 3%</th></tr></thead>';
   const body=rows.map(x=>{
    const over=x.excess_pp!==null&&x.excess_pp!==undefined&&x.excess_pp>0;
-   const diff=x.excess_pp===null||x.excess_pp===undefined?'N/D':(x.excess_pp>0?'+':'')+fmt(x.excess_pp)+' pp';
+   const diff=x.excess_pp===null||x.excess_pp===undefined?'N/D':(x.excess_pp>0?'+':'')+fmt2(x.excess_pp)+' pp';
    return '<tr'+(over?' class="personnel-over-row"':'')+'>'+(employee?'<td><strong>'+esc(x.employee_name)+'</strong></td>':'<td>'+esc(x.store_code||'—')+'</td><td><strong>'+esc(x.store_name||'—')+'</strong></td>')+'<td class="num">'+esc(fmt(x.work_hours))+'</td><td class="num">'+esc(fmt(x.overtime_hours))+'</td><td class="num"><span class="personnel-rate '+state(x.incidence_pct)+'">'+esc(fmtPct(x.incidence_pct))+'</span></td><td class="num'+(over?' personnel-excess':'')+'">'+esc(diff)+'</td></tr>';
   }).join('');
   host.innerHTML='<div class="personnel-summary">'+stats+'</div><div class="personnel-budget'+(data.coverage_complete?'':' warn')+'">'+esc(info)+' · Origine: '+esc(data.source_filename||'—')+'</div>'+(rows.length?'<table class="data-table overtime-table personnel-incidence-table">'+head+'<tbody>'+body+'</tbody></table>':'<div class="empty">Non sono disponibili dipendenti o negozi nel periodo.</div>');
@@ -119,5 +120,5 @@ function render(){
   picker.addEventListener('change',()=>{const file=picker.files[0];picker.value='';if(file)handleImport(file)});
  }
  const originalRender=renderOvertimeCheck;
- renderOvertimeCheck=function(){const result=originalRender.apply(this,arguments);render();return result;};
+ renderOvertimeCheck=function(){const result=originalRender.apply(this,arguments);const meta=find('#overtimeMeta');if(meta)for(const span of meta.querySelectorAll('span')){if(span.querySelector('strong')?.textContent.trim()==='Periodo disponibile:')span.classList.add('overtime-period-emphasis');}render();return result;};
 })();
