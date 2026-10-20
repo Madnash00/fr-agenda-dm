@@ -45,6 +45,6 @@ for(const icon of manifest.icons||[])if(icon.src?.startsWith('./'))assert.ok(exi
 // Session lifecycle regression invariants.
 assert.ok(app.includes("$('.nav-section:not(.rm-only):not(.admin-only):not(.super-admin-only)').forEach("), 'Menus must be rebuilt for every role');
 assert.ok(app.includes('const prefetchActive=()'), 'Idle work must retain session identity');
-assert.ok(cloud.includes('assertCurrentSession()'), 'Old session API replies must be discarded');
-assert.ok(cloud.includes('requestEpoch++'), 'Logout must invalidate pending requests');
+assert.ok(api.includes('assertCurrentSession()'), 'Old session API replies must be discarded');
+assert.ok(api.includes('requestEpoch++'), 'Logout must invalidate pending requests');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
