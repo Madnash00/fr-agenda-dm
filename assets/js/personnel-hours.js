@@ -12,63 +12,91 @@
   return btoa(chunks.join(''));
  }
  window.agendaPersonnelBase64=encodeFile;
- async function parseWorkbook(file){
+ async function parseWorkbook(file,periodYear,allowedMonths){
   await ensureXlsx();
-  const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',sheets:['Venditrice','Negozio']});
-  const sheetOf=name=>{const key=Object.keys(workbook.Sheets||{}).find(k=>norm(k)===norm(name));return key?workbook.Sheets[key]:null};
-  const venditrice=sheetOf('Venditrice');if(!venditrice)throw Error('Foglio VENDITRICE non trovato.');
-  const matrix=XLSX.utils.sheet_to_json(venditrice,{header:1,raw:true,defval:''});
-  const headerIndex=matrix.findIndex(row=>row.some(v=>norm(v)==='DESC')&&row.some(v=>norm(v)==='NOME')&&row.some(v=>norm(v)==='ORE DI LAVORO'));
-  if(headerIndex<0)throw Error('Colonne DESC, NOME e ORE DI LAVORO mancanti nel foglio VENDITRICE.');
-  const columns=matrix[headerIndex].map(norm),storeCol=columns.indexOf('DESC'),personCol=columns.indexOf('NOME'),hoursCol=columns.indexOf('ORE DI LAVORO');
-  const codes=new Map(),shops=sheetOf('Negozio');
-  if(shops){
-   const rows=XLSX.utils.sheet_to_json(shops,{header:1,raw:true,defval:''});
-   const hdr=rows.findIndex(row=>row.some(v=>norm(v)==='MAGA')&&row.some(v=>norm(v)==='DESC'));
-   if(hdr>=0){const cols=rows[hdr].map(norm),c=cols.indexOf('MAGA'),n=cols.indexOf('DESC');
-    for(const row of rows.slice(hdr+1)){const name=String(row[n]??'').trim(),code=String(row[c]??'').trim();if(name&&code&&!/TOTALE/i.test(name))codes.set(storeKey(name),code);}
-   }
-  }
-  let store='',out=[];
+  // DB YTD is the monthly, employee-level source (including months excluded from the report).
+  // The VENDITRICE pivot is cumulative and must never be used for a partial-year comparison.
+  const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',sheets:['DB YTD']});
+  const sheetName=Object.keys(workbook.Sheets||{}).find(k=>norm(k)==='DB YTD');
+  if(!sheetName)throw Error('Nel file manca il foglio DB YTD con le ore del singolo mese.');
+  const sheet=workbook.Sheets[sheetName];
+  const names=workbook.Workbook?.Names||[];
+  const defined=names.find(x=>/FILTERDATABASE/i.test(String(x.Name||x.name||''))&&/DB YTD/i.test(String(x.Ref||x.ref||'')));
+  const definedEnd=String(defined?.Ref||defined?.ref||'').match(/\$?P\$?(\d+)/i);
+  const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,blankrows:false,defval:'',...(definedEnd?{range:'A1:P'+definedEnd[1]}:{})});
+  const headerIndex=matrix.findIndex(row=>['MAGA','DESC','NOME','OREL','MESE','DATA'].every(h=>row.some(v=>norm(v)===h)));
+  if(headerIndex<0)throw Error('Colonne MAGA, DESC, NOME, DATA, OREL e Mese mancanti nel foglio DB YTD.');
+  const cols=matrix[headerIndex].map(norm);
+  const codeCol=cols.indexOf('MAGA'),storeCol=cols.indexOf('DESC'),personCol=cols.indexOf('NOME');
+  const hoursCol=cols.indexOf('OREL'),monthCol=cols.indexOf('MESE'),dateCol=cols.indexOf('DATA'),statusCol=cols.indexOf('STATUS');
+  const monthNames=['GENNAIO','FEBBRAIO','MARZO','APRILE','MAGGIO','GIUGNO','LUGLIO','AGOSTO','SETTEMBRE','OTTOBRE','NOVEMBRE','DICEMBRE'];
+  const totals=new Map(),monthsPresent=new Set(),monthsExcluded=new Set();
   for(const row of matrix.slice(headerIndex+1)){
-   const nextStore=String(row[storeCol]??'').trim(),person=String(row[personCol]??'').trim();
-   if(nextStore&&!/TOTALE/i.test(nextStore))store=nextStore;
-   if(!store||!person||/TOTALE|ETICHETTE DI RIGA|GRAND TOTAL/i.test(person))continue;
-   const raw=row[hoursCol],hours=typeof raw==='number'?raw:Number(String(raw??'').replace(',','.'));
-   if(!Number.isFinite(hours)||hours<0)continue;
-   out.push({store_name:store,store_code:codes.get(storeKey(store))||'',employee_name:person,work_hours:round(hours)});
+    if(statusCol>=0&&norm(row[statusCol])!=='APERTO')continue;
+    const store_name=String(row[storeCol]??'').trim(),store_code=String(row[codeCol]??'').trim();
+    const employee_name=String(row[personCol]??'').trim();
+    if(!store_name||!employee_name||!store_code||/TOTALE|GRAND TOTAL/i.test(employee_name))continue;
+    const month=monthNames.indexOf(norm(row[monthCol]))+1;
+    if(month<1)continue;
+    const dateDigits=String(row[dateCol]??'').replace(/\D/g,'');
+    let year=0,dateMonth=0;
+    if(/^\d{6}$/.test(dateDigits)){year=2000+Number(dateDigits.slice(0,2));dateMonth=Number(dateDigits.slice(2,4));}
+    else if(/^\d{8}$/.test(dateDigits)){year=Number(dateDigits.slice(0,4));dateMonth=Number(dateDigits.slice(4,6));}
+    if(year!==periodYear||dateMonth!==month)continue;
+    if(!allowedMonths.has(month)){monthsExcluded.add(month);continue;}
+    monthsPresent.add(month);
+    const raw=row[hoursCol],hours=typeof raw==='number'?raw:Number(String(raw??'').replace(',','.'));
+    if(!Number.isFinite(hours))continue;
+    const key=store_code.replace(/^0+/,'')+'|'+norm(employee_name);
+    const old=totals.get(key);
+    if(old)old.work_hours+=hours;
+    else totals.set(key,{store_name,store_code,employee_name,work_hours:hours});
   }
-  if(!out.length||out.length>7500)throw Error('Numero righe non valido nel foglio VENDITRICE (1–7.500).');
-  return out;
+  const missing=[...allowedMonths].filter(m=>!monthsPresent.has(m)).sort((a,b)=>a-b);
+  if(missing.length)throw Error('Il file non contiene ore lavorate per i mesi '+missing.map(m=>monthNames[m-1]).join(', ')+'/'+periodYear+'.');
+  const rows=[...totals.values()].map(r=>({...r,work_hours:round(r.work_hours)}));
+  if(!rows.length||rows.length>7500)throw Error('Numero dipendenti aggregati non valido (1–7.500): '+rows.length+'.');
+  if(rows.some(r=>r.work_hours<0))throw Error('Sono presenti ore lavorate negative dopo la somma mensile.');
+  return {rows,monthsExcluded:[...monthsExcluded].sort((a,b)=>a-b),monthNames};
  }
- async function handleImport(file){
+async function handleImport(file){
   if(!file||currentUser?.role!=='ADMIN')return;
   const btn=find('#importPersonnelHoursBtn');
   if(!/\.xlsx$/i.test(file.name)||file.size>18500000){toast('Seleziona un XLSX inferiore a 18 MB.',true);return;}
-  if(btn){btn.disabled=true;btn.textContent='Analizzo il file…';}
+  if(btn){btn.disabled=true;btn.textContent='Verifico il periodo degli straordinari…';}
   try{
-   const rows=await parseWorkbook(file),end=new Date();end.setDate(1);end.setMonth(end.getMonth()-1);
-   const periods=(overtimeCheckCache?.months||[]).map(x=>({year:Number(x.year),month:Number(x.month)})).filter(x=>x.year>=2020&&x.month>=1&&x.month<=12);\n   const latest=periods.slice().sort((a,b)=>b.year-a.year||b.month-a.month)[0];\n   if(!latest)throw Error('Importa prima gli straordinari: non ci sono mesi disponibili per il confronto.');\n   const available=new Set(periods.filter(x=>x.year===latest.year).map(x=>x.month));\n   for(let m=1;m<=latest.month;m++)if(!available.has(m))throw Error('Straordinari non disponibili per tutti i mesi da gennaio a '+latest.month+'/'+latest.year+'. Non è possibile confrontare un totale YTD con mesi incompleti.');\n   const yearText=prompt('Anno di riferimento YTD delle ore lavorate (coerente con gli straordinari)',String(latest.year));if(yearText===null)return;
-   const monthText=prompt('Ultimo mese incluso nel file YTD (1–12)',String(latest.month));if(monthText===null)return;
-   const year=Number(yearText),through_month=Number(monthText);
-   if(!Number.isInteger(year)||year<2020||year>2100||!Number.isInteger(through_month)||through_month<1||through_month>12)throw Error('Anno o mese YTD non validi.');
-   if(year!==latest.year||through_month!==latest.month)throw Error('Periodo non coerente: gli straordinari disponibili coprono gennaio–'+latest.month+'/'+latest.year+'. Seleziona un file ORE PERSONALE relativo esattamente allo stesso periodo.');\n   if(!confirm('Verifica che il file ORE PERSONALE contenga esclusivamente il cumulato gennaio–'+through_month+'/'+year+' (il file YTD non contiene un dettaglio mensile da filtrare). Importare '+rows.length+' righe, periodo gennaio–'+through_month+'/'+year+'? Verrà archiviato su Drive anche il file XLSX originale e sostituito il precedente YTD del distretto per lo stesso anno.'))return;
+   // Always check the entire district, regardless of the store currently selected in the report.
+   const check=await window.agendaCloudApi.request('getStoreOvertimeCheck',{store_id:'',__force:true});
+   const periods=(check?.months||[]).map(x=>({year:Number(x.year),month:Number(x.month)})).filter(x=>x.year>=2020&&x.month>=1&&x.month<=12);
+   const latest=periods.slice().sort((a,b)=>b.year-a.year||b.month-a.month)[0];
+   if(!latest)throw Error('Importa prima gli straordinari: non risultano mesi disponibili.');
+   const available=new Set(periods.filter(x=>x.year===latest.year).map(x=>x.month));
+   for(let m=1;m<=latest.month;m++)if(!available.has(m))throw Error('Straordinari incompleti: manca il mese '+m+'/'+latest.year+'.');
+   if(btn)btn.textContent='Analizzo le ore mensili del file…';
+   const parsed=await parseWorkbook(file,latest.year,available),rows=parsed.rows;
+   const excluded=parsed.monthsExcluded.map(m=>parsed.monthNames[m-1]).join(', ');
+   const message='Importare '+rows.length+' dipendenti con le ore SOMMATE ESCLUSIVAMENTE per gennaio–'+parsed.monthNames[latest.month-1]+' '+latest.year+'?'
+    +(excluded?'\nMesi presenti nel file ma esclusi dal calcolo: '+excluded+'.':'')
+    +'\nIl file originale verrà conservato su Drive; il precedente YTD del distretto per l’anno verrà sostituito.';
+   if(!confirm(message))return;
    if(btn)btn.textContent='Salvo su Google Drive…';
    const source_base64=encodeFile(new Uint8Array(await file.arrayBuffer()));
-   const result=await window.agendaCloudApi.request('importPersonnelWorkHoursYtd',{year,through_month,rows,source_filename:file.name,source_base64});
+   const result=await window.agendaCloudApi.request('importPersonnelWorkHoursYtd',{year:latest.year,through_month:latest.month,rows,source_filename:file.name,source_base64});
+   if(!Number(result?.imported_rows))throw Error('Salvataggio non confermato: nessuna riga importata.');
    await loadOvertimeCheck(true);
    const missing=result.unmatched_stores||[];
-   toast('Ore personale: '+(result.imported_rows||0)+' righe importate'+(missing.length?' · '+missing.length+' negozi non riconosciuti':''),!!missing.length);
+   toast('Ore personale: '+result.imported_rows+' dipendenti importati (gennaio–'+parsed.monthNames[latest.month-1]+' '+latest.year+')'+(missing.length?' · '+missing.length+' negozi non associati':''),!!missing.length);
    if(missing.length)showModal('Negozi non associati','<p>Questi negozi non sono stati associati al tuo distretto:</p><p>'+missing.map(esc).join(', ')+'</p>');
-  }catch(e){toast(e.message||'Impossibile importare le ore personale.',true)}
-  finally{if(btn){btn.disabled=false;btn.textContent='IMPORTA ORE PERSONALE'}}
+  }catch(e){toast(e.message||'Impossibile importare le ore personale.',true);}
+  finally{if(btn){btn.disabled=false;btn.textContent='IMPORTA ORE PERSONALE';}}
  }
- function render(){
+function render(){
   const button=find('#importPersonnelHoursBtn'),panel=find('#personnelIncidencePanel'),host=find('#personnelIncidenceContent');
   if(!button||!panel||!host)return;
-  const data=overtimeCheckCache?.personnel_hours,ready=currentUser?.role==='ADMIN'&&!!data&&typeof data.available==='boolean';
+  const data=overtimeCheckCache?.personnel_hours,ready=currentUser?.role==='ADMIN';
   button.classList.toggle('personnel-ready',ready);panel.classList.toggle('personnel-ready',ready);
   if(!ready)return;
+  if(!data||typeof data.available!=='boolean'){host.innerHTML='<div class="empty">Il report delle ore lavorate non è disponibile al momento. Puoi comunque utilizzare IMPORTA ORE PERSONALE.</div>';return;}
   if(!data.available){host.innerHTML='<div class="empty">Non sono state ancora importate ore lavorate YTD. Utilizza IMPORTA ORE PERSONALE.</div>';return;}
   const fmt=x=>Number(x||0).toLocaleString('it-IT',{maximumFractionDigits:2});
   const fmtPct=x=>x===null||x===undefined?'N/D':fmt(x)+'%';
