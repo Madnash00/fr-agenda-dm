@@ -16,3 +16,7 @@ body.agenda-store-profile .nav-btn[data-page="actionplanreport"]{display:none!im
 .personnel-over-row{background:#fff2f2!important}
 .personnel-incidence-table td,.personnel-incidence-table th{text-align:left}
 .personnel-incidence-table td.num,.personnel-incidence-table th.num{text-align:right}
+
+/* Evidenza del periodo disponibile, solo nel controllo straordinari. */
+#overtimeMeta .overtime-period-emphasis{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;width:100%;font-size:17px;font-weight:700;color:#26262a;line-height:1.4;margin-top:6px;font-variant-numeric:tabular-nums}
+#overtimeMeta .overtime-period-emphasis strong{font-size:17px;font-weight:800;color:#26262a}
