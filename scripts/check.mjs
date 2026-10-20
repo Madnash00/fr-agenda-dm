@@ -47,4 +47,7 @@ assert.ok(app.includes("$('.nav-section:not(.rm-only):not(.admin-only):not(.supe
 assert.ok(app.includes('const prefetchActive=()'), 'Idle work must retain session identity');
 assert.ok(api.includes('assertCurrentSession()'), 'Old session API replies must be discarded');
 assert.ok(api.includes('requestEpoch++'), 'Logout must invalidate pending requests');
+
+const incorrectSingleSelectorIterations = [...app.matchAll(/(?<!\$)\$\(\s*(?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|\x60(?:[^\x60\\]|\\.)*\x60)\s*\)\s*\.forEach\s*\(/g)];
+assert.equal(incorrectSingleSelectorIterations.length, 0, 'DOM selector error: $() returns one element; use $$() before .forEach()');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
