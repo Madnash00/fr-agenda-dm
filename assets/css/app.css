@@ -1064,3 +1064,18 @@ body.agenda-store-profile .nav-launch-btn.sfs-dashboard{display:none!important}
 
 /* RM calendar: centered, larger names without changing table data or behavior. */
 #page-rmcalendar .rm-calendar-table tbody td.rm-dm-col{text-align:center;vertical-align:middle;font-size:12.5px;font-weight:900;line-height:1.3;white-space:normal;overflow-wrap:break-word;letter-spacing:.015em}
+
+/* ACTION PLAN / NEGOZIO: task, checkpoint e bozze. */
+.ap-task-section{display:block;min-width:0;border-top:1px solid #e7e4e0;margin-top:12px;padding-top:12px}
+.ap-task-heading,.ap-checkpoint-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.ap-task-heading h4{margin:0}.ap-task-scroll{max-width:100%;overflow-x:auto}
+.ap-task-table{width:100%;min-width:690px;table-layout:fixed}
+.ap-task-table th:nth-child(1){width:31%}.ap-task-table th:nth-child(2){width:22%}.ap-task-table th:nth-child(3){width:30%}.ap-task-table th:nth-child(4){width:17%}
+.ap-task-table textarea,.ap-task-table input,.ap-checkpoint-row select{box-sizing:border-box;width:100%;min-width:0}
+.ap-task-checkpoints-row>td{background:#fbfaf8!important;padding:12px!important}
+.ap-checkpoint-row{display:grid;grid-template-columns:150px minmax(180px,1fr) minmax(200px,1fr) auto;gap:8px;align-items:end;margin:8px 0;padding:9px;border:1px solid #e9e6e1;border-radius:8px}
+.ap-checkpoint-row label{display:grid;gap:4px;font-size:11px;font-weight:700;min-width:0}
+.ap-checkpoint-row select{font-size:12px}
+.ap-checkpoint-note textarea{min-height:54px}
+.ap-draft-badge{display:inline-block;padding:2px 6px;border-radius:4px;background:#fff0c2;color:#705107;font-weight:800;font-size:10px}
+@media(max-width:720px){.ap-checkpoint-row{grid-template-columns:1fr}.ap-task-table{min-width:620px}}
