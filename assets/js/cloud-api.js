@@ -24,7 +24,7 @@ const AGENDA_CACHE_DOMAIN_BY_READ=Object.freeze({
 const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
  createEvent:['calendar','audit'],updateEvent:['calendar','audit'],deleteEvent:['calendar','audit'],
  saveHolidayPeriods:['holidayPeriods','audit'],createHolidayEmployee:['holiday','audit'],updateHolidayEmployee:['holiday','audit'],deleteHolidayEmployee:['holiday','audit'],saveHolidayPlanBatch:['holiday','audit'],
- importHolidayConsolidated:['holidayConsolidated','audit'],importStoreOvertimeCheck:['overtime','audit'],importPersonnelWorkHoursYtd:['overtime','audit'],saveActionPlan:['actionPlan','audit'],recordExport:['audit'],
+ importHolidayConsolidated:['holidayConsolidated','audit'],importStoreOvertimeCheck:['overtime','audit'],importPersonnelWorkHoursYtd:['overtime','audit'],saveActionPlan:['actionPlan','audit'],deleteActionPlan:['actionPlan','audit'],recordExport:['audit'],
  createAdmin:['directory','audit'],saveStoreMenuConfig:['directory','audit'],saveProfileMenuConfig:['directory','audit'],setProfileAdminFlag:['directory','audit'],createStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],updateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],deactivateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],resetStorePassword:['directory','audit'],updateRegion:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],commitStoreImport:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit']
 });
 const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
@@ -56,10 +56,10 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
    const disk=readPersistent(key);if(disk){const entry={value:disk.value,freshUntil:Number(disk.freshUntil||disk.expires||0),staleUntil:Number(disk.staleUntil||disk.expires||0),domain:disk.domain||domainOf(action)};responseCache.set(key,entry);if(entry.freshUntil>now)return entry.value;if(entry.staleUntil>now){if(!inflight.has(key))setTimeout(()=>request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{}),0);return entry.value}}
   }
   if(isRead&&inflight.has(key))return inflight.get(key);
-  const emitBusy=!silent&&!background&&!AGENDA_SOFT_BUSY_ACTIONS.has(action);
+  const emitBusy=!silent&&!background&&!AGENDA_SOFT_BUSY_ACTIONS.has(action);const emitPageLoad=isRead&&!silent&&!background;
   const controller=isRead&&typeof AbortController!=='undefined'?new AbortController():null;if(controller)inflightControllers.add(controller);
   const task=(async()=>{
-   if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-start',{detail:{action}}));
+   if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-start',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-start',{detail:{action}}));
    try{
     let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})})}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.')}
     assertCurrentSession();let body;try{body=await response.json()}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Risposta API non valida.')}assertCurrentSession();
@@ -67,7 +67,7 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
     if(isRead&&ttl>0)remember(action,key,body.data,ttl);
     if(!isRead&&action!=='login')invalidateForWrite(action);
     return body.data;
-   }finally{if(controller)inflightControllers.delete(controller);if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}))}
+   }finally{if(controller)inflightControllers.delete(controller);if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-end',{detail:{action}}))}
   })();
   if(isRead)inflight.set(key,task);
   try{return await task}finally{if(isRead&&inflight.get(key)===task)inflight.delete(key)}
