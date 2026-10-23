@@ -975,33 +975,30 @@ function apTaskRead(){
 }
 function apTaskDraw(){
  const root=$('#apTaskList');if(!root)return;
- root.innerHTML=apObjectiveTasks.length?'<div class="ap-task-scroll"><table class="data-table ap-task-table"><thead><tr><th>AZIONE</th><th>STRUMENTI</th><th>Owner</th><th>Timing Monitoraggio</th><th>Gestione</th></tr></thead><tbody>'+
- apObjectiveTasks.map((t,i)=>'<tr class="ap-task-row">'+
-  '<td><textarea rows="2" aria-label="Azione '+(i+1)+'" data-ap-task-field="task">'+esc(t.task||'')+'</textarea></td>'+
-  '<td><textarea rows="2" aria-label="Strumenti azione '+(i+1)+'" data-ap-task-field="tools">'+esc(t.tools||'')+'</textarea></td>'+
-  '<td><input aria-label="Owner azione '+(i+1)+'" data-ap-task-field="owner" value="'+esc(t.owner||'')+'"></td>'+
-  '<td><input aria-label="Timing monitoraggio azione '+(i+1)+'" placeholder="Es. ogni venerdì" data-ap-task-field="timing" value="'+esc(t.timing_monitoraggio||'')+'"></td>'+
-  '<td><button class="btn small danger" type="button" data-ap-remove-task="'+i+'">Rimuovi</button></td></tr>'+
-  '<tr class="ap-task-checkpoints-row"><td colspan="5"><div class="ap-checkpoint-heading"><strong>Checkpoint azione '+(i+1)+'</strong><button class="btn small" type="button" data-ap-add-checkpoint="'+i+'">+ NOTA CHECKPOINT</button></div>'+
-  (t.checkpoints||[]).map((c,j)=>'<div class="ap-checkpoint-row">'+
-   '<label>Data<input type="date" data-ap-checkpoint-field="date" value="'+esc(c.date||'')+'"></label>'+
-   '<label class="ap-checkpoint-note">NOTE<textarea data-ap-checkpoint-field="note" rows="2" placeholder="Esito del monitoraggio...">'+esc(c.note||'')+'</textarea></label>'+
-   '<label>CONTINGENZA<select data-ap-checkpoint-field="contingency">'+
-   '<option value=""'+(!c.contingency?' selected':'')+'>Seleziona soglia</option>'+
-   '<option value="RED"'+(c.contingency==='RED'?' selected':'')+'>ROSSO → RIAPRI DIAGNOSI</option>'+
-   '<option value="YELLOW"'+(c.contingency==='YELLOW'?' selected':'')+'>GIALLO → INTENSIFICA</option>'+
-   '<option value="GREEN"'+(c.contingency==='GREEN'?' selected':'')+'>VERDE → CONSOLIDA</option></select></label>'+
-   '<button class="btn small danger" type="button" aria-label="Rimuovi checkpoint" data-ap-remove-checkpoint="'+i+'|'+j+'">Rimuovi</button></div>').join('')+
-  '</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">Nessuna azione. Usa “NUOVA AZIONE”.</div>';
- root.querySelectorAll('[data-ap-remove-task]').forEach(b=>b.onclick=()=>{
-  apObjectiveTasks=apTaskRead();apObjectiveTasks.splice(Number(b.dataset.apRemoveTask),1);apTaskDraw();
- });
- root.querySelectorAll('[data-ap-add-checkpoint]').forEach(b=>b.onclick=()=>{
-  apObjectiveTasks=apTaskRead();apObjectiveTasks[Number(b.dataset.apAddCheckpoint)].checkpoints.push({date:isoDate(new Date()),note:'',contingency:''});apTaskDraw();
- });
- root.querySelectorAll('[data-ap-remove-checkpoint]').forEach(b=>b.onclick=()=>{
-  apObjectiveTasks=apTaskRead();const [i,j]=b.dataset.apRemoveCheckpoint.split('|').map(Number);apObjectiveTasks[i].checkpoints.splice(j,1);apTaskDraw();
- });
+ root.innerHTML=apObjectiveTasks.length?'<div class="ap-task-scroll"><table class="data-table ap-task-table"><thead><tr><th>AZIONE</th><th>STRUMENTI</th><th>OWNER</th><th>TIMING MONITORAGGIO</th><th>CHECKPOINT</th></tr></thead><tbody>'+
+ apObjectiveTasks.map((t,i)=>{
+  const traffic=apCheckpointTraffic(t),timing=String(t.timing_monitoraggio||'');
+  const options='<option value="">Seleziona</option>'+AP_TIMING_OPTIONS.map(v=>'<option value="'+v+'"'+(v===timing?' selected':'')+'>'+v+'</option>').join('')+(timing&&!AP_TIMING_OPTIONS.includes(timing)?'<option value="'+esc(timing)+'" selected>Legacy: '+esc(timing)+'</option>':'');
+  return '<tr class="ap-task-row"><td><textarea rows="2" data-ap-task-field="task" aria-label="Azione '+(i+1)+'">'+esc(t.task||'')+'</textarea></td>'+
+   '<td><textarea rows="2" data-ap-task-field="tools" aria-label="Strumenti '+(i+1)+'">'+esc(t.tools||'')+'</textarea></td>'+
+   '<td><input data-ap-task-field="owner" aria-label="Owner '+(i+1)+'" value="'+esc(t.owner||'')+'"></td>'+
+   '<td><select data-ap-task-field="timing" aria-label="Timing '+(i+1)+'">'+options+'</select></td>'+
+   '<td class="ap-task-controls"><button type="button" class="ap-checkpoint-toggle" data-traffic="'+(traffic||'NONE')+'" data-ap-toggle-checkpoint="'+i+'" aria-expanded="'+(apCheckpointOpenIndex===i?'true':'false')+'">🚦 Checkpoint <small>'+(t.checkpoints||[]).length+'</small></button><button class="ap-remove-action" type="button" data-ap-remove-task="'+i+'" aria-label="Rimuovi azione">×</button></td></tr>'+
+   '<tr class="ap-task-checkpoints-row'+(apCheckpointOpenIndex===i?'':' hidden')+'"><td colspan="5"><div class="ap-checkpoint-panel"><div class="ap-checkpoint-heading"><strong>CHECKPOINT · AZIONE '+(i+1)+'</strong><button class="btn small" type="button" data-ap-add-checkpoint="'+i+'">+ NUOVO CHECKPOINT</button></div>'+
+   (t.checkpoints||[]).map((c,j)=>'<div class="ap-checkpoint-row"><label>Data Checkpoint<input type="date" data-ap-checkpoint-field="date" value="'+esc(c.date||'')+'"></label>'+
+    '<label class="ap-checkpoint-note">Note<textarea data-ap-checkpoint-field="note" rows="2">'+esc(c.note||'')+'</textarea></label>'+
+    '<label>Contingenza<select data-ap-checkpoint-field="contingency"><option value="">Seleziona</option>'+
+    '<option value="RED"'+(c.contingency==='RED'?' selected':'')+'>🔴 Riapri diagnosi</option>'+
+    '<option value="YELLOW"'+(c.contingency==='YELLOW'?' selected':'')+'>🟡 Intensifica</option>'+
+    '<option value="GREEN"'+(c.contingency==='GREEN'?' selected':'')+'>🟢 Consolida</option></select></label>'+
+    '<button type="button" class="ap-remove-checkpoint" data-ap-remove-checkpoint="'+i+'|'+j+'" aria-label="Rimuovi checkpoint">×</button></div>').join('')+
+    (!(t.checkpoints||[]).length?'<p class="muted">Nessun checkpoint registrato.</p>':'')+'</div></td></tr>';
+ }).join('')+'</tbody></table></div>':'<div class="empty">Nessuna azione. Usa “NUOVA AZIONE”.</div>';
+ root.querySelectorAll('[data-ap-remove-task]').forEach(b=>b.onclick=()=>{apObjectiveTasks=apTaskRead();const n=Number(b.dataset.apRemoveTask);apObjectiveTasks.splice(n,1);if(apCheckpointOpenIndex===n)apCheckpointOpenIndex=null;else if(apCheckpointOpenIndex>n)apCheckpointOpenIndex--;apTaskDraw()});
+ root.querySelectorAll('[data-ap-toggle-checkpoint]').forEach(b=>b.onclick=()=>{apObjectiveTasks=apTaskRead();const n=Number(b.dataset.apToggleCheckpoint);apCheckpointOpenIndex=apCheckpointOpenIndex===n?null:n;apTaskDraw()});
+ root.querySelectorAll('[data-ap-add-checkpoint]').forEach(b=>b.onclick=()=>{apObjectiveTasks=apTaskRead();const n=Number(b.dataset.apAddCheckpoint);apObjectiveTasks[n].checkpoints.push({date:isoDate(new Date()),note:'',contingency:''});apCheckpointOpenIndex=n;apTaskDraw()});
+ root.querySelectorAll('[data-ap-remove-checkpoint]').forEach(b=>b.onclick=()=>{apObjectiveTasks=apTaskRead();const [i,j]=b.dataset.apRemoveCheckpoint.split('|').map(Number);apObjectiveTasks[i].checkpoints.splice(j,1);apTaskDraw()});
+ root.addEventListener('input',apUpdateCheckpointBadges);root.addEventListener('change',apUpdateCheckpointBadges);apUpdateCheckpointBadges();
 }
 function apTasksOpen(existing,index){
  apObjectiveEditingIndex=Number.isInteger(index)?index:null;apCheckpointOpenIndex=null;
