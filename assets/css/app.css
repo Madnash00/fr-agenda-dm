@@ -1089,3 +1089,15 @@ body.agenda-store-profile .nav-launch-btn.sfs-dashboard{display:none!important}
 #pageLoading .page-loading-dots i:nth-child(2){animation-delay:.15s}#pageLoading .page-loading-dots i:nth-child(3){animation-delay:.3s}
 @keyframes agendaPageSpin{to{transform:rotate(360deg)}}@keyframes agendaPagePulse{50%{opacity:1;transform:translateY(-2px)}}
 @media(prefers-reduced-motion:reduce){#pageLoading *,#pageLoading{animation:none!important;transition:none!important}}
+
+/* Solo editor ACTION PLAN: cinque colonne, STRUMENTI per AZIONE, maschera stabile. */
+body.agenda-store-profile #modalRoot .modal.wide:has(#actionPlanForm){width:min(1180px,calc(100vw - 18px));max-width:calc(100vw - 18px);max-height:94dvh;display:flex;flex-direction:column}
+body.agenda-store-profile #modalRoot .modal.wide:has(#actionPlanForm) .modal-head{flex:none}
+body.agenda-store-profile #modalRoot .modal.wide:has(#actionPlanForm) .modal-body{overflow-y:auto;overscroll-behavior:contain;min-height:0;flex:1}
+body.agenda-store-profile .ap-task-table{min-width:850px}
+body.agenda-store-profile .ap-task-table th:nth-child(1){width:26%}
+body.agenda-store-profile .ap-task-table th:nth-child(2){width:24%}
+body.agenda-store-profile .ap-task-table th:nth-child(3){width:17%}
+body.agenda-store-profile .ap-task-table th:nth-child(4){width:23%}
+body.agenda-store-profile .ap-task-table th:nth-child(5){width:10%}
+body.agenda-store-profile .ap-task-table textarea{min-height:64px;resize:vertical}
