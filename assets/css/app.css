@@ -1101,3 +1101,41 @@ body.agenda-store-profile .ap-task-table th:nth-child(3){width:17%}
 body.agenda-store-profile .ap-task-table th:nth-child(4){width:23%}
 body.agenda-store-profile .ap-task-table th:nth-child(5){width:10%}
 body.agenda-store-profile .ap-task-table textarea{min-height:64px;resize:vertical}
+
+
+/* ACTION PLAN / NEGOZIO: revisione visiva circoscritta, senza impatto sui DM. */
+body.agenda-store-profile #actionPlanForm .action-plan-modal-grid{padding:16px;background:#f8f9fa;border:1px solid #e1e6e9;border-radius:12px;gap:14px}
+body.agenda-store-profile #actionPlanForm .action-plan-modal-grid label{font-size:11px;letter-spacing:.02em;color:#344451}
+body.agenda-store-profile #actionPlanForm .action-plan-modal-grid textarea{background:#fff;line-height:1.55}
+body.agenda-store-profile #actionPlanForm .action-obj-section{border:2px solid #d5e0e7;border-left:5px solid #263e52;border-radius:12px;background:#f7f9fa;padding:15px;margin-top:15px}
+body.agenda-store-profile #actionPlanForm .action-obj-section-head{padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #dbe4e9}
+body.agenda-store-profile #actionPlanForm .action-obj-section-head h4{font-size:16px;letter-spacing:.06em;color:#233c51}
+body.agenda-store-profile #actionPlanForm .ap-section-caption{font-size:11px;color:#677987;margin:4px 0 0}
+body.agenda-store-profile #actionPlanForm .action-obj-card{background:#fff;border:1px solid #dbe2e7;padding:12px;border-radius:10px;box-shadow:0 2px 5px rgba(25,48,69,.04)}
+body.agenda-store-profile #actionPlanForm .action-obj-editor{border:1px solid #cbdbe5;border-left:4px solid #526e83;background:#fff;border-radius:10px;padding:15px}
+body.agenda-store-profile #actionPlanForm .ap-obj-short-field{max-width:245px;display:grid;gap:6px;font-size:11px;font-weight:800}
+body.agenda-store-profile #actionPlanForm .ap-obj-short-field input{height:36px;font-size:13px;font-weight:750;letter-spacing:.02em}
+body.agenda-store-profile #actionPlanForm .ap-obj-short-field small{font-weight:500;font-size:10px;color:#78848e}
+body.agenda-store-profile #actionPlanForm .ap-task-section{border:1px solid #e0e7ec;border-radius:10px;padding:12px;background:#f9fbfc}
+body.agenda-store-profile #actionPlanForm .ap-task-heading h4{font-size:12px;letter-spacing:.04em;color:#29455b}
+body.agenda-store-profile #actionPlanForm .ap-task-table{min-width:890px}
+body.agenda-store-profile #actionPlanForm .ap-task-table th{background:#293e51;color:#fff;font-size:10px;text-align:left}
+body.agenda-store-profile #actionPlanForm .ap-task-table td{vertical-align:top;background:#fff;padding:9px}
+body.agenda-store-profile #actionPlanForm .ap-task-table textarea{min-height:54px}
+body.agenda-store-profile #actionPlanForm .ap-task-table th:nth-child(1){width:25%}
+body.agenda-store-profile #actionPlanForm .ap-task-table th:nth-child(2){width:24%}
+body.agenda-store-profile #actionPlanForm .ap-task-table th:nth-child(3){width:16%}
+body.agenda-store-profile #actionPlanForm .ap-task-table th:nth-child(4){width:19%}
+body.agenda-store-profile #actionPlanForm .ap-task-table th:nth-child(5){width:16%}
+body.agenda-store-profile #actionPlanForm .ap-task-controls{white-space:nowrap;text-align:center}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-toggle{cursor:pointer;border:1px solid #c2d0da;border-radius:8px;padding:9px 10px;background:#edf3f6;color:#27465f;font-weight:800;font-size:10px}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-toggle[data-traffic="RED"]{background:#fce8e8;border-color:#cd6262;color:#973333}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-toggle[data-traffic="YELLOW"]{background:#fff2c9;border-color:#dfb649;color:#765913}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-toggle[data-traffic="GREEN"]{background:#e3f4e8;border-color:#6eae80;color:#29653c}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-toggle small{font-size:9px;opacity:.8}
+body.agenda-store-profile #actionPlanForm .ap-remove-action,body.agenda-store-profile #actionPlanForm .ap-remove-checkpoint{border:1px solid #e7cccc;background:#fff;color:#a24040;border-radius:7px;padding:7px 9px;font-weight:900;cursor:pointer;margin-left:4px}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-panel{padding:12px;background:#f8fafb;border:1px solid #dce5eb;border-radius:9px}
+body.agenda-store-profile #actionPlanForm .ap-checkpoint-row{background:#fff;grid-template-columns:155px minmax(220px,1fr) minmax(195px,1fr) auto;border-color:#dce3e8}
+body.agenda-store-profile #actionPlanForm .ap-task-checkpoints-row.hidden{display:none}
+body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:0;z-index:3;padding:12px!important;background:#fff;border-top:1px solid #e0e4e8;box-shadow:0 -5px 10px rgba(0,0,0,.04);flex-wrap:wrap}
+@media(max-width:710px){body.agenda-store-profile #actionPlanForm .action-obj-section{padding:9px}body.agenda-store-profile #actionPlanForm .action-obj-editor{padding:10px}body.agenda-store-profile #actionPlanForm .ap-checkpoint-row{grid-template-columns:1fr}body.agenda-store-profile #actionPlanForm .ap-obj-short-field{max-width:100%}}
