@@ -1630,5 +1630,5 @@ body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:
   max-height:calc(100dvh - var(--agenda-mobile-header-height))
  }
  .mobile-nav-backdrop{top:var(--agenda-mobile-header-height)}
- .agenda-dm-week-head{top:var(--agenda-mobile-header-height)}
+ .agenda-dm-week-head{position:static;top:auto;z-index:auto}
 }
