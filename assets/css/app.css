@@ -1383,3 +1383,102 @@ body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:
  .charts-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
  .charts-grid>.wide{grid-column:auto}
 }
+
+/* Desktop overview r2 · ancora più compatto; solo desktop, nessun intervento sul calendario zoomabile. */
+@media screen and (min-width:1024px){
+ :root{--desktop-sidebar-w:166px}
+ html,body{font-size:11px}
+ .sidebar{width:var(--desktop-sidebar-w);padding:8px 6px}
+ .sidebar .logo-row{gap:6px;padding:2px 5px 8px}
+ .sidebar .logo-row .mark{width:28px;height:28px}
+ .sidebar .logo-row small{font-size:8px}
+ .sidebar .nav{gap:2px}
+ .sidebar .nav-btn{padding:5px 7px;font-size:9.5px}
+ .sidebar .nav-group-btn{padding:5px 7px;font-size:9px}
+ .sidebar .nav .nav-sub-btn{padding:5px 6px 5px 12px;font-size:9px}
+ .sidebar .nav-launch-btn{padding:6px 8px;font-size:9px}
+ .main{margin-left:var(--desktop-sidebar-w)}
+ .topbar{height:44px;min-height:44px;padding:0 9px}
+ .topbar h2{font-size:14px}
+ .topbar .eyebrow{font-size:8px}
+ .page{padding:5px 7px 7px}
+ .section-head{padding:6px 8px 4px}
+ .section-head h3,.chart-card h3{font-size:11px}
+ .card{border-radius:6px}
+ .btn{padding:5px 7px;font-size:9.5px}
+ .btn.small{padding:3px 6px;font-size:9px}
+ .toolbar,.holiday-toolbar,.action-plan-toolbar,.overtime-toolbar,.rm-toolbar{padding:5px 7px;gap:5px;margin-bottom:5px}
+ .toolbar-group,.holiday-toolbar-group,.action-plan-toolbar-group,.overtime-toolbar-group,.rm-toolbar-group{gap:5px}
+ .toolbar label,.holiday-toolbar label,.action-plan-toolbar label,.overtime-toolbar label,.rm-toolbar label,.holiday-period-toolbar label{font-size:9px;gap:2px}
+ .toolbar select,.toolbar input,.holiday-toolbar select,.action-plan-toolbar select,.overtime-toolbar select,.rm-toolbar select,.rm-toolbar input,.report-filters select{min-height:27px;font-size:10px;padding:4px 6px}
+ .report-filters>.toolbar-group{padding:6px 8px!important}
+ .legend{padding:4px 6px;gap:6px;font-size:9px;margin-bottom:4px}
+ .modal-backdrop .modal{width:min(600px,calc(100vw - 34px))}
+ .modal-backdrop .modal.wide{width:min(890px,calc(100vw - 34px))}
+ .modal-backdrop .modal-head{padding:9px 11px 6px}
+ .modal-backdrop .modal-head h3{font-size:13px}
+ .modal-backdrop .modal-body{padding:9px 11px}
+ .modal-backdrop .modal .form-grid{gap:6px 8px}
+ .modal-backdrop .modal :is(.form-grid,.stack) label{font-size:10px;gap:3px}
+ .modal-backdrop .modal :is(.form-grid,.stack) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),select,textarea){min-height:28px;padding:5px 7px;font-size:10px}
+ .modal-backdrop .modal-actions{gap:5px;padding:7px 0 0}
+ .kpi-grid,.agenda-dm-kpis,.overtime-kpis,.holiday-report-kpis,.consolidated-kpis,.action-plan-report-kpis{grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:5px;margin:5px 0}
+ .kpi-card{padding:7px 8px}
+ .kpi-card span{font-size:8px}
+ .kpi-card strong{font-size:17px;margin-top:3px}
+ .charts-grid,.split,.holiday-report-grid,.action-plan-report-grid{gap:6px;margin:5px 0}
+ .chart-card,.holiday-report-card,.action-plan-report-card{padding:8px}
+ .chart{min-height:140px}
+ .svg-chart{height:150px}
+ .bar-row{font-size:9px;gap:4px;margin:3px 0}
+ .bar-track{height:9px}
+ .holiday-report-card,.action-plan-report-card{min-height:175px}
+ .holiday-report-card h3,.action-plan-report-card h3{font-size:10.5px;margin-bottom:5px}
+ .holiday-ranking,.action-rank{max-height:205px;gap:4px}
+ .holiday-rank-row,.action-rank-row{font-size:9px;gap:4px}
+ .holiday-month-bars{height:142px}
+ .overtime-chart-card{padding:8px}
+ .overtime-month-chart{min-height:145px}
+ .overtime-month-group{grid-template-rows:142px auto}
+ .overtime-bars{height:142px}
+ .data-table{font-size:9.5px;line-height:1.25}
+ .data-table th,.data-table td{padding:4px 5px}
+ .data-table th{font-size:8.5px}
+ .holiday-summary-table{font-size:9.5px}
+ .holiday-summary-table th,.holiday-summary-table td{padding:4px 5px}
+ .holiday-summary-table th{font-size:8px}
+ .holiday-summary-table input{height:25px;min-height:25px;font-size:9.5px}
+ .holiday-planning-scroll{max-height:calc(100dvh - 275px)}
+ .holiday-plan-table .holiday-hours-input{height:24px;min-height:24px}
+ .holiday-plan-table .hours-value{height:24px}
+ .holiday-report-table-wrap{max-height:245px}
+ .action-plan-list{max-height:calc(100dvh - 135px)}
+ .agenda-dm-toolbar{padding:7px 9px;gap:7px;margin-bottom:5px}
+ .agenda-dm-toolbar h3{font-size:12px}
+ .agenda-dm-toolbar p{font-size:9.5px}
+ .agenda-dm-week-head{padding:6px 8px}
+ .agenda-dm-week-body{padding:5px;gap:4px}
+ .agenda-dm-row{grid-template-columns:90px 105px minmax(110px,1fr) minmax(0,1.8fr);gap:6px;padding:6px 8px}
+ .agenda-dm-date strong{font-size:10px}
+ .agenda-dm-date span,.agenda-dm-location span{font-size:8.5px}
+ .agenda-dm-type strong,.agenda-dm-location strong{font-size:9.5px}
+ .agenda-dm-note{font-size:9.5px;line-height:1.3}
+ .region-store-grid{gap:6px;padding:0 7px 7px}
+ .region-row{padding:5px 6px}
+ .holiday-period-toolbar{padding:6px}
+ .holiday-period-months{gap:7px;padding:7px}
+ .holiday-period-day{min-height:28px;font-size:9.5px}
+ .store-menu-setting{padding:7px 9px}
+ .personnel-stat{padding:7px 9px}
+ #calendarWrap.calendar-scroll{max-height:calc(100dvh - 128px)}
+ .rm-calendar-scroll{max-height:calc(100dvh - 185px)}
+ #page-audit.active{height:calc(100dvh - 50px)}
+ body.agenda-store-profile #actionPlanForm .action-plan-modal-grid{padding:8px;gap:7px}
+ body.agenda-store-profile #actionPlanForm .action-obj-section{padding:8px;margin-top:7px}
+ body.agenda-store-profile #actionPlanForm .action-obj-editor{padding:8px}
+ body.agenda-store-profile #actionPlanForm .ap-task-table td{padding:5px}
+ body.agenda-store-profile #actionPlanForm .ap-task-table textarea{min-height:43px;font-size:10px}
+}
+@media screen and (min-width:1024px) and (max-width:1199px){:root{--desktop-sidebar-w:158px}}
+@media screen and (min-width:1440px){:root{--desktop-sidebar-w:174px}.page{padding:7px 9px 9px}}
+@media screen and (min-width:1600px){.charts-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
