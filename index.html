@@ -14,12 +14,12 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=4a34a6004c5661f3">
+<link rel="stylesheet" href="./assets/css/app.css?v=e6d5fca2f64ee377">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=8e193900c41bea9f"></script>
-<script defer src="./assets/js/app.js?v=ca8e314a9b24ae1a"></script>
+<script defer src="./assets/js/app.js?v=f5a71ec9e24b741f"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
-<script defer src="./assets/js/personnel-hours.js?v=56d4774971b1b4cc"></script>
+<script defer src="./assets/js/personnel-hours.js?v=132f4a34b66a22cf"></script>
 </head>
 <body>
 <div id="toast" class="toast"></div><div id="pageLoading" role="status" aria-live="polite" aria-label="Caricamento dati in corso"><div class="page-loading-card"><img class="agenda-loading-logo page-loading-logo" src="./logo-app-r35.png" alt="" aria-hidden="true"><span>Carico i dati</span></div></div><div id="globalBusy" class="global-busy" aria-live="polite"><div class="global-busy-card"><img class="agenda-loading-logo global-busy-logo" src="./logo-app-r35.png" alt="" aria-hidden="true"><strong id="globalBusyTitle">Operazione in corso…</strong><span id="globalBusyText" class="muted">Sto aggiornando i dati</span></div></div>
@@ -97,6 +97,7 @@
     <button class="nav-btn nav-sub-btn" data-page="users">Account</button>
     <button class="nav-btn nav-sub-btn" data-page="audit">Audit &amp; Export</button>
     <button class="nav-btn nav-sub-btn super-admin-only" data-page="storemenu">Gestione Profili</button>
+     <button class="nav-btn nav-sub-btn super-admin-only" data-page="parameters">Parametri</button>
    </div>
   </div>
   <button id="changePasswordBtn" class="nav-btn admin-only">Cambia password</button><button id="rmChangePasswordBtn" class="nav-btn rm-only hidden" type="button">Cambia password</button>
@@ -144,6 +145,24 @@
 </section>
 <section id="page-users" class="page"><div class="card"><div class="section-head"><div><h3>Account</h3><p class="muted">Gestione accessi ADMIN, DM, RM, SM e NEGOZIO.</p><p class="import-help">Per importare più negozi usa un Excel con le colonne <strong>Negozio, Email, ID, PW, Regione</strong>. <strong>ID vale sia come Login sia come Codice Negozio.</strong> La reimportazione di negozi già presenti completa solo i dati mancanti, senza sovrascrivere quelli già registrati.</p></div><div class="users-actions"><button id="importStoresUsersBtn" class="btn">IMPORTA NEGOZI DA EXCEL</button><button id="createAdminBtn" class="btn hidden">Nuovo profilo</button><button id="addAccountBtn" class="btn primary">Aggiungi account</button></div></div><input id="backupFile" type="file" accept="application/json,.json" class="hidden"><div id="usersTable" class="table-scroll"></div></div></section>
 <section id="page-audit" class="page"><div class="split"><div class="card"><div class="section-head"><h3>Log modifiche</h3></div><div id="auditTable" class="table-scroll"></div></div><div class="card"><div class="section-head"><h3>Storico export Outlook</h3></div><div id="exportHistory" class="table-scroll"></div></div></div><div class="card" style="margin-top:12px"><div class="section-head"><h3>Report tecnico migrazione</h3><button id="toggleMigrationBtn" class="btn">Mostra / nascondi</button></div><div id="migrationPanel" class="panel hidden"><pre id="migrationReport" class="code"></pre></div></div></section>
+<section id="page-parameters" class="page super-admin-only hidden">
+ <div class="card parameters-card">
+  <div class="section-head"><div><h3>Parametri</h3><p class="muted">Configurazione condivisa dei criteri di controllo.</p></div></div>
+  <form id="appParametersForm" class="parameters-form">
+   <div class="parameters-section">
+    <h4>BUDGET STRAORDINARI</h4>
+    <p class="muted">Soglia percentuale utilizzata in Check Straordinari Negozio per l'incidenza e lo scostamento dal budget.</p>
+    <label for="overtimeBudgetPct">Budget percentuale</label>
+    <div class="parameters-input-row">
+     <input id="overtimeBudgetPct" name="overtime_budget_pct" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="2" required>
+     <span class="parameters-unit" aria-hidden="true">%</span>
+     <button type="submit" id="saveAppParametersBtn" class="btn primary">Salva budget</button>
+    </div>
+    <p id="appParametersStatus" class="muted" role="status" aria-live="polite"></p>
+   </div>
+  </form>
+ </div>
+</section>
 <section id="page-storemenu" class="page super-admin-only">
  <div class="card store-menu-settings">
   <div class="section-head">

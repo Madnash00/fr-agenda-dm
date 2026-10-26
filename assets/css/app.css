@@ -1731,3 +1731,16 @@ body.agenda-store-profile .agenda-events{gap:5px}
  body.agenda-store-profile #actionPlanForm .action-obj-editor{padding:8px}
  body.agenda-store-profile #actionPlanForm .ap-checkpoint-row{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* ADMIN · Parametri: stesso linguaggio visivo compatto delle impostazioni. */
+.parameters-card{max-width:780px}
+.parameters-form{padding:9px 12px 14px}
+.parameters-section{display:grid;gap:7px}
+.parameters-section h4{font-size:12px;margin:0;font-weight:850;letter-spacing:.04em}
+.parameters-section p{font-size:10px;margin:0;line-height:1.5}
+.parameters-section label{font-size:10px;font-weight:800;color:#53606a}
+.parameters-input-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.parameters-input-row input{width:115px;max-width:100%;min-height:31px;padding:6px 9px;border:1px solid #d7dfe3;border-radius:6px;font-size:13px;font-weight:800}
+.parameters-unit{font-size:12px;font-weight:800}
+@media(max-width:600px){.parameters-form{padding:9px}.parameters-input-row input{flex:0 0 105px}}
