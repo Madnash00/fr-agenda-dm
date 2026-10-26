@@ -78,6 +78,7 @@
    <button class="nav-group-btn" type="button" data-nav-group="rm-supervision" aria-expanded="false"><span>SUPERVISIONE</span><span class="nav-chevron">›</span></button>
    <div class="nav-submenu">
     <button class="nav-btn nav-sub-btn" data-page="rmholidays">Report Ferie</button>
+     <button class="nav-btn nav-sub-btn" data-page="rmovertime">Check Straordinari</button>
     <button class="nav-btn nav-sub-btn" data-page="rmactionplans">Action Plan</button>
    </div>
   </div>
@@ -199,11 +200,22 @@
  </div>
 </section>
 <section id="page-rmovertime" class="page rm-only hidden">
- <div class="card rm-toolbar"><div><h3 style="margin:0">Straordinari · supervisione DM</h3><p class="muted" style="margin:3px 0 0">Straordinario, malattia e infortunio in sola consultazione.</p></div><div class="rm-toolbar-group"><label>DM<select id="rmOvertimeDm" class="rm-supervision-dm"></select></label><button id="reloadRMOvertimeBtn" class="btn">Aggiorna</button></div></div>
- <div id="rmOvertimeKpis" class="kpi-grid"></div>
- <div class="card rm-section"><div class="section-head"><h3>Andamento mensile</h3></div><div id="rmOvertimeMonths" class="table-scroll"></div></div>
- <div class="card rm-section"><div class="section-head"><h3>Dettaglio negozi</h3></div><div id="rmOvertimeStores" class="table-scroll"></div></div>
- <div class="card rm-section"><div class="section-head"><h3>Dettaglio dipendenti</h3></div><div id="rmOvertimeEmployees" class="table-scroll"></div></div>
+ <div class="card rm-toolbar">
+  <div class="rm-toolbar-group">
+   <label>DM<select id="rmOvertimeDm"><option value="">TUTTA LA CATENA · Tutti i DM</option></select></label>
+   <button id="reloadRMOvertimeBtn" class="btn primary" type="button">Aggiorna</button>
+  </div>
+ </div>
+ <div id="rmOvertimeMeta" class="overtime-meta"></div>
+ <div id="rmOvertimeCoverageNote" class="overtime-source-note hidden"></div>
+ <div id="rmOvertimeKpis" class="kpi-grid overtime-kpis"></div>
+ <div class="overtime-charts">
+  <div class="card overtime-chart-card"><h3>Andamento mensile</h3><p>Straordinario, malattia e infortunio nel perimetro selezionato.</p><div class="overtime-legend"><span><i class="overtime-dot ot"></i>Straordinario</span><span><i class="overtime-dot sick"></i>Malattia</span><span><i class="overtime-dot injury"></i>Infortunio</span></div><div id="rmOvertimeMonthlyChart"></div></div>
+  <div class="card overtime-chart-card"><h3>Totale periodo</h3><p>Confronto cumulato in ore.</p><div id="rmOvertimeTotalChart"></div></div>
+ </div>
+ <div class="card overtime-section"><div class="section-head"><h3>Dettaglio per mese</h3></div><div id="rmOvertimeMonths" class="table-scroll"></div></div>
+ <div class="card overtime-section"><div class="section-head"><h3>Dettaglio negozi</h3></div><div id="rmOvertimeStores" class="table-scroll"></div></div>
+ <div class="card overtime-section"><div class="section-head"><h3>Dettaglio dipendenti</h3></div><div id="rmOvertimeEmployees" class="table-scroll"></div></div>
 </section>
 <section id="page-rmactionplans" class="page rm-only hidden">
  <div class="card rm-toolbar"><div><h3 style="margin:0">Action Plan · supervisione DM</h3><p class="muted" style="margin:3px 0 0">Stato degli Action Plan in sola consultazione.</p></div><div class="rm-toolbar-group"><label>DM<select id="rmActionDm" class="rm-supervision-dm"></select></label><label>Anno<select id="rmActionYear"><option value="">Tutti</option></select></label><label>Frazione<select id="rmActionFraction"><option value="">Tutte</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option><option>H1</option><option>H2</option></select></label><button id="reloadRMActionBtn" class="btn">Aggiorna</button></div></div>
