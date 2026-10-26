@@ -77,8 +77,7 @@
   <div class="nav-section rm-only hidden" data-nav-section="rm-supervision">
    <button class="nav-group-btn" type="button" data-nav-group="rm-supervision" aria-expanded="false"><span>SUPERVISIONE</span><span class="nav-chevron">›</span></button>
    <div class="nav-submenu">
-    <button class="nav-btn nav-sub-btn" data-page="rmholidays">Ferie</button>
-    <button class="nav-btn nav-sub-btn" data-page="rmovertime">Straordinari</button>
+    <button class="nav-btn nav-sub-btn" data-page="rmholidays">Report Ferie</button>
     <button class="nav-btn nav-sub-btn" data-page="rmactionplans">Action Plan</button>
    </div>
   </div>
@@ -168,13 +167,36 @@
  <div class="card rm-calendar-card"><div class="section-head"><div><h3>Calendario Retail Manager</h3><p id="rmCalendarRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="rmCalendarGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
 </section>
 <section id="page-rmholidays" class="page rm-only hidden">
- <div class="card rm-toolbar"><div><h3 style="margin:0">Ferie · supervisione DM</h3><p class="muted" style="margin:3px 0 0">Planning e consolidato in sola consultazione.</p></div><div class="rm-toolbar-group"><label>DM<select id="rmHolidayDm" class="rm-supervision-dm"></select></label><label>Anno<select id="rmHolidayYear"></select></label><label>Negozio<select id="rmHolidayStore"><option value="">Seleziona negozio</option></select></label><button id="reloadRMHolidayBtn" class="btn">Aggiorna</button></div></div>
- <div class="rm-section-title">Planning ferie</div><div id="rmHolidayKpis" class="kpi-grid"></div>
- <div class="card rm-section"><div class="section-head"><h3>Situazione per negozio</h3></div><div id="rmHolidayStores" class="table-scroll"></div></div>
- <div class="card rm-section"><div class="section-head"><h3>Dettaglio planning negozio selezionato</h3></div><div id="rmHolidayPlanningDetail" class="table-scroll"><div class="empty">Seleziona un negozio.</div></div></div>
- <div class="rm-section-title">Ferie consolidate</div><div id="rmHolidayConsolidatedKpis" class="kpi-grid"></div>
- <div class="card rm-section"><div class="section-head"><h3>Consolidato per negozio</h3></div><div id="rmHolidayConsolidatedStores" class="table-scroll"></div></div>
- <div class="card rm-section"><div class="section-head"><h3>Dipendenti · consolidato</h3></div><div id="rmHolidayEmployees" class="table-scroll"></div></div>
+ <div class="card rm-toolbar">
+  <div class="rm-toolbar-group">
+   <label>DM<select id="rmHolidayDm" class="rm-holiday-report-dm"><option value="">TUTTA LA CATENA · Tutti i DM</option></select></label>
+   <label>Tipo Ferie<select id="rmHolidayReportType"><option value="PLANNING">PLANNING FERIE NEGOZIO</option><option value="CONSOLIDATED">CONSOLIDATO FERIE</option></select></label>
+   <label>Anno<select id="rmHolidayYear"></select></label>
+   <label>Regione<select id="rmHolidayReportRegion"><option value="">Tutte le regioni</option></select></label>
+   <button id="reloadRMHolidayBtn" class="btn primary" type="button">Aggiorna</button>
+  </div>
+ </div>
+ <div id="rmHolidayReportPlanningSection">
+  <div class="holiday-report-section-title">Planning inserito dai negozi <small>Supervisione RM · dati dei DM selezionati</small></div>
+  <div id="rmHolidayKpis" class="kpi-grid holiday-report-kpis"></div>
+  <div class="holiday-report-grid">
+   <div class="card holiday-report-card"><h3>Ranking negozi · smaltimento ferie</h3><div id="rmHolidayStoreRanking" class="holiday-ranking"></div></div>
+   <div class="card holiday-report-card"><h3>Smaltimento per regione</h3><div id="rmHolidayRegionRanking" class="holiday-ranking"></div></div>
+   <div class="card holiday-report-card"><h3>Ore programmate/godute per mese</h3><div id="rmHolidayMonthlyChart"></div></div>
+   <div class="card holiday-report-card"><h3>Dettaglio regionale</h3><div id="rmHolidayRegionTable" class="holiday-report-table-wrap"></div></div>
+  </div>
+  <div class="card"><div class="section-head"><div><h3>Dettaglio negozi · Planning store</h3></div></div><div id="rmHolidayStores" class="holiday-report-table-wrap"></div></div>
+ </div>
+ <div id="rmHolidayReportConsolidatedSection" class="hidden">
+  <div class="holiday-report-section-title">Ferie consolidate <small>Ultimo consolidato disponibile per ciascun DM</small></div>
+  <div id="rmHolidayConsolidatedReportMeta" class="card" style="padding:8px 10px;margin-bottom:7px"></div>
+  <div id="rmHolidayConsolidatedKpis" class="kpi-grid consolidated-kpis"></div>
+  <div class="holiday-report-grid">
+   <div class="card holiday-report-card"><h3>Ranking negozi · consolidato</h3><div id="rmHolidayConsolidatedStoreRanking" class="holiday-ranking"></div></div>
+   <div class="card holiday-report-card"><h3>Smaltimento consolidato per regione</h3><div id="rmHolidayConsolidatedRegionRanking" class="holiday-ranking"></div></div>
+  </div>
+  <div class="card"><div class="section-head"><div><h3>Dettaglio negozi · Ferie consolidate</h3></div></div><div id="rmHolidayConsolidatedStores" class="holiday-report-table-wrap"></div></div>
+ </div>
 </section>
 <section id="page-rmovertime" class="page rm-only hidden">
  <div class="card rm-toolbar"><div><h3 style="margin:0">Straordinari · supervisione DM</h3><p class="muted" style="margin:3px 0 0">Straordinario, malattia e infortunio in sola consultazione.</p></div><div class="rm-toolbar-group"><label>DM<select id="rmOvertimeDm" class="rm-supervision-dm"></select></label><button id="reloadRMOvertimeBtn" class="btn">Aggiorna</button></div></div>
