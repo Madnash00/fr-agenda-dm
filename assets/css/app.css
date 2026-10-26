@@ -1514,3 +1514,100 @@ body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:
 #globalBusy .global-busy-card{gap:9px}
 #globalBusy .global-busy-logo{width:62px;height:62px;margin:0 auto 2px}
 @media(prefers-reduced-motion:reduce){.agenda-loading-logo{animation:none!important}}
+
+
+/* Mobile & tablet · compact responsive layout, scroll isolation and overlay safety. */
+.mobile-nav-backdrop{display:none}
+@media screen and (max-width:1023px){
+ html,body{max-width:100%;overflow-x:hidden}
+ .app-shell,.main,.page{min-width:0;max-width:100%}
+ .main{margin-left:0!important}
+ .mobile-menu{display:inline-grid}
+ .topbar{height:48px;min-height:48px;padding:0 10px;gap:8px}
+ .topbar h2{font-size:15px;overflow-wrap:anywhere}
+ .topbar .eyebrow{font-size:9px}
+ .top-actions{display:none}
+ .page{padding:7px}
+ .sidebar{position:fixed;inset:0 auto 0 0;width:min(268px,85vw);max-width:85vw;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;transform:translateX(-105%);transition:transform .2s ease;z-index:111;box-shadow:4px 0 20px rgba(0,0,0,.12)}
+ .sidebar.open{transform:translateX(0)}
+ .sidebar .nav{min-height:0;overflow:visible;align-content:start}
+ .sidebar .nav-section.open>.nav-submenu{max-height:240px}
+ .sidebar .sidebar-foot{margin-top:12px}
+ .mobile-nav-backdrop{display:block;position:fixed;inset:0;z-index:110;background:rgba(25,30,36,.48);border:0;border-radius:0;padding:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+ body:has(.sidebar.open) .mobile-nav-backdrop{opacity:1;visibility:visible;pointer-events:auto}
+ .toolbar,.holiday-toolbar,.action-plan-toolbar,.overtime-toolbar,.rm-toolbar,.holiday-period-toolbar{padding:8px;gap:7px;flex-wrap:wrap;overflow:visible}
+ .toolbar-group,.holiday-toolbar-group,.action-plan-toolbar-group,.overtime-toolbar-group,.rm-toolbar-group{min-width:0;max-width:100%;flex-wrap:wrap;gap:6px}
+ .toolbar label,.holiday-toolbar label,.action-plan-toolbar label,.overtime-toolbar label,.rm-toolbar label{min-width:0;max-width:100%}
+ .toolbar input,.toolbar select,.holiday-toolbar select,.action-plan-toolbar select,.overtime-toolbar select,.rm-toolbar input,.rm-toolbar select{max-width:100%}
+ .card,.chart-card,.panel,.section-head{min-width:0}
+ .section-head{flex-wrap:wrap;align-items:flex-start;gap:7px;padding:9px 10px 6px}
+ .section-head>div{min-width:0}
+ .kpi-grid,.agenda-dm-kpis,.holiday-report-kpis,.consolidated-kpis,.overtime-kpis,.action-plan-report-kpis,.info-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .kpi-card{min-width:0;padding:9px}
+ .kpi-card span{font-size:9px;overflow-wrap:anywhere}
+ .kpi-card strong{font-size:19px;overflow-wrap:anywhere}
+ .charts-grid,.split,.holiday-report-grid,.action-plan-report-grid,.overtime-charts,.region-store-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+ .charts-grid>.wide{grid-column:auto}
+ .chart-card,.holiday-report-card,.action-plan-report-card,.overtime-chart-card{min-width:0;padding:10px}
+ .chart{min-width:0;max-width:100%;overflow-x:auto}
+ .svg-chart{max-width:100%;height:auto;min-height:150px}
+ .bar-row{grid-template-columns:minmax(74px,1fr) minmax(0,2fr) 32px;gap:5px;font-size:9px}
+ .table-scroll,.action-plan-list,.holiday-planning-scroll,.holiday-report-table-wrap,.consolidated-table-wrap,.rm-calendar-scroll,.calendar-scroll{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+ .data-table,.holiday-summary-table,.holiday-plan-table,.action-plan-table{max-width:none}
+ .data-table th,.data-table td{padding:6px 7px}
+ .modal-backdrop{padding:8px;z-index:150;align-items:center}
+ .modal-backdrop .modal,.modal-backdrop .modal.wide{width:min(100%,650px);max-width:100%;max-height:calc(100dvh - 16px);display:flex;flex-direction:column;overflow:hidden}
+ .modal-backdrop .modal-head{flex:0 0 auto;padding:10px 12px 8px}
+ .modal-backdrop .modal-head h3{font-size:14px;overflow-wrap:anywhere}
+ .modal-backdrop .modal-body{min-width:0;min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:10px 12px}
+ .modal-backdrop .form-grid,.modal-backdrop .action-plan-modal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .modal-backdrop .form-grid .full,.modal-backdrop .action-plan-modal-grid .full{grid-column:1/-1}
+ .modal-backdrop .modal-actions{flex-wrap:wrap;gap:6px;padding:8px 0 0}
+ .modal-backdrop input,.modal-backdrop select,.modal-backdrop textarea{max-width:100%;min-width:0}
+ .action-obj-card,.action-obj-editor{min-width:0}
+ .ap-task-scroll{max-width:100%;overflow-x:auto}
+ .ap-task-table{min-width:620px}
+ .ap-checkpoint-row,body.agenda-store-profile #actionPlanForm .ap-checkpoint-row{grid-template-columns:minmax(0,1fr);gap:7px}
+ body.agenda-store-profile #modalRoot .modal.wide:has(#actionPlanForm){width:min(100%,820px);max-width:100%;max-height:calc(100dvh - 16px)}
+ body.agenda-store-profile #modalRoot .modal.wide:has(#actionPlanForm) .modal-body{overflow-y:auto}
+ #page-audit.active{height:auto;min-height:calc(100dvh - 54px);display:block!important;overflow:visible}
+ #page-audit>.split{height:auto;overflow:visible;grid-template-columns:minmax(0,1fr)}
+ #page-audit .split>.card{min-height:200px;max-height:50dvh;overflow:hidden}
+ #page-audit>.card{max-height:45dvh;overflow:hidden}
+ .holiday-period-months{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:6px}
+ .holiday-period-days{gap:2px;padding:5px}
+ .holiday-period-day{min-height:26px;font-size:9px}
+ .holiday-period-month h3{font-size:10px;padding:6px}
+ .holiday-period-weekday{font-size:8px;padding:2px 0}
+ .agenda-dm-row{grid-template-columns:100px minmax(0,1fr);gap:7px;padding:8px}
+ .agenda-dm-location,.agenda-dm-note{grid-column:1/-1}
+ .agenda-dm-week-head{flex-wrap:wrap;gap:5px}
+ .users-actions{justify-content:flex-start}
+ .preview-item{min-width:0}
+ #pageLoading{height:100dvh}
+ #pageLoading .page-loading-card{max-width:calc(100vw - 30px)}
+ #globalBusy .global-busy-card{max-width:calc(100vw - 30px)}
+ .hover-tooltip{max-width:calc(100vw - 22px)}
+}
+@media screen and (max-width:600px){
+ .topbar{padding:0 8px}
+ .page{padding:5px}
+ .btn{white-space:normal}
+ .toolbar-group,.holiday-toolbar-group,.action-plan-toolbar-group,.overtime-toolbar-group,.rm-toolbar-group{width:100%;justify-content:flex-start}
+ .toolbar label,.holiday-toolbar label,.action-plan-toolbar label,.rm-toolbar label{flex:1 1 100px}
+ .multi-filter-wrap{flex:1 1 125px;min-width:0}
+ .multi-filter-button{min-width:0;width:100%}
+ .zoom-label{min-width:130px!important}
+ .modal-backdrop .modal,.modal-backdrop .modal.wide{max-height:calc(100dvh - 12px)}
+ .modal-backdrop .form-grid,.modal-backdrop .action-plan-modal-grid{grid-template-columns:minmax(0,1fr)}
+ .modal-backdrop .form-grid .full,.modal-backdrop .action-plan-modal-grid .full{grid-column:auto}
+ .modal-backdrop .modal-body{padding:9px}
+ .holiday-period-months{grid-template-columns:minmax(0,1fr)}
+ .holiday-period-day{min-height:29px}
+ .holiday-period-months{gap:8px}
+ .agenda-dm-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .agenda-dm-location,.agenda-dm-note{grid-column:1/-1}
+ .overtime-total-row{grid-template-columns:80px minmax(0,1fr) 50px}
+ .holiday-rank-row,.action-rank-row{grid-template-columns:20px minmax(85px,1fr) minmax(55px,1.1fr) 42px;gap:4px}
+}
+@media(prefers-reduced-motion:reduce){.sidebar,.mobile-nav-backdrop{transition:none!important}}
