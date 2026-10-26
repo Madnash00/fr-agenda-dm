@@ -1482,3 +1482,23 @@ body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:
 @media screen and (min-width:1024px) and (max-width:1199px){:root{--desktop-sidebar-w:158px}}
 @media screen and (min-width:1440px){:root{--desktop-sidebar-w:174px}.page{padding:7px 9px 9px}}
 @media screen and (min-width:1600px){.charts-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* PERIODI FERIE · Overview desktop ADMIN/DM: 3 mesi per riga, calendario più denso. */
+@media screen and (min-width:1024px){
+ #page-holidayperiods .holiday-period-months{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:5px;align-items:start
+ }
+ #page-holidayperiods .holiday-period-month{border-radius:5px}
+ #page-holidayperiods .holiday-period-month h3{padding:4px 5px;font-size:9px;line-height:1.2}
+ #page-holidayperiods .holiday-period-days{gap:1px;padding:4px}
+ #page-holidayperiods .holiday-period-weekday{padding:2px 0;font-size:8px;line-height:1}
+ #page-holidayperiods .holiday-period-day{
+  min-height:21px;height:21px;padding:0;border-radius:3px;font-size:9px;line-height:1
+ }
+ #page-holidayperiods .holiday-period-toolbar{padding:5px 7px;margin-bottom:4px;gap:5px}
+ #page-holidayperiods .holiday-period-mode{padding:4px 6px;font-size:9px;gap:4px}
+ #page-holidayperiods .holiday-period-swatch{width:11px;height:11px}
+ #page-holidayperiods .holiday-period-summary{padding:4px 7px;gap:6px;font-size:9px}
+ #page-holidayperiods .holiday-period-legend{padding:5px 7px;gap:8px;font-size:9px;margin-top:4px}
+ #page-holidayperiods .holiday-period-status{font-size:9px;line-height:1.2}
+}
