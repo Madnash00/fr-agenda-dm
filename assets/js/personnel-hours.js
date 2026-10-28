@@ -67,11 +67,17 @@ async function handleImport(file){
   try{
    // Always check the entire district, regardless of the store currently selected in the report.
    const check=await window.agendaCloudApi.request('getGlobalImportOvertimePeriods',{__force:true});
-   const periods=(check?.periods||[]).map(x=>({year:Number(String(x).slice(0,4)),month:Number(String(x).slice(5,7))})).filter(x=>x.year>=2020&&x.month>=1&&x.month<=12);
-   const latest=periods.slice().sort((a,b)=>b.year-a.year||b.month-a.month)[0];
-   if(!latest)throw Error('Importa prima gli straordinari: non risultano mesi disponibili.');
-   const available=new Set(periods.filter(x=>x.year===latest.year).map(x=>x.month));
-   for(let m=1;m<=latest.month;m++)if(!available.has(m))throw Error('Straordinari incompleti: manca il mese '+m+'/'+latest.year+'.');
+   const byDm=check?.dm_periods||{};
+   const owners=Object.entries(byDm).filter(([,months])=>months&&Object.keys(months).length);
+   if(!owners.length)throw Error('Importa prima gli straordinari: non risultano mesi disponibili.');
+   const candidates=[...new Set(owners.flatMap(([,months])=>Object.keys(months)))].filter(k=>/^20\d{2}-\d{2}$/.test(k)).sort().reverse();
+   const period=candidates.find(k=>{
+     const year=Number(k.slice(0,4)),month=Number(k.slice(5,7));
+     return month>=1&&month<=12&&owners.every(([,months])=>Array.from({length:month},(_,i)=>String(year)+'-'+String(i+1).padStart(2,'0')).every(key=>months[key]));
+   });
+   if(!period)throw Error('Non esiste un periodo gennaio–mese completo per tutti i DM con straordinari. Verifica i mesi mancanti prima di importare.');
+   const latest={year:Number(period.slice(0,4)),month:Number(period.slice(5,7))};
+   const available=new Set(Array.from({length:latest.month},(_,i)=>i+1));
    if(btn)btn.textContent='Analizzo le ore mensili del file…';
    const parsed=await parseWorkbook(file,latest.year,available),rows=parsed.rows;
    const excluded=parsed.monthsExcluded.map(m=>parsed.monthNames[m-1]).join(', ');
@@ -86,7 +92,7 @@ async function handleImport(file){
    await loadOvertimeCheck(true);
    const missing=result.unmatched_stores||[];
    toast('Ore personale: '+result.imported_rows+' dipendenti importati (gennaio–'+parsed.monthNames[latest.month-1]+' '+latest.year+')'+(missing.length?' · '+missing.length+' negozi non associati':''),!!missing.length);
-   if(missing.length)showModal('Negozi non associati','<p>Questi negozi non sono stati associati al tuo distretto:</p><p>'+missing.map(esc).join(', ')+'</p>');
+   if(missing.length)showModal('Negozi non associati','<p>Questi negozi non sono stati associati in modo univoco a un DM della catena:</p><p>'+missing.map(esc).join(', ')+'</p>');
   }catch(e){toast(e.message||'Impossibile importare le ore personale.',true);}
   finally{if(btn){btn.disabled=false;btn.textContent='IMPORTA ORE PERSONALE';}}
  }
