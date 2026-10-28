@@ -1750,3 +1750,7 @@ body.agenda-store-profile .agenda-events{gap:5px}
 .nav-launch-btn .nav-launch-favicon[hidden]{display:none}
 
 .sv-visibility-btn{min-width:31px;display:inline-flex;align-items:center;justify-content:center;padding-inline:7px}.sv-visibility-btn[aria-pressed="false"]{opacity:.7;border-color:#b96c7d;color:#8c3f3b}.sv-visibility-btn:disabled{opacity:.45;cursor:wait}
+
+/* CALENDARIO RM · ADATTA: tutta l'altezza delle righe in un'unica vista, senza scroll verticale. */
+#page-rmcalendar .rm-calendar-scroll.rm-fit-active{overflow-x:auto;overflow-y:hidden;scrollbar-gutter:auto}
+#page-rmcalendar #rmCalFitBtn[aria-pressed="true"]{background:#e8f0f4;border-color:#7e929e;color:#2c4856;font-weight:850}
