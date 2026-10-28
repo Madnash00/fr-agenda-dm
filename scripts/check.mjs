@@ -99,4 +99,9 @@ assert.ok(app.includes('rmHolidayConsolidatedPeriodBadge(d.sources)'),'RM needs 
 assert.ok(!app.includes("icon.textContent=storeVisitsVisibleToStores?'👁':'◉̸'"),'Do not replace the eye with an unrelated glyph');
 assert.ok(html.includes('class="sv-eye-cross"')&&html.includes('class="sv-eye-svg"'),'DM button uses shared SVG eye with centered X');
 assert.ok(read('assets/css/app.css').includes('#page-calendar #todayBtn,#page-calendar #storeVisitVisibilityBtn'),'Calendar Today and SV visibility buttons must share height');
+// Neutral period badges share one renderer, sourced from actual imported months.
+for(const id of ['holidayConsolidatedPeriod','holidayConsolidatedReportPeriod','rmHolidayConsolidatedPeriod','overtimePeriod','rmOvertimePeriod'])assert.ok(html.includes('id="'+id+'" class="period-toolbar-slot'),'Missing filter-toolbar period slot: '+id);
+assert.ok(app.includes('function periodBadge(label,value,mixed=false)')&&app.includes('function overtimePeriodBadge(months)')&&app.includes('PERIODI DIVERSI PER DM'),'Period badges and mixed RM sources must be supported');
+assert.ok(app.includes('period.innerHTML=overtimePeriodBadge(d?.months)')&&app.includes('period.innerHTML=holidayConsolidatedPeriodBadge(d?.meta)'),'Period from actual dataset required');
+assert.ok(read('assets/css/app.css').includes('.consolidated-period-highlight{display:inline-flex;flex-direction:row')&&read('assets/css/app.css').includes('background:#f5f6f7'),'Shared horizontal gray styling required');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
