@@ -14,10 +14,10 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=17fe181c1483b77e">
+<link rel="stylesheet" href="./assets/css/app.css?v=034fcb84522ba16b">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=686e9f3778e388e7"></script>
-<script defer src="./assets/js/app.js?v=9c1bdb0cf3fb88e8"></script>
+<script defer src="./assets/js/app.js?v=b92c7a1bde4cd5b7"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/personnel-hours.js?v=eb24fe35c15efbe8"></script>
 </head>
@@ -195,6 +195,7 @@
    <label>Regione<select id="rmHolidayReportRegion"><option value="">Tutte le regioni</option></select></label>
    <button id="reloadRMHolidayBtn" class="btn primary" type="button">Aggiorna</button>
   </div>
+  <div id="rmHolidayConsolidatedPeriod" class="period-toolbar-slot hidden"></div>
  </div>
  <div id="rmHolidayReportPlanningSection">
   <div class="holiday-report-section-title">Planning inserito dai negozi <small>Supervisione RM · dati dei DM selezionati</small></div>
@@ -224,6 +225,7 @@
    <label>DM<select id="rmOvertimeDm"><option value="">TUTTA LA CATENA · Tutti i DM</option></select></label>
    <button id="reloadRMOvertimeBtn" class="btn primary" type="button">Aggiorna</button>
   </div>
+  <div id="rmOvertimePeriod" class="period-toolbar-slot"></div>
  </div>
  <div id="rmOvertimeMeta" class="overtime-meta"></div>
  <div id="rmOvertimeCoverageNote" class="overtime-source-note hidden"></div>
@@ -288,6 +290,7 @@
    <button id="importHolidayConsolidatedBtn" class="btn primary admin-only">Carica file ferie consolidato</button>
    <input id="holidayConsolidatedFile" class="consolidated-file-input" type="file" accept=".xlsx,.xls,.csv">
   </div>
+  <div id="holidayConsolidatedPeriod" class="period-toolbar-slot"></div>
   <div id="holidayConsolidatedMeta" class="consolidated-meta"></div>
  </div>
  <div id="holidayConsolidatedKpis" class="kpi-grid consolidated-kpis"></div>
@@ -304,6 +307,7 @@
 <section id="page-holidayreport" class="page admin-only">
  <div class="holiday-toolbar card">
   <div class="holiday-toolbar-group"><label>Tipo Ferie<select id="holidayReportType"><option value="PLANNING">PLANNING FERIE NEGOZIO</option><option value="CONSOLIDATED">CONSOLIDATO FERIE</option></select></label><label>Anno<select id="holidayReportYear"></select></label><label>Regione<select id="holidayReportRegion"><option value="">Tutte le regioni</option></select></label><button id="loadHolidayReportBtn" class="btn primary">Aggiorna</button></div>
+  <div id="holidayConsolidatedReportPeriod" class="period-toolbar-slot hidden"></div>
  </div>
  <div id="holidayReportPlanningSection">
   <div class="holiday-report-section-title">Planning inserito dai negozi <small>Dati gestiti direttamente dagli store nella pagina Planning Ferie</small></div>
@@ -343,6 +347,7 @@
    <input id="personnelHoursFile" class="overtime-file-input" type="file" accept=".xlsx">
    <input id="overtimeFile" class="overtime-file-input" type="file" accept=".xlsx,.xls,.csv">
   </div>
+  <div id="overtimePeriod" class="period-toolbar-slot"></div>
   <div id="overtimeMeta" class="overtime-meta"></div>
  </div>
  <div id="overtimeSourceNote" class="overtime-source-note hidden"></div>
