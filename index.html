@@ -14,10 +14,10 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=fb52f5419477cfb9">
+<link rel="stylesheet" href="./assets/css/app.css?v=f98380eb5b421517">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=7b980212e517eb84"></script>
-<script defer src="./assets/js/app.js?v=f15332a0d9cb660f"></script>
+<script defer src="./assets/js/app.js?v=e07247491b563c43"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/personnel-hours.js?v=6285ee3f4a029e69"></script>
 </head>
@@ -100,7 +100,7 @@
      <button class="nav-btn nav-sub-btn super-admin-only" data-page="parameters">Parametri</button>
    </div>
   </div>
-  <button id="changePasswordBtn" class="nav-btn admin-only">Cambia password</button><button id="rmChangePasswordBtn" class="nav-btn rm-only hidden" type="button">Cambia password</button>
+  <button id="changePasswordBtn" class="nav-btn admin-only">Cambia password</button><button id="rmChangePasswordBtn" class="nav-btn rm-only hidden" type="button">Cambia password</button><button id="storeChangePasswordBtn" class="nav-btn store-only hidden" type="button">Cambia password</button>
   <button id="logoutBtn" class="nav-btn">Esci</button>
  </div>
 </aside>
@@ -181,7 +181,7 @@
 <section id="page-rmcalendar" class="page rm-only hidden">
  <div class="card rm-toolbar">
   <div class="rm-toolbar-group"><button id="rmCalPrev" class="btn" type="button">‹</button><button id="rmCalToday" class="btn primary" type="button">Oggi</button><button id="rmCalNext" class="btn" type="button">›</button></div>
-  <div class="rm-toolbar-group"><label>Vista<select id="rmCalendarView"><option value="day">Giorno</option><option value="week">Settimana</option><option value="month" selected>Mese</option></select></label><label>Data<input id="rmCalendarDate" type="date"></label><label>DM<select id="rmCalendarDm"><option value="">Tutti i DM</option></select></label><button id="reloadRMCalendarBtn" class="btn">Aggiorna</button></div>
+  <div class="rm-toolbar-group"><label>Vista<select id="rmCalendarView"><option value="day">Giorno</option><option value="week">Settimana</option><option value="month" selected>Mese</option></select></label><label>Data<input id="rmCalendarDate" type="date"></label><label>DM<select id="rmCalendarDm"><option value="">Tutti i DM</option></select></label><button id="rmCalFitBtn" class="btn rm-calendar-fit-btn" type="button" aria-pressed="false" title="Adatta tutte le righe del calendario all’altezza dello schermo">ADATTA</button><button id="reloadRMCalendarBtn" class="btn">Aggiorna</button></div>
  </div>
  <div id="rmCalendarKpis" class="kpi-grid"></div>
  <div class="card rm-calendar-card"><div class="section-head"><div><h3>Calendario Retail Manager</h3><p id="rmCalendarRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="rmCalendarGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
