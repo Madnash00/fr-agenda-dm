@@ -121,6 +121,9 @@ function normalizeCurrentUser(u){if(!u)return null;const raw=String(u.role||'').
 function calendarLegacyStore(st,regionById){return {id:String(st.store_id),store_id:String(st.store_id),admin_id:String(st.admin_id||''),code:st.store_code||null,name:st.name||'',source_name:null,region:regionById.get(String(st.region_id))?.name||'DA ASSEGNARE',region_id:st.region_id,email:st.email||null,username:st.username||'',password:st.password||'',active:st.active===true||String(st.active)==='true'||String(st.active)==='1'?1:0,credential_status:(st.username&&st.password)?'CONFIGURED':'PENDING_CREDENTIALS',created_at:st.created_at,updated_at:st.updated_at}}
 function setStoreCalendarContract(cal){
  if(currentUser?.role!=='STORE')return;
+ if(typeof cal?.store_visits_visible_to_stores!=='boolean')throw new AgendaApiError('STORE_VISIBILITY_CONTRACT_INVALID','Visibilità SV non disponibile: aggiorna il backend Apps Script.');
+ storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;
+ storeVisitsVisibilityReady=true;
  const policy=String(cal?.store_calendar_policy||''),scope=String(cal?.calendar_scope||''),view=String(cal?.store_calendar_view||''),serverAdmin=String(cal?.admin_id||''),expectedAdmin=String(currentUser.admin_id||''),own=String(cal?.own_store_id||currentUser.store_id||''),regions=Array.isArray(cal?.regions)?cal.regions:[],regionById=new Map(regions.map(r=>[String(r.region_id),r])),raw=(Array.isArray(cal?.stores)?cal.stores:[]).filter(st=>st.active===true||String(st.active)==='true'||String(st.active)==='1'),dir=raw.map(st=>calendarLegacyStore(st,regionById));
  if(policy!==STORE_CALENDAR_POLICY.id)throw new AgendaApiError('STORE_CALENDAR_POLICY_INVALID',`Policy calendario NEGOZIO non aggiornata (${policy||'assente'}). Pubblica il Code.gs della stessa versione dell'index.html.`);
  if(scope!==STORE_CALENDAR_POLICY.scope)throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Contratto calendario NEGOZIO non coerente.');
@@ -203,7 +206,7 @@ function isOwnStore(storeId){return isStoreCalendarUser()&&String(storeId||'')==
 function isStoreSmType(type){return ['SM_HOLIDAY','SM_REST','SM_TRANSFER'].includes(String(type||''))}
 function storeCanEditCalendarCell(storeId,track){return isStoreCalendarUser()&&isOwnStore(storeId)&&String(track||'')===STORE_CALENDAR_POLICY.editableTrack}
 function eventAuthoredByStore(ev){if(!isStoreCalendarUser())return false;const author=String(ev?.user_id||'');return !!author&&allowedStoreIds().includes(author)}
-function eventVisibleToCalendarViewer(ev){if(!isStoreCalendarUser())return true;const sid=String(ev?.store_id||''),own=String(currentUser.store_id||''),type=String(ev?.event_type||''),storeAuthored=eventAuthoredByStore(ev);if(!sid)return true;if(sid===own){if(isStoreSmType(type))return String(ev?.user_id||'')===own;return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}
+function eventVisibleToCalendarViewer(ev){if(!isStoreCalendarUser())return true;if(ev?.event_type==='STORE_VISIT'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores)return false;const sid=String(ev?.store_id||''),own=String(currentUser.store_id||''),type=String(ev?.event_type||''),storeAuthored=eventAuthoredByStore(ev);if(!sid)return true;if(sid===own){if(isStoreSmType(type))return String(ev?.user_id||'')===own;return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}
 function eventTextVisibleToCalendarViewer(ev){return eventVisibleToCalendarViewer(ev)}
 function canEditEvent(ev){if(currentUser.role==='ADMIN')return true;if(!isStoreCalendarUser())return false;return isOwnStore(ev.store_id)&&isStoreSmType(ev.event_type)}
 function canAddType(type,storeId){if(currentUser.role==='ADMIN')return true;return isOwnStore(storeId)&&isStoreSmType(type)}
@@ -225,7 +228,10 @@ function updateStoreVisitVisibilityButton(){
  btn.classList.toggle('hidden',!dm);
  btn.disabled=!dm||!storeVisitsVisibilityReady;
  btn.setAttribute('aria-pressed',String(storeVisitsVisibleToStores));
- btn.textContent=storeVisitsVisibleToStores?'👁':'◉̸';
+ btn.classList.toggle('is-hidden',!storeVisitsVisibleToStores);
+ const icon=btn.querySelector('.sv-visibility-icon'),label=btn.querySelector('.sv-visibility-label');
+ if(icon)icon.textContent=storeVisitsVisibleToStores?'👁':'◉̸';
+ if(label)label.textContent=storeVisitsVisibleToStores?'SV VISIBILI':'SV NASCOSTE';
  btn.title=storeVisitsVisibleToStores?'SV visibili ai negozi · clicca per nasconderle':'SV nascoste ai negozi · clicca per mostrarle';
  btn.setAttribute('aria-label',btn.title);
 }
@@ -235,7 +241,8 @@ async function toggleStoreVisitVisibility(){
  btn.disabled=true;
  try{
   const result=await window.agendaCloudApi.request('setStoreVisitVisibility',{visible:desired});
-  storeVisitsVisibleToStores=result.visible===true;
+  if(typeof result?.visible!=='boolean'||result.visible!==desired)throw new Error('Impossibile verificare la visibilità delle SV.');
+  storeVisitsVisibleToStores=result.visible;
   window.agendaCloudApi.clearCache('calendar');
   calendarRangeFreshUntil.clear();
   toast(storeVisitsVisibleToStores?'SV ora visibili agli account NEGOZIO':'SV nascoste agli account NEGOZIO');
@@ -282,7 +289,7 @@ async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=f
  const action=currentUser?.role==='STORE'?'getStoreCalendarContext':'getCalendar',cal=await window.agendaCloudApi.request(action,{from,to,__silent:silent,__force:force});
  if(currentUser?.role==='STORE')setStoreCalendarContract(cal||{});
  syncStoreVisitVisibilityState(cal);
- const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED').map(e=>localEventFromServer(e));
+ const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED'&&!(currentUser?.role==='STORE'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores&&e.event_type==='STORE_VISIT')).map(e=>localEventFromServer(e));
  app.events=app.events.filter(e=>e.event_date<from||e.event_date>to).concat(fresh);calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
  if(expectedEventId&&!fresh.some(e=>String(e.id)===String(expectedEventId)))throw new AgendaApiError('WRITE_VERIFY_FAILED',"Il salvataggio è stato eseguito ma l'evento non è stato riletto dal calendario centrale. Riprova senza chiudere la finestra.");return fresh
 }
