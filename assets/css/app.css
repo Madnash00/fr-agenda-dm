@@ -1744,3 +1744,7 @@ body.agenda-store-profile .agenda-events{gap:5px}
 .parameters-input-row input{width:115px;max-width:100%;min-height:31px;padding:6px 9px;border:1px solid #d7dfe3;border-radius:6px;font-size:13px;font-weight:800}
 .parameters-unit{font-size:12px;font-weight:800}
 @media(max-width:600px){.parameters-form{padding:9px}.parameters-input-row input{flex:0 0 105px}}
+
+/* Icone originali dei collegamenti esterni nel menu. */
+.nav-launch-btn .nav-launch-favicon{width:14px;height:14px;object-fit:contain;flex:0 0 14px;margin-right:7px;vertical-align:middle}
+.nav-launch-btn .nav-launch-favicon[hidden]{display:none}
