@@ -61,7 +61,7 @@ assert.ok(app.includes('function outlookSvUid(e)')&&app.includes("latestVisitByD
 assert.ok(html.includes('sv-visibility-label'),'Store visibility control needs explicit state label');
 assert.ok(app.includes("if(typeof cal?.store_visits_visible_to_stores!=='boolean')"),'Store calendar must enforce visibility policy');
 const hoursModule=read('assets/js/personnel-hours.js');
-assert.ok(hoursModule.includes('const byDm=check?.dm_periods||{}')&&hoursModule.includes('owners.every('),'Personnel import must select YTD period covered by all DMs');
+assert.ok(hoursModule.includes('monthly_hours')&&hoursModule.includes('const periods=(check?.periods||[])'),'Personnel import retains per-employee monthly totals and uses overtime months');
 // Performance regressions: delegated clicks, one date calculation per day, last-request-wins.
 assert.ok(app.includes("dayMeta={ds,isWeekend,isSunday,isToday}") && app.includes("renderTransposedStoreCell(st,d,idx,track,regionStartIds.has(st.id),dayMeta)"),'Calendar date metadata must be reused per row');
 assert.ok(app.includes("const flag=e.target.closest?.('[data-info-flag]')") && !app.includes("$('[data-info-flag]').forEach"),'Calendar flags use click delegation');
