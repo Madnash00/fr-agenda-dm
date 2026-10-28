@@ -1308,7 +1308,7 @@ function renderRMCalendar(){const d=rmCalendarCache,host=$('#rmCalendarGrid');if
 let rmHolidayReportRequest=0,rmHolidayReportData=null;
 function rmHolidaySum(rows,k){return rows.reduce((a,r)=>a+(Number(r[k])||0),0)}
 function rmHolidayCombine(res,type){
- const stores=res.flatMap(({dm,report})=>(report.stores||[]).map(x=>({...x,dm_name:dm.display_name||dm.username,dm_id:dm.dm_id})));
+ const stores=res.flatMap(({dm,report})=>(report.stores||[]).map(x=>({...x,dm_name:dm.display_name||dm.username,dm_id:dm.dm_id,consolidated_year:Number(report.meta?.year)||null})));
  const keys=type==='PLANNING'?['employees','total_hours','planned_hours']:['employees','used_hours','residual_ac_hours','residual_ap_hours','remaining_total_hours','entitlement_year_end'];
  const map=new Map();
  for(const x of stores){const k=String(x.region||'DA ASSEGNARE'),r=map.get(k)||{region:k,stores:0};r.stores++;for(const n of keys)r[n]=(r[n]||0)+(Number(x[n])||0);map.set(k,r)}
@@ -1339,6 +1339,8 @@ async function loadRMHolidays(force=false){
  }catch(err){if(seq!==rmHolidayReportRequest)return;rmHolidayReportData=null;renderRMHolidayReport();toast(err.message||'Impossibile caricare Report Ferie RM',true)}
  finally{if(seq===rmHolidayReportRequest)$('#rmHolidayReportRegion').disabled=false}
 }
+function rmConsolidatedPace(year){const y=Number(year),now=new Date();if(!Number.isInteger(y)||y<2000||y>2100)return null;if(y<now.getFullYear())return 100;if(y>now.getFullYear())return 0;return Math.max(0,Math.min(100,100*(Date.UTC(y,now.getMonth(),now.getDate())-Date.UTC(y,0,1)+86400000)/(Date.UTC(y+1,0,1)-Date.UTC(y,0,1))))}
+function rmDisposalColor(v,year){const pace=rmConsolidatedPace(year);if(pace===null)return 'pace-unrated';const delta=Number(v)-pace;return delta>=-3?'pace-green':delta>=-12?'pace-amber':'pace-red'}
 function renderRMHolidayReport(){
  const d=rmHolidayReportData,type=d?.type||$('#rmHolidayReportType')?.value||'PLANNING',planning=type==='PLANNING';
  $('#rmHolidayReportPlanningSection').classList.toggle('hidden',!planning);$('#rmHolidayReportConsolidatedSection').classList.toggle('hidden',planning);
@@ -1360,10 +1362,13 @@ function renderRMHolidayReport(){
   $('#rmHolidayStores').innerHTML='<table class="data-table"><thead><tr><th>DM</th><th>Regione</th><th>Codice</th><th>Negozio</th><th>Dipendenti</th><th>Ore Totali AC+AP</th><th>Programmate/Godute</th><th>Residue</th><th>Smaltimento</th></tr></thead><tbody>'+sorted(stores).map(x=>'<tr>'+td(x.dm_name)+td(x.region)+td(x.code||'—')+td(x.name)+td(x.employees)+td(fmt(x.total_hours))+td(fmt(x.planned_hours))+td(fmt(x.total_hours-x.planned_hours))+td(pct(x.disposal_pct))+'</tr>').join('')+'</tbody></table>';
  }else{
   const used=rmHolidaySum(stores,'used_hours'),ac=rmHolidaySum(stores,'residual_ac_hours'),ap=rmHolidaySum(stores,'residual_ap_hours'),ent=rmHolidaySum(stores,'entitlement_year_end');
-  $('#rmHolidayConsolidatedKpis').innerHTML=kpis([['Dipendenti',rmHolidaySum(stores,'employees')],['Goduto AC',fmt(used)],['Da smaltire AC',fmt(ac)],['Residuo AP',fmt(ap)],['Da smaltire AC+AP',fmt(ac+ap)],['Smaltimento 31/12',pct(rate(used,ent))]]);
+  const years=d.sources.map(x=>Number(x.meta?.year)),uniformYear=years.length&&years.every(y=>Number.isInteger(y)&&y>=2000&&y===years[0])?years[0]:null;
+  const consolidatedValues=[['Dipendenti',rmHolidaySum(stores,'employees')],['Goduto AC',fmt(used)],['Da smaltire AC',fmt(ac)],['Residuo AP',fmt(ap)],['Da smaltire AC+AP',fmt(ac+ap)],['Smaltimento 31/12',pct(rate(used,ent))]];
+  $('#rmHolidayConsolidatedKpis').innerHTML=consolidatedValues.map(([l,v])=>'<div class="card kpi-card '+(l==='Smaltimento 31/12'&&uniformYear?'consolidated-disposal-kpi '+rmDisposalColor(rate(used,ent),uniformYear):'consolidated-regular-kpi')+'"><span>'+esc(l)+'</span><strong>'+esc(v)+'</strong></div>').join('');
+  const legend=$('#rmHolidayConsolidatedLegend');if(legend)legend.textContent=uniformYear?'Avanzamento anno '+rmConsolidatedPace(uniformYear).toFixed(1)+'% · Verde: in linea (entro 3 pp) · Giallo: ritardo fino a 12 pp · Rosso: ritardo maggiore.':'Semaforo per negozio riferito all’anno dei rispettivi file. Totale senza semaforo se gli anni differiscono.';
   $('#rmHolidayConsolidatedStoreRanking').innerHTML=ranks(stores,false);$('#rmHolidayConsolidatedRegionRanking').innerHTML=ranks(regions,true);
   $('#rmHolidayConsolidatedReportMeta').innerHTML='<div class="consolidated-meta">'+d.sources.map(x=>'<span><strong>'+esc(x.dm)+':</strong> '+(x.meta?esc(String(x.meta.month||'—').padStart(2,'0')+'/'+String(x.meta.year||'—')):'Nessun consolidato')+'</span>').join('')+'</div>';
-  $('#rmHolidayConsolidatedStores').innerHTML='<table class="data-table"><thead><tr><th>DM</th><th>Regione</th><th>Codice</th><th>Negozio</th><th>Dip.</th><th>Goduto AC</th><th>Da smaltire AC</th><th>Residuo AP</th><th>Da smaltire AC+AP</th><th>Smaltimento</th></tr></thead><tbody>'+sorted(stores).map(x=>'<tr>'+td(x.dm_name)+td(x.region)+td(x.code||'—')+td(x.name)+td(x.employees)+td(fmt(x.used_hours))+td(fmt(x.residual_ac_hours))+td(fmt(x.residual_ap_hours))+td(fmt(x.remaining_total_hours))+td(pct(x.disposal_pct))+'</tr>').join('')+'</tbody></table>';
+  $('#rmHolidayConsolidatedStores').innerHTML='<table class="data-table"><thead><tr><th>DM</th><th>Regione</th><th>Codice</th><th>Negozio</th><th>Dip.</th><th>Goduto AC</th><th>Da smaltire AC</th><th>Residuo AP</th><th>Da smaltire AC+AP</th><th>Smaltimento</th></tr></thead><tbody>'+sorted(stores).map(x=>'<tr>'+td(x.dm_name)+td(x.region)+td(x.code||'—')+td(x.name)+td(x.employees)+td(fmt(x.used_hours))+td(fmt(x.residual_ac_hours))+td(fmt(x.residual_ap_hours))+td(fmt(x.remaining_total_hours))+('<td><span class="store-disposal-badge '+rmDisposalColor(x.disposal_pct,x.consolidated_year)+'">'+pct(x.disposal_pct)+'</span></td>')+'</tr>').join('')+'</tbody></table>';
  }
 }
 async function loadRMHolidayPlanning(force=false){const storeId=$('#rmHolidayStore')?.value;if(!storeId||!rmSelectedDmId){$('#rmHolidayPlanningDetail').innerHTML='<div class="empty">Seleziona un negozio.</div>';return}const year=Number($('#rmHolidayYear')?.value)||new Date().getFullYear();try{rmHolidayPlanningCache=await window.agendaCloudApi.request('getRMHolidayPlanning',{target_dm_id:rmSelectedDmId,store_id:storeId,year,__force:force});renderRMHolidayPlanning()}catch(err){toast(err.message||'Impossibile caricare il planning',true)}}
