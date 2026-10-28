@@ -91,4 +91,6 @@ assert.ok(html.includes('id="rmOvertimeBudgetPanel"')&&html.includes('id="rmHoli
 assert.ok(app.includes('function renderRMOvertimeBudget()')&&app.includes('function overtimeBudgetPanelMarkup(p)'),'Shared overtime UI must exist');
 assert.ok(!app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.indexOf('function renderStoreOvertimeBudget()')).includes('<strong>${usage'),'Do not show oversized budget usage percentage');
 assert.ok(app.includes('function rmDisposalColor(v,year)')&&app.includes('consolidated-disposal-kpi'),'RM holiday colors must follow the same progress rules');
+assert.ok(app.includes('function placeDmOvertimeBudget()')&&app.includes('toolbar.after(panel)')&&app.includes('incidence.after(panel)'),'DM budget should follow filters and STORE layout should remain unchanged');
+assert.ok(!read('assets/js/personnel-hours.js').includes('class="personnel-summary"')&&!read('assets/js/personnel-hours.js').includes("const stats=[["),'Incidence KPI cards should be removed, table retained');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
