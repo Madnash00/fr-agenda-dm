@@ -112,7 +112,6 @@ function render(){
   const state=x=>x===null||x===undefined?'na':Number(x)>budget?'over':'ok';
   const missing=(data.months_missing||[]).map(m=>String(m).padStart(2,'0')).join(', ');
   const info=data.coverage_complete?'Gennaio–'+String(data.through_month).padStart(2,'0')+'/'+data.year+' · Budget '+formatBudget+'.':'Confronto incompleto: mancano gli straordinari dei mesi '+missing+'. Incidenze non calcolate.';
-  const stats=[['Ore lavorate YTD',fmt(data.work_hours)],['Ore straordinarie YTD',fmt(data.overtime_hours)],['Incidenza',fmtPct(data.incidence_pct)],['Scostamento',data.excess_pp===null||data.excess_pp===undefined?'N/D':(data.excess_pp>0?'+':'')+fmt2(data.excess_pp)+' pp'],['Budget previsto',formatBudget]].map(v=>'<div class="personnel-stat"><span class="muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong></div>').join('');
   const employee=overtimeCheckCache?.scope==='STORE',sourceRows=(employee?data.employees:data.stores)||[],rows=employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows;
   const head='<thead><tr>'+(employee?'<th>Venditrice</th>':'<th>Codice</th><th>Negozio</th>')+'<th class="num">Ore lavorate</th><th class="num">Straordinario</th><th class="num">Incidenza</th><th class="num">Scostamento da BDG</th></tr></thead>';
   const body=rows.map(x=>{
@@ -120,7 +119,7 @@ function render(){
    const diff=x.excess_pp===null||x.excess_pp===undefined?'N/D':(x.excess_pp>0?'+':'')+fmt2(x.excess_pp)+' pp';
    return '<tr'+(over?' class="personnel-over-row"':'')+'>'+(employee?'<td><strong>'+esc(x.employee_name)+'</strong></td>':'<td>'+esc(x.store_code||'—')+'</td><td><strong>'+esc(x.store_name||'—')+'</strong></td>')+'<td class="num">'+esc(fmt(x.work_hours))+'</td><td class="num">'+esc(fmt(x.overtime_hours))+'</td><td class="num"><span class="personnel-rate '+state(x.incidence_pct)+'">'+esc(fmtPct(x.incidence_pct))+'</span></td><td class="num'+(over?' personnel-excess':'')+'">'+esc(diff)+'</td></tr>';
   }).join('');
-  host.innerHTML='<div class="personnel-summary">'+stats+'</div><div class="personnel-budget'+(data.coverage_complete?'':' warn')+'">'+esc(info)+' · Origine: '+esc(data.source_filename||'—')+'</div>'+(rows.length?'<table class="data-table overtime-table personnel-incidence-table">'+head+'<tbody>'+body+'</tbody></table>':'<div class="empty">Non sono disponibili dipendenti o negozi nel periodo.</div>');
+  host.innerHTML='<div class="personnel-budget'+(data.coverage_complete?'':' warn')+'">'+esc(info)+' · Origine: '+esc(data.source_filename||'—')+'</div>'+(rows.length?'<table class="data-table overtime-table personnel-incidence-table">'+head+'<tbody>'+body+'</tbody></table>':'<div class="empty">Non sono disponibili dipendenti o negozi nel periodo.</div>');
  }
  const button=find('#importPersonnelHoursBtn'),picker=find('#personnelHoursFile');
  if(button&&picker){
