@@ -739,7 +739,7 @@ function renderHolidaySummary(){
  host.innerHTML=`<table class="holiday-summary-table"><thead>${head}</thead><tbody>${body}${foot}</tbody></table>`;
  if(!readOnly){
   $$('[data-holiday-emp-field]').forEach(el=>el.onchange=()=>saveHolidayEmployeeField(el));
-  $('[data-delete-holiday-employee]').forEach(b=>b.onclick=()=>deleteHolidayEmployee(b.dataset.deleteHolidayEmployee));
+  $$('[data-delete-holiday-employee]').forEach(b=>b.onclick=()=>deleteHolidayEmployee(b.dataset.deleteHolidayEmployee));
   wireHolidayEmployeeDrag();
  }
 }
