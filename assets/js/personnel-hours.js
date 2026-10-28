@@ -49,12 +49,12 @@
     if(!Number.isFinite(hours))continue;
     const key=store_code.replace(/^0+/,'')+'|'+norm(employee_name);
     const old=totals.get(key);
-    if(old)old.work_hours+=hours;
-    else totals.set(key,{store_name,store_code,employee_name,work_hours:hours});
+    if(old){old.work_hours+=hours;old.monthly_hours[month]=(old.monthly_hours[month]||0)+hours;}
+    else totals.set(key,{store_name,store_code,employee_name,work_hours:hours,monthly_hours:{[month]:hours}});
   }
   const missing=[...allowedMonths].filter(m=>!monthsPresent.has(m)).sort((a,b)=>a-b);
   if(missing.length)throw Error('Il file non contiene ore lavorate per i mesi '+missing.map(m=>monthNames[m-1]).join(', ')+'/'+periodYear+'.');
-  const rows=[...totals.values()].map(r=>({...r,work_hours:round(r.work_hours)}));
+  const rows=[...totals.values()].map(r=>({...r,work_hours:round(r.work_hours),monthly_hours:Object.fromEntries(Object.entries(r.monthly_hours).map(([m,h])=>[m,round(h)]))}));
   if(!rows.length||rows.length>7500)throw Error('Numero dipendenti aggregati non valido (1–7.500): '+rows.length+'.');
   if(rows.some(r=>r.work_hours<0))throw Error('Sono presenti ore lavorate negative dopo la somma mensile.');
   return {rows,monthsExcluded:[...monthsExcluded].sort((a,b)=>a-b),monthNames};
@@ -67,21 +67,14 @@ async function handleImport(file){
   try{
    // Always check the entire district, regardless of the store currently selected in the report.
    const check=await window.agendaCloudApi.request('getGlobalImportOvertimePeriods',{__force:true});
-   const byDm=check?.dm_periods||{};
-   const owners=Object.entries(byDm).filter(([,months])=>months&&Object.keys(months).length);
-   if(!owners.length)throw Error('Importa prima gli straordinari: non risultano mesi disponibili.');
-   const candidates=[...new Set(owners.flatMap(([,months])=>Object.keys(months)))].filter(k=>/^20\d{2}-\d{2}$/.test(k)).sort().reverse();
-   const period=candidates.find(k=>{
-     const year=Number(k.slice(0,4)),month=Number(k.slice(5,7));
-     return month>=1&&month<=12&&owners.every(([,months])=>Array.from({length:month},(_,i)=>String(year)+'-'+String(i+1).padStart(2,'0')).every(key=>months[key]));
-   });
-   if(!period)throw Error('Non esiste un periodo gennaio–mese completo per tutti i DM con straordinari. Verifica i mesi mancanti prima di importare.');
-   const latest={year:Number(period.slice(0,4)),month:Number(period.slice(5,7))};
-   const available=new Set(Array.from({length:latest.month},(_,i)=>i+1));
+   const periods=(check?.periods||[]).filter(k=>/^20\d{2}-\d{2}$/.test(k)).sort().reverse();
+   if(!periods.length)throw Error('Importa prima gli straordinari: non risultano mesi disponibili.');
+   const latest={year:Number(periods[0].slice(0,4)),month:Number(periods[0].slice(5,7))};
+   const available=new Set(periods.filter(k=>Number(k.slice(0,4))===latest.year).map(k=>Number(k.slice(5,7))));
    if(btn)btn.textContent='Analizzo le ore mensili del file…';
    const parsed=await parseWorkbook(file,latest.year,available),rows=parsed.rows;
    const excluded=parsed.monthsExcluded.map(m=>parsed.monthNames[m-1]).join(', ');
-   const message='Importare '+rows.length+' dipendenti con le ore SOMMATE ESCLUSIVAMENTE per gennaio–'+parsed.monthNames[latest.month-1]+' '+latest.year+'?'
+   const message='Importare '+rows.length+' dipendenti? Saranno sommate solo le ore dei mesi che risultano negli STRAORDINARI dello stesso DM e dello stesso negozio, fino a '+parsed.monthNames[latest.month-1]+' '+latest.year+'.'
     +(excluded?'\nMesi presenti nel file ma esclusi dal calcolo: '+excluded+'.':'')
     +'\nIl file originale verrà conservato su Drive; il precedente YTD sarà sostituito solo per i negozi riconosciuti, distribuiti ai rispettivi DM.';
    if(!confirm(message))return;
@@ -91,7 +84,7 @@ async function handleImport(file){
    if(!Number(result?.imported_rows))throw Error('Salvataggio non confermato: nessuna riga importata.');
    await loadOvertimeCheck(true);
    const missing=result.unmatched_stores||[];
-   toast('Ore personale: '+result.imported_rows+' dipendenti importati (gennaio–'+parsed.monthNames[latest.month-1]+' '+latest.year+')'+(missing.length?' · '+missing.length+' negozi non associati':''),!!missing.length);
+   toast('Ore personale: '+result.imported_rows+' dipendenti importati (solo mesi presenti negli straordinari, fino a '+parsed.monthNames[latest.month-1]+' '+latest.year+')'+(missing.length?' · '+missing.length+' negozi non associati':''),!!missing.length);
    if(missing.length)showModal('Negozi non associati','<p>Questi negozi non sono stati associati in modo univoco a un DM della catena:</p><p>'+missing.map(esc).join(', ')+'</p>');
   }catch(e){toast(e.message||'Impossibile importare le ore personale.',true);}
   finally{if(btn){btn.disabled=false;btn.textContent='IMPORTA ORE PERSONALE';}}
