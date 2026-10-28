@@ -62,4 +62,10 @@ assert.ok(html.includes('sv-visibility-label'),'Store visibility control needs e
 assert.ok(app.includes("if(typeof cal?.store_visits_visible_to_stores!=='boolean')"),'Store calendar must enforce visibility policy');
 const hoursModule=read('assets/js/personnel-hours.js');
 assert.ok(hoursModule.includes('const byDm=check?.dm_periods||{}')&&hoursModule.includes('owners.every('),'Personnel import must select YTD period covered by all DMs');
+// Performance regressions: delegated clicks, one date calculation per day, last-request-wins.
+assert.ok(app.includes("dayMeta={ds,isWeekend,isSunday,isToday}") && app.includes("renderTransposedStoreCell(st,d,idx,track,regionStartIds.has(st.id),dayMeta)"),'Calendar date metadata must be reused per row');
+assert.ok(app.includes("const flag=e.target.closest?.('[data-info-flag]')") && !app.includes("$('[data-info-flag]').forEach"),'Calendar flags use click delegation');
+assert.ok(app.includes('ensureMobileAgendaClickDelegation()') && !app.includes("$('[data-mobile-cell]').forEach"),'Store mobile agenda uses click delegation');
+for(const k of ['reportRequestSequence','overtimeCheckRequestSequence','rmCalendarRequestSequence','holidayConsolidatedRequestSequence'])assert.ok(app.includes(k),'Latest request guard missing: '+k);
+assert.ok(api.includes("if(keys.length<=48)return"),'Avoid parsing persistent cache entries when pruning is not required');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
