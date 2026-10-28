@@ -14,10 +14,10 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=62b9a051ca9ff4fb">
+<link rel="stylesheet" href="./assets/css/app.css?v=b9ef5595b45e3b0f">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
-<script defer src="./assets/js/cloud-api.js?v=5785d49ca2e890b5"></script>
-<script defer src="./assets/js/app.js?v=148ae3b6a0f475cf"></script>
+<script defer src="./assets/js/cloud-api.js?v=686e9f3778e388e7"></script>
+<script defer src="./assets/js/app.js?v=1babf43b37f824bd"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/personnel-hours.js?v=bde5a2f57da37255"></script>
 </head>
@@ -253,7 +253,7 @@
   <div class="holiday-toolbar-group"><p id="holidayPlanningMeta" class="holiday-view-note"></p><span id="holidaySaveStatus" class="holiday-saving"></span></div>
  </div>
  <div class="card holiday-summary-card">
-  <div class="section-head"><div><h3>Quadro ferie dipendenti</h3><p class="muted">Le ore programmate/godute e le ore residue si aggiornano automaticamente dal planning giornaliero.</p></div><button id="addHolidayEmployeeBtn" class="btn primary store-only">Aggiungi dipendente</button></div>
+  <div class="section-head"><div><h3>Quadro ferie dipendenti</h3><p class="muted">Le ore programmate/godute e le ore residue si aggiornano automaticamente dal planning giornaliero. Trascina il simbolo ⋮⋮ davanti al nome per riordinare i dipendenti.</p></div><button id="addHolidayEmployeeBtn" class="btn primary store-only">Aggiungi dipendente</button></div>
   <div id="holidayEmployeeSummary" class="table-scroll"><div class="empty">Seleziona un negozio per caricare il planning.</div></div>
  </div>
  <div class="card holiday-planning-card">
@@ -295,9 +295,10 @@
   <div id="holidayConsolidatedStores" class="consolidated-table-wrap"></div>
  </div>
  <div class="card consolidated-section">
-  <div class="section-head"><div><h3>Dettaglio dipendenti</h3><p class="consolidated-upload-note">Il dato “Smaltimento 31/12” riprende la logica del file aziendale: TOT.GODUTO / SPETT.31/12.</p></div></div>
+  <div class="section-head"><div><h3>Dettaglio dipendenti</h3><p class="consolidated-upload-note">Il dato “Smaltimento 31/12” riprende la logica del file aziendale: TOT.GODUTO / SPETT.31/12.</p><p id="holidayStoreDisposalLegend" class="store-only hidden store-disposal-legend"></p></div></div>
   <div id="holidayConsolidatedEmployees" class="consolidated-table-wrap"></div>
  </div>
+ <div class="store-only hidden store-holiday-disclaimer" role="note" aria-label="Avvertenza sulla proiezione delle ferie"><span class="store-holiday-disclaimer-icon" aria-hidden="true">!</span><p>La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo e non considera eventuali variazioni contrattuali, orarie, aspettative o altre causali incidenti sulla maturazione di ferie e ROL.</p></div>
 </section>
 <section id="page-holidayreport" class="page admin-only">
  <div class="holiday-toolbar card">
@@ -345,6 +346,10 @@
  </div>
  <div id="overtimeSourceNote" class="overtime-source-note hidden"></div>
  <div id="personnelIncidencePanel" class="card overtime-section admin-only" aria-live="polite"><div class="section-head"><div><h3>Incidenza ore straordinarie sulle ore lavorate</h3><p class="muted">Budget previsto: 3% delle ore lavorate, su periodo YTD comparabile.</p></div></div><div id="personnelIncidenceContent" class="table-scroll"></div></div>
+ <section id="overtimeStoreBudgetPanel" class="card overtime-section store-only hidden store-overtime-budget" aria-labelledby="overtimeStoreBudgetTitle">
+  <div class="section-head"><div><h3 id="overtimeStoreBudgetTitle">Budget straordinari · il tuo negozio</h3><p class="muted">Confronto tra ore lavorate e straordinari sullo stesso periodo YTD disponibile.</p></div></div>
+  <div id="overtimeStoreBudgetContent" aria-live="polite"></div>
+ </section>
  <div id="overtimeKpis" class="kpi-grid overtime-kpis"></div>
  <div class="overtime-charts">
   <div class="card overtime-chart-card"><h3>Andamento mensile</h3><p>Straordinario, malattia e infortunio in ore sul periodo importato.</p><div class="overtime-legend"><span><i class="overtime-dot ot"></i>Straordinario</span><span><i class="overtime-dot sick"></i>Malattia</span><span><i class="overtime-dot injury"></i>Infortunio</span></div><div id="overtimeMonthlyChart"></div></div>
