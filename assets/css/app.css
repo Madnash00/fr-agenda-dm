@@ -1802,3 +1802,19 @@ body.agenda-store-profile .agenda-events{gap:5px}
 .store-budget-note{margin:10px 0 0;padding:9px 11px;border-radius:8px;background:#fff1e8;color:#7a451d;font-size:11px;font-weight:700}
 @media(max-width:850px){.store-budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.store-budget-stat strong{font-size:18px}.store-budget-summary{gap:7px}.store-holiday-disclaimer{padding:12px}.store-holiday-disclaimer p{font-size:11px}}
+
+/* FERIE CONSOLIDATE · semaforo unico per card e tabelle, DM e NEGOZIO. */
+#holidayConsolidatedKpis .consolidated-regular-kpi{background:#fff5f9;border:1px solid #f5e3eb}
+#holidayConsolidatedKpis .consolidated-disposal-kpi{border:1px solid hsl(var(--pace-hue) 75% 48%);background:hsl(var(--pace-hue) 94% 89%)}
+#holidayConsolidatedKpis .consolidated-disposal-kpi span{color:hsl(var(--pace-hue) 75% 30%)}
+#holidayConsolidatedKpis .consolidated-disposal-kpi strong{color:hsl(var(--pace-hue) 85% 26%)}
+#holidayConsolidatedKpis .pace-red{--pace-hue:0}
+#holidayConsolidatedKpis .pace-amber{--pace-hue:41}
+#holidayConsolidatedKpis .pace-green{--pace-hue:137}
+/* CHECK STRAORDINARI · RISPARMIATO: colori nella convenzione richiesta. */
+#overtimeStoreBudgetPanel .store-budget-stat.saved-green{background:#ecf8ef;border-color:#98d5aa}
+#overtimeStoreBudgetPanel .store-budget-stat.saved-green strong{color:#16713b}
+#overtimeStoreBudgetPanel .store-budget-stat.saved-red{background:#fff0f1;border-color:#e7acb1}
+#overtimeStoreBudgetPanel .store-budget-stat.saved-red strong{color:#ac3345}
+#overtimeStoreBudgetPanel .store-budget-summary{grid-template-columns:repeat(3,minmax(130px,1fr))}
+@media(max-width:700px){#overtimeStoreBudgetPanel .store-budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}

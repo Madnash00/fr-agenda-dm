@@ -77,4 +77,14 @@ const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()
 assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
 assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
 assert.ok(app.includes('function renderStoreOvertimeBudget()')&&app.includes("String(d.store_id||'')!==own"),'Store budget must be restricted to authenticated store');
+// Strict regression locks: requested overtime filter and consolidated formatting.
+const hoursUI=read('assets/js/personnel-hours.js');
+assert.ok(hoursUI.includes("employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows"),'DM selected-store employee report must exclude zero worked hours only');
+const consolidated=app.slice(app.indexOf('function renderHolidayConsolidated()'),app.indexOf('async function loadHolidayConsolidatedReport(',app.indexOf('function renderHolidayConsolidated()')));
+assert.ok(consolidated.includes('consolidated-disposal-kpi')&&consolidated.includes('consolidated-regular-kpi'),'Holiday KPI colors must share disposal logic');
+assert.ok(consolidated.includes('<th>Smaltimento 31/12</th>')&&consolidated.includes("store-disposal-badge ${paceClass(x.disposal_pct)}"),'Store summary percent must use employee disposal badge');
+assert.ok(consolidated.includes("if(legend)legend.classList.remove('hidden')"),'DM must see year-progress disposal legend');
+const budgetView=app.slice(app.indexOf('function renderStoreOvertimeBudget()'),app.indexOf('function renderOvertimeMonthlyChart()',app.indexOf('function renderStoreOvertimeBudget()')));
+assert.ok(budgetView.includes("['Budget disponibile fino ad oggi',budget]")&&budgetView.includes("['Risparmiato',remaining]")&&!budgetView.includes("['Scostamento',delta]"),'NEGOZIO budget cards should have requested labels and no scostamento');
+assert.ok(budgetView.includes("n<0?'saved-green':'saved-red'"),'RISPARMIATO negative green, nonnegative red');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
