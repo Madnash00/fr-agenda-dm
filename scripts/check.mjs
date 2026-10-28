@@ -60,4 +60,6 @@ assert.ok(html.includes('visual-dashboard-link')&&read('assets/css/app.css').inc
 assert.ok(app.includes('function outlookSvUid(e)')&&app.includes("latestVisitByDate.get(e.event_date)===e"),'Outlook SVs must be deduplicated per day and use stable identities');
 assert.ok(html.includes('sv-visibility-label'),'Store visibility control needs explicit state label');
 assert.ok(app.includes("if(typeof cal?.store_visits_visible_to_stores!=='boolean')"),'Store calendar must enforce visibility policy');
+const hoursModule=read('assets/js/personnel-hours.js');
+assert.ok(hoursModule.includes('const byDm=check?.dm_periods||{}')&&hoursModule.includes('owners.every('),'Personnel import must select YTD period covered by all DMs');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
