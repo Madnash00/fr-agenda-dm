@@ -87,4 +87,8 @@ assert.ok(consolidated.includes("if(legend)legend.classList.remove('hidden')"),'
 const budgetView=app.slice(app.indexOf('function renderStoreOvertimeBudget()'),app.indexOf('function renderOvertimeMonthlyChart()',app.indexOf('function renderStoreOvertimeBudget()')));
 assert.ok(budgetView.includes("['Budget disponibile fino ad oggi',budget]")&&budgetView.includes("['Risparmiato',remaining]")&&!budgetView.includes("['Scostamento',delta]"),'NEGOZIO budget cards should have requested labels and no scostamento');
 assert.ok(budgetView.includes("n<0?'saved-red':'saved-green'"),'RISPARMIATO negative red, nonnegative green');
+assert.ok(html.includes('id="rmOvertimeBudgetPanel"')&&html.includes('id="rmHolidayConsolidatedLegend"'),'RM layout panels must exist');
+assert.ok(app.includes('function renderRMOvertimeBudget()')&&app.includes('function overtimeBudgetPanelMarkup(p)'),'Shared overtime UI must exist');
+assert.ok(!app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.indexOf('function renderStoreOvertimeBudget()')).includes('<strong>${usage'),'Do not show oversized budget usage percentage');
+assert.ok(app.includes('function rmDisposalColor(v,year)')&&app.includes('consolidated-disposal-kpi'),'RM holiday colors must follow the same progress rules');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
