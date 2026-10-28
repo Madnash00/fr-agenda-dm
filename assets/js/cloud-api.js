@@ -23,7 +23,7 @@ const AGENDA_CACHE_DOMAIN_BY_READ=Object.freeze({
 });
 const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
  createEvent:['calendar','audit'],updateEvent:['calendar','audit'],deleteEvent:['calendar','audit'],setStoreVisitVisibility:['calendar','audit'],
- saveHolidayPeriods:['holidayPeriods','audit'],createHolidayEmployee:['holiday','audit'],updateHolidayEmployee:['holiday','audit'],deleteHolidayEmployee:['holiday','audit'],saveHolidayPlanBatch:['holiday','audit'],
+ saveHolidayPeriods:['holidayPeriods','audit'],createHolidayEmployee:['holiday','audit'],updateHolidayEmployee:['holiday','audit'],saveHolidayEmployeeOrder:['holiday','audit'],deleteHolidayEmployee:['holiday','audit'],saveHolidayPlanBatch:['holiday','audit'],
  importHolidayConsolidated:['holidayConsolidated','audit'],importStoreOvertimeCheck:['overtime','audit'],importPersonnelWorkHoursYtd:['overtime','audit'],saveActionPlan:['actionPlan','audit'],deleteActionPlan:['actionPlan','audit'],recordExport:['audit'],
  createAdmin:['directory','audit'],saveStoreMenuConfig:['directory','audit'],saveProfileMenuConfig:['directory','audit'],setProfileAdminFlag:['directory','audit'],createStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],updateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],deactivateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],resetStorePassword:['directory','audit'],updateRegion:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],commitStoreImport:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit']
 });
