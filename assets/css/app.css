@@ -1818,3 +1818,12 @@ body.agenda-store-profile .agenda-events{gap:5px}
 #overtimeStoreBudgetPanel .store-budget-stat.saved-red strong{color:#ac3345}
 #overtimeStoreBudgetPanel .store-budget-summary{grid-template-columns:repeat(3,minmax(130px,1fr))}
 @media(max-width:700px){#overtimeStoreBudgetPanel .store-budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* RM FERIE CONSOLIDATE — stessi colori di DM/NEGOZIO, senza modificare il planning. */
+#rmHolidayConsolidatedKpis .consolidated-regular-kpi{background:#fff5f9;border:1px solid #f5e3eb}
+#rmHolidayConsolidatedKpis .consolidated-disposal-kpi{border:1px solid hsl(var(--pace-hue) 75% 48%);background:hsl(var(--pace-hue) 94% 89%)}
+#rmHolidayConsolidatedKpis .consolidated-disposal-kpi span{color:hsl(var(--pace-hue) 75% 30%)}
+#rmHolidayConsolidatedKpis .consolidated-disposal-kpi strong{color:hsl(var(--pace-hue) 85% 26%)}
+#rmHolidayConsolidatedKpis .pace-red{--pace-hue:0}#rmHolidayConsolidatedKpis .pace-amber{--pace-hue:41}#rmHolidayConsolidatedKpis .pace-green{--pace-hue:137}
+#page-rmovertime .store-budget-summary{grid-template-columns:repeat(3,minmax(130px,1fr))}
+@media(max-width:700px){#page-rmovertime .store-budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
