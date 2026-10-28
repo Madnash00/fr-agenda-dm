@@ -1749,6 +1749,11 @@ body.agenda-store-profile .agenda-events{gap:5px}
 .nav-launch-btn .nav-launch-favicon{width:14px;height:14px;object-fit:contain;flex:0 0 14px;margin-right:7px;vertical-align:middle}
 .nav-launch-btn .nav-launch-favicon[hidden]{display:none}
 
+/* Center only VISUAL DASHBOARD while preserving its favicon and external-link icon. */
+.nav-launch-btn.visual-dashboard-link{justify-content:center;position:relative;text-align:center}
+.nav-launch-btn.visual-dashboard-link .nav-launch-icon{position:absolute;right:9px}
+.nav-launch-btn.visual-dashboard-link .nav-launch-favicon{position:absolute;left:9px;margin-right:0}
+
 .sv-visibility-btn{min-width:31px;display:inline-flex;align-items:center;justify-content:center;padding-inline:7px}.sv-visibility-btn[aria-pressed="false"]{opacity:.7;border-color:#b96c7d;color:#8c3f3b}.sv-visibility-btn:disabled{opacity:.45;cursor:wait}
 
 /* CALENDARIO RM · ADATTA: tutta l'altezza delle righe in un'unica vista, senza scroll verticale. */

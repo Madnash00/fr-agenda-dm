@@ -56,4 +56,6 @@ assert.ok(html.includes('id="storeChangePasswordBtn"') && html.indexOf('id="stor
 assert.ok(app.includes("$('#storeChangePasswordBtn').onclick=changeOwnPassword"),'Store self-password change must use existing authenticated API');
 assert.ok(app.includes("(currentUser?.profile_role==='DM'||currentUser?.profile_role==='ADMIN')"),'ADMIN must inherit DM store visit visibility');
 assert.ok(html.includes('id="rmCalFitBtn"') && app.includes('function applyRMCalendarFit()') && app.includes('requestAnimationFrame(applyRMCalendarFit)'),'RM fit control must reflow calendar without altering rows');
+assert.ok(html.includes('visual-dashboard-link')&&read('assets/css/app.css').includes('.nav-launch-btn.visual-dashboard-link{justify-content:center'),'Visual Dashboard title should be centered');
+assert.ok(app.includes('function outlookSvUid(e)')&&app.includes("latestVisitByDate.get(e.event_date)===e"),'Outlook SVs must be deduplicated per day and use stable identities');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
