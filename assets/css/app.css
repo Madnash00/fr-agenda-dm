@@ -1768,3 +1768,37 @@ body.agenda-store-profile .agenda-events{gap:5px}
 .nav-btn,.nav-launch-btn,.btn,.event-chip,.cell-click{touch-action:manipulation}
 .nav-btn:focus-visible,.nav-launch-btn:focus-visible,.btn:focus-visible,.event-chip:focus-visible{outline:2px solid #d289a3;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.nav-btn,.nav-launch-btn,.btn,.event-chip{transition:none!important}}
+
+
+/* STORE · proiezione consolidato e semaforo progressivo rispetto ai giorni trascorsi. */
+.store-holiday-disclaimer{display:flex;align-items:flex-start;gap:12px;margin:14px 0 2px;padding:15px 16px;border:1px solid #c99777;border-left:5px solid #b76b40;border-radius:12px;background:#fff6ec;color:#6a381d;box-shadow:0 3px 12px rgba(110,60,30,.07)}
+.store-holiday-disclaimer p{margin:0;font-weight:750;line-height:1.52;font-size:12px}
+.store-holiday-disclaimer-icon{display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;border-radius:50%;background:#ad5429;color:white;font-size:16px;font-weight:900}
+.store-disposal-legend{margin:8px 0 0;font-weight:750;color:#574b4b;font-size:11px}
+.store-disposal-badge{display:inline-flex;justify-content:center;min-width:74px;padding:4px 9px;border:1px solid hsl(var(--pace-hue) 78% 48%);border-radius:999px;background:hsl(var(--pace-hue) 95% 90%);color:hsl(var(--pace-hue) 88% 26%);font-weight:900;box-shadow:inset 0 1px 0 #ffffffbb}
+.store-disposal-badge.pace-red{--pace-hue:0}.store-disposal-badge.pace-amber{--pace-hue:41}.store-disposal-badge.pace-green{--pace-hue:137}
+#holidayConsolidatedEmployees.store-consolidated-table th:last-child{white-space:nowrap}
+/* STORE · planning ferie: presa ergonomica per mouse, touch e tastiera. */
+.holiday-drag-handle{display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;margin-right:6px;min-width:25px;min-height:25px;border:1px solid #c5bac1;border-radius:7px;color:#6c535e;background:#fff1f5;cursor:grab;touch-action:none;font-weight:900;font-size:15px;user-select:none}
+.holiday-drag-handle:hover,.holiday-drag-handle:focus-visible{background:#f9dae5;border-color:#bc8096;outline-offset:2px}
+.holiday-drag-handle:active{cursor:grabbing}
+[data-holiday-sort-id].holiday-drag-target{outline:2px dashed #b45075;outline-offset:-2px;background-color:#fff0f5}
+[data-holiday-sort-id].holiday-drag-source{opacity:.55}
+.holiday-summary-table .holiday-name-input{max-width:calc(100% - 36px)}
+/* STORE · budget: ore assolute, uso e residuo senza arrotondamenti fuorvianti. */
+.store-overtime-budget{padding:14px 16px}
+.store-budget-summary{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px;margin:10px 0 14px}
+.store-budget-stat{background:#f7f4f5;padding:13px;border:1px solid #e7dce0;border-radius:11px}
+.store-budget-stat span{display:block;color:#6e6369;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.store-budget-stat strong{display:block;margin-top:7px;font-size:22px;line-height:1.1;font-weight:900;font-variant-numeric:tabular-nums}
+.store-budget-stat.budget-alert strong{color:#a72d45}
+.store-budget-chart{padding:14px;border:1px solid #e6d9dd;border-radius:12px;background:linear-gradient(120deg,#fff9fb,#f8f5f6)}
+.store-budget-chart-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:12px;font-weight:800}
+.store-budget-chart-top strong{font-size:18px;font-variant-numeric:tabular-nums}
+.store-budget-track{position:relative;height:20px;border-radius:999px;background:#e9e2e5;overflow:hidden}
+.store-budget-track-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#d987a5,#ad436f);transition:width .3s ease}
+.store-budget-chart.over-budget .store-budget-track-fill{background:linear-gradient(90deg,#e39b4c,#c83d58)}
+.store-budget-foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:9px;font-size:11px;color:#665a62}
+.store-budget-note{margin:10px 0 0;padding:9px 11px;border-radius:8px;background:#fff1e8;color:#7a451d;font-size:11px;font-weight:700}
+@media(max-width:850px){.store-budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.store-budget-stat strong{font-size:18px}.store-budget-summary{gap:7px}.store-holiday-disclaimer{padding:12px}.store-holiday-disclaimer p{font-size:11px}}
