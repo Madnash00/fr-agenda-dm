@@ -76,7 +76,7 @@ assert.ok(app.includes('store-disposal-badge')&&app.includes('SPETTANTE AC 31/12
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
 assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
 assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
-assert.ok(app.includes('function renderStoreOvertimeBudget()')&&app.includes("String(d.store_id||'')!==own"),'Store budget must be restricted to authenticated store');
+assert.ok(app.includes('function renderStoreOvertimeBudget()')&&app.includes("String(d.store_id||'')!==String(currentUser.store_id||'')"),'Store budget must be restricted to authenticated store');
 // Strict regression locks: requested overtime filter and consolidated formatting.
 const hoursUI=read('assets/js/personnel-hours.js');
 assert.ok(hoursUI.includes("employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows"),'DM selected-store employee report must exclude zero worked hours only');
