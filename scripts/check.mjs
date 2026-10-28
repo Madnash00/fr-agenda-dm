@@ -70,4 +70,11 @@ for(const k of ['reportRequestSequence','overtimeCheckRequestSequence','rmCalend
 assert.ok(api.includes("if(keys.length<=48)return"),'Avoid parsing persistent cache entries when pruning is not required');
 assert.ok(app.includes("if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibilityReady||!storeVisitsVisibleToStores))"),'STORE SV must fail closed before verified visibility');
 assert.ok(app.includes("storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;\n storeVisitsVisibilityReady=true;\n if(!dir.length)"),'STORE privacy must be applied after checking DM ownership');
+// Store-only holiday and overtime UX regression locks.
+assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
+assert.ok(app.includes('store-disposal-badge')&&app.includes('SPETTANTE AC 31/12')&&app.includes('<th>GODUTO</th>'),'Store employee consolidated columns must remain');
+const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
+assert.ok(!overtimeDetail.includes('<th>Livello</th>')&&!overtimeDetail.includes('x.level'),'NEGOZIO employee level column must never render');
+assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
+assert.ok(app.includes('function renderStoreOvertimeBudget()')&&app.includes("String(d.store_id||'')!==own"),'Store budget must be restricted to authenticated store');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
