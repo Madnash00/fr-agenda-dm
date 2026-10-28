@@ -93,4 +93,10 @@ assert.ok(!app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.in
 assert.ok(app.includes('function rmDisposalColor(v,year)')&&app.includes('consolidated-disposal-kpi'),'RM holiday colors must follow the same progress rules');
 assert.ok(app.includes('function placeDmOvertimeBudget()')&&app.includes('toolbar.after(panel)')&&app.includes('incidence.after(panel)'),'DM budget should follow filters and STORE layout should remain unchanged');
 assert.ok(!read('assets/js/personnel-hours.js').includes('class="personnel-summary"')&&!read('assets/js/personnel-hours.js').includes("const stats=[["),'Incidence KPI cards should be removed, table retained');
+// Targeted UI regressions: holiday period source and DM eye button geometry.
+assert.ok(app.includes('function holidayConsolidatedPeriodName(meta)')&&app.includes('function holidayConsolidatedPeriodBadge(meta)'),'Clear consolidated month/year required');
+assert.ok(app.includes('rmHolidayConsolidatedPeriodBadge(d.sources)'),'RM needs explicit uniform/mixed-period indication');
+assert.ok(!app.includes("icon.textContent=storeVisitsVisibleToStores?'👁':'◉̸'"),'Do not replace the eye with an unrelated glyph');
+assert.ok(html.includes('class="sv-eye-cross"')&&html.includes('class="sv-eye-svg"'),'DM button uses shared SVG eye with centered X');
+assert.ok(read('assets/css/app.css').includes('#page-calendar #todayBtn,#page-calendar #storeVisitVisibilityBtn'),'Calendar Today and SV visibility buttons must share height');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
