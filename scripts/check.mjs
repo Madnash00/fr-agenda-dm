@@ -86,5 +86,5 @@ assert.ok(consolidated.includes('<th>Smaltimento 31/12</th>')&&consolidated.incl
 assert.ok(consolidated.includes("if(legend)legend.classList.remove('hidden')"),'DM must see year-progress disposal legend');
 const budgetView=app.slice(app.indexOf('function renderStoreOvertimeBudget()'),app.indexOf('function renderOvertimeMonthlyChart()',app.indexOf('function renderStoreOvertimeBudget()')));
 assert.ok(budgetView.includes("['Budget disponibile fino ad oggi',budget]")&&budgetView.includes("['Risparmiato',remaining]")&&!budgetView.includes("['Scostamento',delta]"),'NEGOZIO budget cards should have requested labels and no scostamento');
-assert.ok(budgetView.includes("n<0?'saved-green':'saved-red'"),'RISPARMIATO negative green, nonnegative red');
+assert.ok(budgetView.includes("n<0?'saved-red':'saved-green'"),'RISPARMIATO negative red, nonnegative green');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
