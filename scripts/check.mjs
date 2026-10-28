@@ -68,4 +68,6 @@ assert.ok(app.includes("const flag=e.target.closest?.('[data-info-flag]')") && !
 assert.ok(app.includes('ensureMobileAgendaClickDelegation()') && !app.includes("$('[data-mobile-cell]').forEach"),'Store mobile agenda uses click delegation');
 for(const k of ['reportRequestSequence','overtimeCheckRequestSequence','rmCalendarRequestSequence','holidayConsolidatedRequestSequence'])assert.ok(app.includes(k),'Latest request guard missing: '+k);
 assert.ok(api.includes("if(keys.length<=48)return"),'Avoid parsing persistent cache entries when pruning is not required');
+assert.ok(app.includes("if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibilityReady||!storeVisitsVisibleToStores))"),'STORE SV must fail closed before verified visibility');
+assert.ok(app.includes("storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;\n storeVisitsVisibilityReady=true;\n if(!dir.length)"),'STORE privacy must be applied after checking DM ownership');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
