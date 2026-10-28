@@ -972,8 +972,18 @@ function overtimeBudgetPanelMarkup(p){
  return `<div class="store-budget-summary">${cards.map(([label,n])=>`<div class="store-budget-stat ${label==='Risparmiato'?(n<0?'saved-red':'saved-green'):''}"><span>${label}</span><strong>${fmt(n)} h</strong></div>`).join('')}</div>
  <div class="store-budget-chart ${remaining<0?'over-budget':''}"><div class="store-budget-chart-top"><span>Utilizzo del budget · ${fmt(pct)}% delle ore lavorate</span></div><div class="store-budget-track" role="progressbar" aria-label="Budget straordinari utilizzato" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${usage===null?0:Math.min(100,Math.max(0,usage))}"><div class="store-budget-track-fill" style="width:${usage===null?0:Math.min(100,Math.max(0,usage))}%"></div></div><div class="store-budget-foot"><span>Ore lavorate: <strong>${fmt(worked)} h</strong></span><span>Incidenza straordinari: <strong>${fmt(used/worked*100)}%</strong> · Delta <strong>${used/worked*100-pct>0?'+':''}${fmt(used/worked*100-pct)} pp</strong></span><span>YTD: gennaio–${String(p.through_month).padStart(2,'0')}/${p.year}</span></div></div>${remaining<0?'<p class="store-budget-note">Attenzione: le ore straordinarie hanno superato il budget del periodo.</p>':''}`;
 }
+function placeDmOvertimeBudget(){
+ const panel=$('#overtimeStoreBudgetPanel'),toolbar=$('#page-overtimecheck .overtime-toolbar'),incidence=$('#personnelIncidencePanel');
+ if(!panel||!toolbar||!incidence)return;
+ if(currentUser?.role==='ADMIN'){
+  if(toolbar.nextElementSibling!==panel)toolbar.after(panel);
+ }else if(incidence.nextElementSibling!==panel){
+  incidence.after(panel);
+ }
+}
 function renderStoreOvertimeBudget(){
  const panel=$('#overtimeStoreBudgetPanel'),host=$('#overtimeStoreBudgetContent'),title=$('#overtimeStoreBudgetTitle');if(!panel||!host)return;
+ placeDmOvertimeBudget();
  const store=currentUser?.role==='STORE',dm=currentUser?.role==='ADMIN',d=overtimeCheckCache;
  panel.classList.toggle('hidden',!store&&!dm);if(!store&&!dm)return;
  if(!d||(store&&String(d.store_id||'')!==String(currentUser.store_id||''))){host.innerHTML='<p class="muted">Dati del negozio non disponibili.</p>';return}
