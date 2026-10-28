@@ -220,7 +220,7 @@ function syncStoreVisitVisibilityState(cal){
 }
 function updateStoreVisitVisibilityButton(){
  const btn=$('#storeVisitVisibilityBtn');if(!btn)return;
- const dm=currentUser?.role==='ADMIN'&&(currentUser?.profile_role==='DM'||currentUser?.profile_role==='ADMIN')&&!rmAdminOriginalUser;
+ const dm=currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'&&!rmAdminOriginalUser;
  btn.classList.toggle('hidden',!dm);
  btn.disabled=!dm||!storeVisitsVisibilityReady;
  btn.setAttribute('aria-pressed',String(storeVisitsVisibleToStores));
