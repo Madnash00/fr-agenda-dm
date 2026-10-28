@@ -113,7 +113,7 @@ function render(){
   const missing=(data.months_missing||[]).map(m=>String(m).padStart(2,'0')).join(', ');
   const info=data.coverage_complete?'Gennaio–'+String(data.through_month).padStart(2,'0')+'/'+data.year+' · Budget '+formatBudget+'.':'Confronto incompleto: mancano gli straordinari dei mesi '+missing+'. Incidenze non calcolate.';
   const stats=[['Ore lavorate YTD',fmt(data.work_hours)],['Ore straordinarie YTD',fmt(data.overtime_hours)],['Incidenza',fmtPct(data.incidence_pct)],['Scostamento',data.excess_pp===null||data.excess_pp===undefined?'N/D':(data.excess_pp>0?'+':'')+fmt2(data.excess_pp)+' pp'],['Budget previsto',formatBudget]].map(v=>'<div class="personnel-stat"><span class="muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong></div>').join('');
-  const employee=overtimeCheckCache?.scope==='STORE',rows=(employee?data.employees:data.stores)||[];
+  const employee=overtimeCheckCache?.scope==='STORE',sourceRows=(employee?data.employees:data.stores)||[],rows=employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows;
   const head='<thead><tr>'+(employee?'<th>Venditrice</th>':'<th>Codice</th><th>Negozio</th>')+'<th class="num">Ore lavorate</th><th class="num">Straordinario</th><th class="num">Incidenza</th><th class="num">Scostamento da BDG</th></tr></thead>';
   const body=rows.map(x=>{
    const over=x.excess_pp!==null&&x.excess_pp!==undefined&&x.excess_pp>0;
