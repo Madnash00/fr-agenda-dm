@@ -66,8 +66,8 @@ async function handleImport(file){
   if(btn){btn.disabled=true;btn.textContent='Verifico il periodo degli straordinari…';}
   try{
    // Always check the entire district, regardless of the store currently selected in the report.
-   const check=await window.agendaCloudApi.request('getStoreOvertimeCheck',{store_id:'',__force:true});
-   const periods=(check?.months||[]).map(x=>({year:Number(x.year),month:Number(x.month)})).filter(x=>x.year>=2020&&x.month>=1&&x.month<=12);
+   const check=await window.agendaCloudApi.request('getGlobalImportOvertimePeriods',{__force:true});
+   const periods=(check?.periods||[]).map(x=>({year:Number(String(x).slice(0,4)),month:Number(String(x).slice(5,7))})).filter(x=>x.year>=2020&&x.month>=1&&x.month<=12);
    const latest=periods.slice().sort((a,b)=>b.year-a.year||b.month-a.month)[0];
    if(!latest)throw Error('Importa prima gli straordinari: non risultano mesi disponibili.');
    const available=new Set(periods.filter(x=>x.year===latest.year).map(x=>x.month));
@@ -77,7 +77,7 @@ async function handleImport(file){
    const excluded=parsed.monthsExcluded.map(m=>parsed.monthNames[m-1]).join(', ');
    const message='Importare '+rows.length+' dipendenti con le ore SOMMATE ESCLUSIVAMENTE per gennaio–'+parsed.monthNames[latest.month-1]+' '+latest.year+'?'
     +(excluded?'\nMesi presenti nel file ma esclusi dal calcolo: '+excluded+'.':'')
-    +'\nIl file originale verrà conservato su Drive; il precedente YTD del distretto per l’anno verrà sostituito.';
+    +'\nIl file originale verrà conservato su Drive; il precedente YTD sarà sostituito solo per i negozi riconosciuti, distribuiti ai rispettivi DM.';
    if(!confirm(message))return;
    if(btn)btn.textContent='Salvo su Google Drive…';
    const source_base64=encodeFile(new Uint8Array(await file.arrayBuffer()));
