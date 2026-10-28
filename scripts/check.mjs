@@ -51,4 +51,9 @@ assert.ok(api.includes('requestEpoch++'), 'Logout must invalidate pending reques
 
 const incorrectSingleSelectorIterations = [...app.matchAll(/(?<!\$)\$\(\s*(?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|\x60(?:[^\x60\\]|\\.)*\x60)\s*\)\s*\.forEach\s*\(/g)];
 assert.equal(incorrectSingleSelectorIterations.length, 0, 'DOM selector error: $() returns one element; use $$() before .forEach()');
+// Focused regressions: ADMIN inherits DM, STORE self-service credentials and RM calendar fit.
+assert.ok(html.includes('id="storeChangePasswordBtn"') && html.indexOf('id="storeChangePasswordBtn"')<html.indexOf('id="logoutBtn"'),'STORE password menu must precede logout');
+assert.ok(app.includes("$('#storeChangePasswordBtn').onclick=changeOwnPassword"),'Store self-password change must use existing authenticated API');
+assert.ok(app.includes("(currentUser?.profile_role==='DM'||currentUser?.profile_role==='ADMIN')"),'ADMIN must inherit DM store visit visibility');
+assert.ok(html.includes('id="rmCalFitBtn"') && app.includes('function applyRMCalendarFit()') && app.includes('requestAnimationFrame(applyRMCalendarFit)'),'RM fit control must reflow calendar without altering rows');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
