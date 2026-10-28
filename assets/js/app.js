@@ -122,8 +122,6 @@ function calendarLegacyStore(st,regionById){return {id:String(st.store_id),store
 function setStoreCalendarContract(cal){
  if(currentUser?.role!=='STORE')return;
  if(typeof cal?.store_visits_visible_to_stores!=='boolean')throw new AgendaApiError('STORE_VISIBILITY_CONTRACT_INVALID','Visibilità SV non disponibile: aggiorna il backend Apps Script.');
- storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;
- storeVisitsVisibilityReady=true;
  const policy=String(cal?.store_calendar_policy||''),scope=String(cal?.calendar_scope||''),view=String(cal?.store_calendar_view||''),serverAdmin=String(cal?.admin_id||''),expectedAdmin=String(currentUser.admin_id||''),own=String(cal?.own_store_id||currentUser.store_id||''),regions=Array.isArray(cal?.regions)?cal.regions:[],regionById=new Map(regions.map(r=>[String(r.region_id),r])),raw=(Array.isArray(cal?.stores)?cal.stores:[]).filter(st=>st.active===true||String(st.active)==='true'||String(st.active)==='1'),dir=raw.map(st=>calendarLegacyStore(st,regionById));
  if(policy!==STORE_CALENDAR_POLICY.id)throw new AgendaApiError('STORE_CALENDAR_POLICY_INVALID',`Policy calendario NEGOZIO non aggiornata (${policy||'assente'}). Pubblica il Code.gs della stessa versione dell'index.html.`);
  if(scope!==STORE_CALENDAR_POLICY.scope)throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Contratto calendario NEGOZIO non coerente.');
@@ -131,6 +129,8 @@ function setStoreCalendarContract(cal){
  if(Number(cal?.calendar_contract_version)!==STORE_CALENDAR_POLICY.contractVersion)throw new AgendaApiError('STORE_CALENDAR_VERSION_INVALID','Versione contratto calendario NEGOZIO non allineata al backend.');
  if(!serverAdmin||!expectedAdmin||serverAdmin!==expectedAdmin)throw new AgendaApiError('STORE_CALENDAR_ADMIN_INVALID','Associazione DM del negozio non coerente. Effettua logout/login dopo aver pubblicato il backend aggiornato.');
  if(!own||own!==String(currentUser.store_id||''))throw new AgendaApiError('STORE_CALENDAR_OWN_STORE_INVALID','Identità del negozio non coerente nel calendario.');
+ storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;
+ storeVisitsVisibilityReady=true;
  if(!dir.length)throw new AgendaApiError('STORE_CALENDAR_SCOPE_EMPTY','Nessun negozio attivo disponibile nel distretto associato.');
  if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Il perimetro calendario contiene negozi non appartenenti al DM associato.');
  if(!dir.some(st=>String(st.id)===own))throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Il proprio negozio non è presente nel perimetro calendario del DM.');
@@ -206,7 +206,7 @@ function isOwnStore(storeId){return isStoreCalendarUser()&&String(storeId||'')==
 function isStoreSmType(type){return ['SM_HOLIDAY','SM_REST','SM_TRANSFER'].includes(String(type||''))}
 function storeCanEditCalendarCell(storeId,track){return isStoreCalendarUser()&&isOwnStore(storeId)&&String(track||'')===STORE_CALENDAR_POLICY.editableTrack}
 function eventAuthoredByStore(ev){if(!isStoreCalendarUser())return false;const author=String(ev?.user_id||'');return !!author&&allowedStoreIds().includes(author)}
-function eventVisibleToCalendarViewer(ev){if(!isStoreCalendarUser())return true;if(ev?.event_type==='STORE_VISIT'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores)return false;const sid=String(ev?.store_id||''),own=String(currentUser.store_id||''),type=String(ev?.event_type||''),storeAuthored=eventAuthoredByStore(ev);if(!sid)return true;if(sid===own){if(isStoreSmType(type))return String(ev?.user_id||'')===own;return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}
+function eventVisibleToCalendarViewer(ev){if(!isStoreCalendarUser())return true;if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibilityReady||!storeVisitsVisibleToStores))return false;const sid=String(ev?.store_id||''),own=String(currentUser.store_id||''),type=String(ev?.event_type||''),storeAuthored=eventAuthoredByStore(ev);if(!sid)return true;if(sid===own){if(isStoreSmType(type))return String(ev?.user_id||'')===own;return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}return (type==='STORE_VISIT'||type==='NOTE')&&!storeAuthored}
 function eventTextVisibleToCalendarViewer(ev){return eventVisibleToCalendarViewer(ev)}
 function canEditEvent(ev){if(currentUser.role==='ADMIN')return true;if(!isStoreCalendarUser())return false;return isOwnStore(ev.store_id)&&isStoreSmType(ev.event_type)}
 function canAddType(type,storeId){if(currentUser.role==='ADMIN')return true;return isOwnStore(storeId)&&isStoreSmType(type)}
@@ -241,7 +241,7 @@ async function toggleStoreVisitVisibility(){
  btn.disabled=true;
  try{
   const result=await window.agendaCloudApi.request('setStoreVisitVisibility',{visible:desired});
-  if(typeof result?.visible!=='boolean'||result.visible!==desired)throw new Error('Impossibile verificare la visibilità delle SV.');
+  if(typeof result?.visible!=='boolean'||result.visible!==desired||(result.admin_id&&String(result.admin_id)!==String(currentUser.admin_id)))throw new Error('Impossibile verificare la visibilità delle SV per questo DM.');
   storeVisitsVisibleToStores=result.visible;
   window.agendaCloudApi.clearCache('calendar');
   calendarRangeFreshUntil.clear();
