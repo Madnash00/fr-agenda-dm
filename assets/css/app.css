@@ -1846,3 +1846,43 @@ body.agenda-store-profile .agenda-events{gap:5px}
 #page-calendar .sv-eye-cross-outline{stroke:#f8eef1;stroke-width:4}
 #page-calendar .sv-eye-cross{stroke:currentColor;stroke-width:2.4}
 @media(max-width:700px){#page-calendar #todayBtn,#page-calendar #storeVisitVisibilityBtn{height:30px;min-height:30px}}
+
+/* STORE Action Plan YTD pre-analysis: exclusively scoped to the store editor. */
+body.agenda-store-profile #page-actionplans .action-plan-toolbar{background:linear-gradient(105deg,#fff,#fff0f5);border:1px solid #eadbe2;padding:13px;border-radius:14px}
+body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px solid #e5e9ec;border-radius:14px}
+.apy-workflow .apy-hero{padding:21px;border-radius:15px;background:linear-gradient(120deg,#fff0f5,#f8f9fb);border:1px solid #efdae3;margin-bottom:15px}
+.apy-workflow .apy-hero small{display:inline-block;padding:6px 10px;border-radius:30px;background:#fff;color:#984266;font-size:10px;font-weight:900;letter-spacing:.08em}
+.apy-workflow .apy-hero h3{font-size:25px;margin:11px 0 6px;color:#27323c;letter-spacing:-.03em}
+.apy-workflow .apy-hero p{font-size:12px;line-height:1.55;color:#626d76;max-width:650px}
+.apy-workflow .apy-panel{padding:16px;margin-bottom:12px;border:1px solid #e3e8ed;border-radius:14px;background:#fff;box-shadow:0 3px 14px rgba(0,0,0,.025)}
+.apy-workflow .apy-panel>h4{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:14px;color:#293440}
+.apy-workflow .apy-panel>h4 span{display:grid;place-items:center;width:33px;height:33px;border-radius:10px;background:#f9eaf0;color:#a04470;font-weight:900;font-size:11px}
+.apy-workflow .apy-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.apy-workflow .apy-field{min-width:0;padding:9px;background:#f9fafb;border:1px solid #e9edf0;border-radius:10px}
+.apy-workflow .apy-field>span{display:block;min-height:26px;font-size:10px;font-weight:800;color:#606b75}
+.apy-workflow .apy-field>div{display:flex;align-items:center;gap:6px}
+.apy-workflow .apy-field input{min-width:0;width:100%;box-sizing:border-box;border:1px solid #dfe5e9;border-radius:7px;padding:8px;font-size:14px;font-weight:800;color:#29343e;background:#fff}
+.apy-workflow .apy-field b{font-size:11px;color:#687681}
+.apy-workflow .apy-field.positive{background:#f1f8f3;border-color:#cee8d6}.apy-workflow .apy-field.positive input{color:#236b41}
+.apy-workflow .apy-field.negative{background:#fff3f4;border-color:#f0cdd2}.apy-workflow .apy-field.negative input{color:#bb2833}
+.apy-workflow .apy-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.apy-workflow .apy-summary>div{padding:11px;border-radius:10px;border:1px solid #e4e9ec;min-width:0}
+.apy-workflow .apy-summary>div:first-child{grid-column:1/-1;background:#f4f6f8}
+.apy-workflow .apy-summary small{display:block;font-size:9px;font-weight:850;color:#6b7780}
+.apy-workflow .apy-summary strong{display:block;font-size:17px;margin-top:5px;color:#29343c}
+.apy-workflow .apy-summary>div:first-child strong{font-size:24px}
+.apy-workflow #apy-output>h4{font-size:12px;margin:8px 0}
+.apy-workflow .apy-chart{display:grid;grid-template-columns:repeat(7,minmax(66px,1fr));gap:8px;overflow-x:auto;padding:9px 3px 4px;border-bottom:1px solid #e1e7eb}
+.apy-workflow .apy-col{min-width:66px;display:flex;align-items:center;flex-direction:column;justify-content:end;gap:6px}
+.apy-workflow .apy-col>strong{font-size:9px;white-space:nowrap;color:#293540}.apy-workflow .apy-col>span{font-size:10px;font-weight:800;min-height:25px;text-align:center}
+.apy-workflow .apy-rail{width:80%;height:155px;display:flex;align-items:end;background:#f5f7f8;border-radius:6px 6px 0 0}
+.apy-workflow .apy-bar{width:100%;background:linear-gradient(#c45c85,#933d66);border-radius:6px 6px 0 0}
+.apy-workflow .apy-col.reference .apy-bar{background:linear-gradient(#90a0aa,#405969)}
+.apy-workflow .apy-explain,.apy-workflow .apy-footer p{font-size:10.5px;line-height:1.5;color:#687581}
+.apy-workflow .apy-help{padding:22px;background:#f7f9fa;text-align:center;border:1px dashed #d7e0e5;border-radius:10px;font-size:12px}
+.apy-workflow .apy-warning{padding:11px;border-radius:10px;color:#735627;background:#fff8e9;border:1px solid #e8d39d;font-size:11px}
+.apy-workflow .apy-footer{display:flex;justify-content:space-between;align-items:center;gap:14px}.apy-workflow .apy-footer button{background:#9a426a;color:#fff;font-weight:900;padding:10px 14px;flex:0 0 auto}.apy-workflow .apy-footer button:disabled{opacity:.45}
+.apy-workflow #apy-plan-stage .action-plan-modal-grid,.apy-workflow #apy-plan-stage .action-obj-section{background:#fff;border:1px solid #e1e6eb;border-radius:13px;padding:15px}
+.apy-workflow #apy-back{margin-top:12px;background:white;border:1px solid #e4c5d1;color:#92446a}
+@media(max-width:760px){.apy-workflow .apy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.apy-workflow .apy-footer{flex-direction:column;align-items:stretch}.apy-workflow .apy-footer button{width:100%}}
+@media(max-width:500px){.apy-workflow .apy-hero{padding:14px}.apy-workflow .apy-hero h3{font-size:21px}.apy-workflow .apy-panel{padding:11px}.apy-workflow .apy-grid{gap:6px}.apy-workflow .apy-field{padding:7px}.apy-workflow .apy-field input{font-size:12px}.apy-workflow .apy-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
