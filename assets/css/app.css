@@ -1886,3 +1886,12 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 .apy-workflow #apy-back{margin-top:12px;background:white;border:1px solid #e4c5d1;color:#92446a}
 @media(max-width:760px){.apy-workflow .apy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.apy-workflow .apy-footer{flex-direction:column;align-items:stretch}.apy-workflow .apy-footer button{width:100%}}
 @media(max-width:500px){.apy-workflow .apy-hero{padding:14px}.apy-workflow .apy-hero h3{font-size:21px}.apy-workflow .apy-panel{padding:11px}.apy-workflow .apy-grid{gap:6px}.apy-workflow .apy-field{padding:7px}.apy-workflow .apy-field input{font-size:12px}.apy-workflow .apy-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ACTION PLAN NEGOZIO: secondo step indipendente, coerente con la pre-analisi YTD. */
+.apy-workflow .apy-period-hero{background:linear-gradient(118deg,#f1f4f7,#fff6f9);border-color:#dce3e9}
+.apy-workflow .apy-period-reference{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;margin-top:12px!important;border:1px solid #dfe5ea;border-radius:8px;background:#fff;font-size:11px!important;color:#52616e!important}
+.apy-workflow .apy-period-reference strong{font-weight:900;color:#253541}
+.apy-workflow .apy-footer .apy-back-button{flex:0 0 auto;background:#fff;color:#775568;border:1px solid #e2cbd5;font-weight:800}
+.apy-workflow #apy-plan-stage .action-plan-modal-grid>.full{order:-1}
+.apy-workflow #apy-plan-stage .action-plan-modal-grid>.full textarea{min-height:130px;border-radius:9px}
+@media(max-width:760px){.apy-workflow .apy-footer .apy-back-button{width:100%}}
