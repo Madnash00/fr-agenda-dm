@@ -104,4 +104,16 @@ for(const id of ['holidayConsolidatedPeriod','holidayConsolidatedReportPeriod','
 assert.ok(app.includes('function periodBadge(label,value,mixed=false)')&&app.includes('function overtimePeriodBadge(months)')&&app.includes('PERIODI DIVERSI PER DM'),'Period badges and mixed RM sources must be supported');
 assert.ok(app.includes('period.innerHTML=overtimePeriodBadge(d?.months)')&&app.includes('period.innerHTML=holidayConsolidatedPeriodBadge(d?.meta)'),'Period from actual dataset required');
 assert.ok(read('assets/css/app.css').includes('.consolidated-period-highlight{display:inline-flex;flex-direction:row')&&read('assets/css/app.css').includes('background:#f5f6f7'),'Shared horizontal gray styling required');
+
+// YTD regression: original store permissions and shared Action Plan schema remain untouched.
+assert.ok(app.includes('function apYtdCalculate(v)')&&app.includes('function apYtdSetup(plan)'),'Store YTD analysis missing');
+assert.ok(app.includes("apYtdSetup(plan);renderActionPlanObjectivesDraft()"),'STORE analysis must open first');
+assert.ok(app.includes("btoa(JSON.stringify(apYtdRead()))"),'YTD fields must be persisted in the existing premise');
+assert.ok(!app.includes('actionPlanPdfWrap(plan.premise,premiseW-20,font)'),'PDF must omit structured YTD metadata');
+const calcCode=app.slice(app.indexOf('const AP_YTD_DEF='),app.indexOf('function actionPlanStore(id){'));
+const calc=new Function(calcCode+';return apYtdCalculate;')();
+const base=calc({sales:100000,salesD:-10,visD:-10,cr:20,crD:-5,upt:2,uptD:-5,asp:50,aspD:-5,atv:100,atvD:-5,ms:40,msD:-5});
+assert.ok(base&&base.ticketsAC===1000&&base.visitsAC===5000,'AC ticket / visit derivation incorrect');
+assert.ok(Math.abs(base.visitsAP-5000/.9)<1e-8&&Math.abs(base.ticketsAP-5000/.9*.2/.95)<1e-8,'AP ticket / visit derivation incorrect');
+assert.ok(base.levers.length===7&&base.levers[6][1]===null,'MS must not have an invented value');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
