@@ -108,7 +108,7 @@ assert.ok(read('assets/css/app.css').includes('.consolidated-period-highlight{di
 // YTD regression: original store permissions and shared Action Plan schema remain untouched.
 assert.ok(app.includes('function apYtdCalculate(v)')&&app.includes('function apYtdSetup(plan)'),'Store YTD analysis missing');
 assert.ok(app.includes("apYtdSetup(plan);renderActionPlanObjectivesDraft()"),'STORE analysis must open first');
-assert.ok(app.includes("btoa(JSON.stringify(apYtdRead()))"),'YTD fields must be persisted in the existing premise');
+assert.ok(app.includes("btoa(JSON.stringify({...apYtdRead(),period:apYtdRead('app-')}))"),'YTD and Action Plan period must persist in the existing premise');
 assert.ok(!app.includes('actionPlanPdfWrap(plan.premise,premiseW-20,font)'),'PDF must omit structured YTD metadata');
 const calcCode=app.slice(app.indexOf('const AP_YTD_DEF='),app.indexOf('function actionPlanStore(id){'));
 const calc=new Function(calcCode+';return apYtdCalculate;')();
@@ -116,4 +116,13 @@ const base=calc({sales:100000,salesD:-10,visD:-10,cr:20,crD:-5,upt:2,uptD:-5,asp
 assert.ok(base&&base.ticketsAC===1000&&base.visitsAC===5000,'AC ticket / visit derivation incorrect');
 assert.ok(Math.abs(base.visitsAP-5000/.9)<1e-8&&Math.abs(base.ticketsAP-5000/.9*.2/.95)<1e-8,'AP ticket / visit derivation incorrect');
 assert.ok(base.levers.length===7&&base.levers[6][1]===null,'MS must not have an invented value');
+
+// Action Plan: standalone period-analysis step must not overwrite historical YTD input.
+assert.ok(app.includes("periodSaved=saved.period&&typeof saved.period==='object'?saved.period:{}"),'Legacy YTD plans must open with a blank action-period analysis');
+assert.ok(app.includes("body('apy-',saved)")&&app.includes("body('app-',periodSaved)"),'Independent YTD and action-period input sets required');
+assert.ok(app.includes("apYtdRender('app-')")&&app.includes("apYtdCalculate(apYtdRead('app-'))"),'Action-period calculations and validation required');
+assert.ok(app.includes("period:apYtdRead('app-')"),'Action-period KPI values must persist independently of legacy YTD fields');
+assert.ok(app.includes('STEP 01 / 03')&&app.includes('STEP 02 / 03')&&app.includes('STEP 03 / 03'),'Three-stage workflow required');
+assert.ok(app.includes("document.getElementById('app-next').onclick")&&app.includes("document.getElementById('app-back').onclick"),'Back/forward navigation must be available on period analysis');
+assert.ok(read('assets/css/app.css').includes('.apy-workflow .apy-period-hero'),'Dedicated period-analysis presentation missing');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
