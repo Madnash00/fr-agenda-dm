@@ -306,23 +306,45 @@ async function submitNewCalendarEvent(payload,temp,successMessage){
 }
 
 function restoreLocalEvent(snapshot){const i=app.events.findIndex(e=>String(e.id)===String(snapshot.id));if(i>=0)app.events[i]=snapshot;else app.events.push(snapshot)}
-const calendarSyncRequestSequence=new Map();
-function syncCalendarRequestIsCurrent(key,sequence){return calendarSyncRequestSequence.get(key)===sequence}
+// Per-date sequencing prevents two overlapping range requests from rolling back newer cells.
+const calendarSyncLatestByDate=new Map();
+let calendarSyncRevision=0,calendarSyncContractRevision=0;
+function calendarSyncDays(from,to){
+ const days=[],end=Date.parse(to+'T00:00:00Z');
+ for(let time=Date.parse(from+'T00:00:00Z');Number.isFinite(time)&&time<=end;time+=86400000)days.push(new Date(time).toISOString().slice(0,10));
+ return days;
+}
+function calendarSyncInvalidateOverlappingFreshness(from,to){
+ for(const key of calendarRangeFreshUntil.keys()){
+  const parts=key.split('|');if(parts.length===2&&parts[0]<=to&&parts[1]>=from)calendarRangeFreshUntil.delete(key);
+ }
+}
 async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=false,silent=false}={}){
- const rangeKey=`${from}|${to}`,freshUntil=calendarRangeFreshUntil.get(rangeKey)||0;
- if(!force&&!expectedEventId&&freshUntil>Date.now())return app.events.filter(e=>e.event_date>=from&&e.event_date<=to);
- const sequence=(calendarSyncRequestSequence.get(rangeKey)||0)+1;calendarSyncRequestSequence.set(rangeKey,sequence);
- const action=currentUser?.role==='STORE'?'getStoreCalendarContext':'getCalendar',cal=await window.agendaCloudApi.request(action,{from,to,__silent:silent,__force:force});
- const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED'&&!(currentUser?.role==='STORE'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores&&e.event_type==='STORE_VISIT')).map(e=>localEventFromServer(e));
+ const rangeKey=from+'|'+to,freshUntil=calendarRangeFreshUntil.get(rangeKey)||0;
+ // STORE visibility is authorization-sensitive: do not use the local range shortcut.
+ if(currentUser?.role!=='STORE'&&!force&&!expectedEventId&&freshUntil>Date.now())return app.events.filter(e=>e.event_date>=from&&e.event_date<=to);
+ const days=calendarSyncDays(from,to),revision=++calendarSyncRevision;
+ for(const day of days)calendarSyncLatestByDate.set(day,revision);
+ calendarSyncContractRevision=revision;
+ const action=currentUser?.role==='STORE'?'getStoreCalendarContext':'getCalendar';
+ const cal=await window.agendaCloudApi.request(action,{from,to,__silent:silent,__force:force});
+ // Only the newest response may change visibility and directory policy.
+ if(calendarSyncContractRevision===revision){
+  if(currentUser?.role==='STORE')setStoreCalendarContract(cal||{});
+  syncStoreVisitVisibilityState(cal);
+ }
+ const visibleSV=currentUser?.role==='STORE'?cal?.store_visits_visible_to_stores===true:true;
+ const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED'&&!(currentUser?.role==='STORE'&&!visibleSV&&e.event_type==='STORE_VISIT')).map(e=>localEventFromServer(e));
  if(expectedEventId&&!fresh.some(e=>String(e.id)===String(expectedEventId)))throw new AgendaApiError('WRITE_VERIFY_FAILED',"Il salvataggio è stato eseguito ma l'evento non è stato riletto dal calendario centrale. Riprova senza chiudere la finestra.");
- // Earlier responses for the same range may not replace a more recently requested version.
- if(!syncCalendarRequestIsCurrent(rangeKey,sequence))return fresh;
- if(currentUser?.role==='STORE')setStoreCalendarContract(cal||{});
- syncStoreVisitVisibilityState(cal);
- // Reconcile only when the backend returns the exact client_key, never by date/text heuristics.
- const confirmedKeys=new Set(fresh.filter(e=>e.client_key).map(e=>String(e.client_key)));
- const pending=app.events.filter(e=>String(e.id).startsWith('TMP:')&&e.event_date>=from&&e.event_date<=to&&!confirmedKeys.has(String(e.client_key||'')));
- app.events=app.events.filter(e=>e.event_date<from||e.event_date>to).concat(fresh,pending);calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
+ const currentDays=new Set(days.filter(day=>calendarSyncLatestByDate.get(day)===revision));
+ if(!currentDays.size)return fresh;
+ const relevantFresh=fresh.filter(e=>currentDays.has(e.event_date));
+ // Reconcile only by exact server-returned client_key, not by matching event contents.
+ const confirmedKeys=new Set(relevantFresh.filter(e=>e.client_key).map(e=>String(e.client_key)));
+ const pending=app.events.filter(e=>currentDays.has(e.event_date)&&String(e.id).startsWith('TMP:')&&!confirmedKeys.has(String(e.client_key||'')));
+ app.events=app.events.filter(e=>!currentDays.has(e.event_date)).concat(relevantFresh,pending);
+ calendarSyncInvalidateOverlappingFreshness(from,to);
+ if(currentDays.size===days.length)calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
  return fresh
 }
 async function syncCalendarDateFromServer(date,expectedEventId=null){return syncCalendarRangeFromServer(date,date,expectedEventId,{force:!!expectedEventId})}
