@@ -84,3 +84,17 @@ Modifiche funzionali senza alterazione del visual design: nelle ferie, durante i
 3. Ambiente di staging/autorizzato con account di prova nei quattro ruoli, visibilità SV disabilitata, codici negozio duplicati in DM distinti.
 4. Strumentare latenze anonime (p50/p95), conteggi API e timing render prima di ottimizzare ulteriormente.
 5. Intervenire su calendari, report e UX con PR ulteriori e confronto before/after reale.
+
+## Aggiornamento tranche P0 — 30/10/2026
+
+### Ulteriore materiale backend locale esaminato
+Durante la revisione è stata rilevata una copia di sorgente Apps Script denominata `Code_AGENDA_DM_ORE_PERSONALE_MESI_STRAORDINARI_2026-10-28.gs` nel contesto del progetto. Questo file dichiara `BACKEND_BUILD = 2026-10-28-personnel-hours-month-store-match-v10`, mentre il client versionato in repository indica `EXPECTED_BACKEND_BUILD = 2026-10-08-rm-iphone-icon-r31`. **La divergenza non dimostra quale build sia in produzione:** occorre una lettura autorizzata dell'endpoint health e la verifica del deployment Apps Script associato.
+
+La copia mostra `LockService.getScriptLock()` sulle mutazioni del planning ferie, restituzione `{saved: entries.length}` da `saveHolidayPlanBatch`, e idempotenza per `createEvent` tramite `client_key`/`source_key`. Non dimostra un controllo di conflitto ottimistico per ogni record o idempotenza di tutte le altre operazioni. Il codice backend non è stato modificato né distribuito.
+
+### Test comportamentali aggiunti
+`scripts/test-holiday-reliability.mjs` usa richieste differite senza account né dati reali per testare: flush concorrenti deduplicati, sequenza dei batch, modifica della stessa cella durante la scrittura, errore di rete e conservazione del valore più recente, assenza di retry automatici per scritture ambigue e conferma incompleta del numero di celle.
+
+Nel client, lo stato di salvataggio ora richiede una risposta `saved` esattamente pari al numero di celle inviate. In caso contrario mantiene le modifiche pendenti ed espone l'errore. Il contratto deve essere verificato sul deployment reale prima del merge.
+
+**Limite di ambito:** questi sono test unitari/sintetici su codice frontend. Non verificano atomicità, serializzazione cross-user o persistenza Google Sheets. I target p50/p95 e le prestazioni del calendario sono ancora privi di baseline reale. La PR deve restare draft sino al collaudo autorizzato.
