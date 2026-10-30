@@ -107,3 +107,17 @@ Nel client, lo stato di salvataggio ora richiede una risposta `saved` esattament
 - È stato aggiunto un pulsante di recupero con etichetta esplicita e focus visibile; il nuovo comportamento è controllato dal test `scripts/test-holiday-reliability.mjs` con errore di rete e riprova manuale.
 
 **Limiti:** le modifiche non sono pubblicate; nessuna persistenza reale Google Sheets è stata collaudata, e la build Apps Script distribuita rimane non confermata. Le letture e i salvataggi delle altre sezioni richiedono ulteriore verifica. Non sono disponibili benchmark comparabili prima/dopo per il calendario e i report.
+
+## Tranche successiva — controllo delle chiavi cache e letture NEGOZIO (30 ottobre 2026)
+
+Durante l'ispezione di `cloud-api.js` sono stati rilevati due problemi dimostrabili per lettura del codice:
+
+1. **`getStoreCalendarContext` assente dall'insieme `readActions`.** Anche se l'azione era presente nella mappa dei domini e aveva TTL 0, non seguiva il percorso di lettura (deduplicazione, gestione di controller e generazioni). Ora è esplicitamente una lettura con TTL 0: non viene memorizzata come risposta riutilizzabile e il controllo di visibilità/autorizzazioni deve continuare a essere eseguito dal backend.
+2. **`stableKey` con replacer `JSON.stringify(payload,Object.keys(payload).sort())`.** Il replacer array filtrava anche le proprietà degli oggetti annidati, rischiando di generare la medesima chiave per due filtri diversi. Ora la normalizzazione delle chiavi è ricorsiva per oggetti e array.
+3. **Refresh stale duplicati.** Ora i refresh già programmati o in volo per la stessa chiave sono deduplicati. I payload di scrittura non sono serializzati inutilmente per costruire chiavi cache; il tracking dei write resta per dominio. Il reset completo della sessione cancella anche lo stato dei refresh programmati.
+
+**Regression test aggiunti:** `scripts/test-api-reliability.mjs` confronta due richieste al calendario NEGOZIO con filtri annidati differenti e verifica che `getStoreCalendarContext` non restituisca un risultato in cache senza interrogare il server. Il test usa un server sintetico senza dati reali.
+
+**CI:** GitHub Actions run [41038222802](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41038222802) ha completato con esito SUCCESS sul commit `0e2f3a06b894be53bbae2d24b05f1b8ba7a14cee`.
+
+**Limitazioni:** il test dimostra il comportamento client, non l'effettiva esclusione delle SV dai payload Apps Script. Persistenza Google Sheets, controllo di ruoli in backend e benchmark dei tempi in browser non sono ancora certificati. Non è stato effettuato alcun deploy su `main` o Apps Script.
