@@ -125,4 +125,10 @@ assert.ok(app.includes("period:apYtdRead('app-')"),'Action-period KPI values mus
 assert.ok(app.includes('STEP 01 / 03')&&app.includes('STEP 02 / 03')&&app.includes('STEP 03 / 03'),'Three-stage workflow required');
 assert.ok(app.includes("document.getElementById('app-next').onclick")&&app.includes("document.getElementById('app-back').onclick"),'Back/forward navigation must be available on period analysis');
 assert.ok(read('assets/css/app.css').includes('.apy-workflow .apy-period-hero'),'Dedicated period-analysis presentation missing');
+
+// Action Plan in-flight changes must remain editable and target the confirmed plan ID.
+assert.ok(app.includes('actionPlanStoreRevision!==submittedRevision'),'Must preserve unsaved in-flight Action Plan edits');
+assert.ok(app.includes('editorForm.dataset.planId=String(saved.plan_id)'),'Second submit must reuse confirmed plan ID');
+assert.ok(app.includes('planForm.dataset.planId||null'),'Submit handler must read updated ID');
+assert.ok(app.includes('if(!saved?.plan_id||!String(saved.plan_id).trim())'),'Cannot confirm Action Plan without server plan ID');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
