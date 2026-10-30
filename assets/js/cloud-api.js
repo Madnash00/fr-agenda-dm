@@ -1,7 +1,7 @@
 
 /* CONFIGURAZIONE: dopo il deploy di Apps Script incolla qui l'URL che termina con /exec */
 const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbx5aIQzE7YEwyctRMtTHPMMOxVw3vpIq2YQeayCW8LiFvKQfGf-tT98DvTU5oAJONwt0w/exec';
-const EXPECTED_BACKEND_BUILD='2026-10-08-rm-iphone-icon-r31';
+const EXPECTED_BACKEND_BUILD='2026-10-30-event-idempotency-v13';
 const STORE_CALENDAR_POLICY=Object.freeze({id:'STORE_DM_CONTEXT_OWN_SM_WRITE_V6',scope:'DM_FULL',view:'STORE_DM_ONLY_OTHER_STORES_V3',contractVersion:6,editableTrack:'SM',hideOtherStoreStoreAuthored:true,protected:true});
 class AgendaApiError extends Error{constructor(code,message,requestId){super(message||code);this.name='AgendaApiError';this.code=code;this.requestId=requestId||null}}
 const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',_token:'',_user:null,
