@@ -290,7 +290,8 @@ async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=f
  if(currentUser?.role==='STORE')setStoreCalendarContract(cal||{});
  syncStoreVisitVisibilityState(cal);
  const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED'&&!(currentUser?.role==='STORE'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores&&e.event_type==='STORE_VISIT')).map(e=>localEventFromServer(e));
- app.events=app.events.filter(e=>e.event_date<from||e.event_date>to).concat(fresh);calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
+ const pending=app.events.filter(e=>String(e.id).startsWith('TMP:')&&e.event_date>=from&&e.event_date<=to);
+  app.events=app.events.filter(e=>e.event_date<from||e.event_date>to).concat(fresh,pending);calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
  if(expectedEventId&&!fresh.some(e=>String(e.id)===String(expectedEventId)))throw new AgendaApiError('WRITE_VERIFY_FAILED',"Il salvataggio è stato eseguito ma l'evento non è stato riletto dal calendario centrale. Riprova senza chiudere la finestra.");return fresh
 }
 async function syncCalendarDateFromServer(date,expectedEventId=null){return syncCalendarRangeFromServer(date,date,expectedEventId,{force:!!expectedEventId})}
@@ -685,7 +686,10 @@ function holidayMetrics(emp){
  const total=holidayHours(emp.residual_ap_hours)+holidayHours(emp.projected_ac_hours),planned=holidayPlanningCache?.plannedTotals?.[String(emp.employee_id)]||0,residual=total-planned,pct=total>0?planned/total*100:0;
  return {total,planned,residual,pct}
 }
+let holidayPlanningRequestSequence=0;
 async function loadHolidayPlanning(force=false){
+ const requestSequence=++holidayPlanningRequestSequence;
+ if(currentUser?.role==='STORE'&&(holidayPlanQueue.size||holidaySaveInFlight)){const ok=await flushHolidayPlanQueue();if(requestSequence!==holidayPlanningRequestSequence)return;if(!ok){toast('Il planning contiene modifiche non confermate. Riprova prima di ricaricare.',true);return}}
  const requestedYear=Number($('#holidayYear')?.value)||new Date().getFullYear();
  void loadHolidayPeriodYear(requestedYear,force).then(()=>{if(Number($('#holidayYear')?.value)===requestedYear&&holidayPlanningCache&&!holidayPlanningCache.all_stores&&Number(holidayPlanningCache.year)===requestedYear)renderHolidayGrid()}).catch(()=>{});
  const storeId=holidayCurrentStoreId(),year=Number($('#holidayYear')?.value)||new Date().getFullYear();
@@ -693,13 +697,15 @@ async function loadHolidayPlanning(force=false){
  try{
   if(holidayPlanningAllStoresSelected()){
    const data=await window.agendaCloudApi.request('getHolidayReport',{year,__force:force});
+   if(requestSequence!==holidayPlanningRequestSequence||holidayCurrentStoreId()!==storeId||Number($('#holidayYear')?.value)!==year)return;
    holidayPlanningCache={all_stores:true,year:data.year||year,read_only:true,kpis:data.kpis||{},stores:data.stores||[]};
    renderHolidayPlanning();
    return;
   }
   const data=await window.agendaCloudApi.request('getHolidayPlanning',{store_id:storeId,year,__force:force});
+  if(requestSequence!==holidayPlanningRequestSequence||holidayCurrentStoreId()!==storeId||Number($('#holidayYear')?.value)!==year)return;
   holidayPlanningCache=data;indexHolidayPlanningCache();renderHolidayPlanning();
- }catch(err){toast(err.message||'Impossibile caricare il planning ferie',true)}
+ }catch(err){if(requestSequence===holidayPlanningRequestSequence)toast(err.message||'Impossibile caricare il planning ferie',true)}
 }
 function renderHolidayPlanning(){
  if(!holidayPlanningCache)return;
@@ -887,11 +893,27 @@ function updateHolidayPlanCell(inp,normalize=false){
  inp.closest('td')?.classList.toggle('has-hours',holidayPlanHasValue(next));holidayPlanQueue.set(key,{employee_id:id,plan_date:date,value:next==='R'?'R':nextHours});renderHolidaySummary();setHolidaySaveStatus('Salvataggio…');
  clearTimeout(holidayPlanTimer);holidayPlanTimer=setTimeout(flushHolidayPlanQueue,280);
 }
+let holidaySaveInFlight=null;
 async function flushHolidayPlanQueue(){
- if(!holidayPlanQueue.size||currentUser?.role!=='STORE')return;
- const batch=[...holidayPlanQueue.values()];holidayPlanQueue.clear();clearTimeout(holidayPlanTimer);holidayPlanTimer=null;
- try{await window.agendaCloudApi.request('saveHolidayPlanBatch',{entries:batch,__silent:true});setHolidaySaveStatus('Salvato','ok')}
- catch(err){for(const x of batch)holidayPlanQueue.set(`${x.employee_id}|${x.plan_date}`,x);setHolidaySaveStatus('Errore salvataggio','error');toast(err.message||'Salvataggio planning ferie non riuscito',true)}
+ if(currentUser?.role!=='STORE')return false;
+ if(holidaySaveInFlight)return holidaySaveInFlight;
+ if(!holidayPlanQueue.size)return true;
+ clearTimeout(holidayPlanTimer);holidayPlanTimer=null;
+ const scope=String(currentUser.store_id||''),isCurrent=()=>currentUser?.role==='STORE'&&String(currentUser.store_id||'')===scope;
+ holidaySaveInFlight=(async()=>{
+  while(holidayPlanQueue.size&&isCurrent()){
+   const batch=[...holidayPlanQueue.values()];holidayPlanQueue.clear();setHolidaySaveStatus('Salvataggio in corso…');
+   try{await window.agendaCloudApi.request('saveHolidayPlanBatch',{entries:batch,__silent:true})}
+   catch(err){
+    if(isCurrent())for(const x of batch){const key=`${x.employee_id}|${x.plan_date}`;if(!holidayPlanQueue.has(key))holidayPlanQueue.set(key,x)}
+    if(isCurrent()){setHolidaySaveStatus('Non salvato · Riprova','error');toast(err.message||'Salvataggio ferie non confermato. Verifica prima di riprovare.',true)}
+    return false;
+   }
+  }
+  if(isCurrent()&&!holidayPlanQueue.size){setHolidaySaveStatus('Salvato','ok');return true}
+  return false;
+ })();
+ try{return await holidaySaveInFlight}finally{holidaySaveInFlight=null}
 }
 function addHolidayEmployee(){
  if(currentUser?.role!=='STORE')return;
@@ -1162,7 +1184,8 @@ function initActionPlanControls(){
  syncActionPlanReportStoreOptions();
 }
 function syncActionPlanReportStoreOptions(){const sel=$('#actionPlanReportStore');if(!sel)return;const prev=sel.value,region=$('#actionPlanReportRegion')?.value||'';const stores=(app?.stores||[]).filter(s=>s.active&&(!region||s.region===region)).sort((a,b)=>a.name.localeCompare(b.name));sel.innerHTML='<option value="">Tutti i negozi</option>'+stores.map(s=>`<option value="${s.id}">${esc(s.code||'—')} · ${esc(s.name)}</option>`).join('');if([...sel.options].some(o=>o.value===prev))sel.value=prev}
-async function loadActionPlans(force=false){try{actionPlanCache=await window.agendaCloudApi.request('getActionPlans',{__force:force});initActionPlanControls();renderActionPlans()}catch(err){toast(err.message||'Impossibile caricare gli Action Plan',true)}}
+let actionPlanLoadSequence=0;
+async function loadActionPlans(force=false){const seq=++actionPlanLoadSequence;try{const data=await window.agendaCloudApi.request('getActionPlans',{__force:force});if(seq!==actionPlanLoadSequence)return;actionPlanCache=data;initActionPlanControls();renderActionPlans()}catch(err){if(seq===actionPlanLoadSequence)toast(err.message||'Impossibile caricare gli Action Plan',true)}}
 function renderActionPlans(){
  const root=$('#actionPlanList');if(!root)return;
  let rows=(actionPlanCache?.plans||[]).slice();
@@ -1263,7 +1286,7 @@ function apCaptureOpenObjectiveDraft(){
  else if(next.objective_text||next.actions||next.tools||next.notes||next.tasks.length)actionPlanDraftObjectives.push(next);
 }
 function openActionObjectiveDraft(index=null){const editor=$('#actionObjectiveEditor');if(!editor)return;if(currentUser?.role==='STORE'&&!editor.classList.contains('hidden')){apCaptureOpenObjectiveDraft();renderActionPlanObjectivesDraft();}const existing=Number.isInteger(index)?actionPlanDraftObjectives[index]:null,status=actionPlanStatusKey(existing?.status);editor.classList.remove('hidden');editor.innerHTML=`<div id="actionObjectiveForm" class="form-grid">${currentUser?.role==='STORE'?`<label class="ap-obj-short-field">DATO / OBJ<input id="apObjText" type="text" maxlength="15" placeholder="Max 15 caratteri" value="${esc(existing?.objective_text||'')}" required><small>Indicatore o obiettivo sintetico · max 15 caratteri</small></label>`:`<label class="full">Dato / Obiettivo<textarea id="apObjText" rows="3" required>${esc(existing?.objective_text||'')}</textarea></label>`}<label class="full">${currentUser?.role==='STORE'?'STRATEGIA':'AZIONI'}<textarea id="apObjActions" rows="4" required>${esc(existing?.actions||'')}</textarea></label>${currentUser?.role==='STORE'?'':`<label class="full">STRUMENTI<textarea id="apObjTools" rows="3" required>${esc(existing?.tools||'')}</textarea></label>`}<label>${currentUser?.role==='STORE'?'STATO OBIETTIVO':'Stato OBJ'}<select id="apObjStatus"><option value="IN_PROGRESS" ${status==='IN_PROGRESS'?'selected':''}>In corso</option><option value="ACHIEVED" ${status==='ACHIEVED'?'selected':''}>Raggiunto</option><option value="NOT_ACHIEVED" ${status==='NOT_ACHIEVED'?'selected':''}>Non Raggiunto</option></select></label><label class="full">Note<textarea id="apObjNotes" rows="3" placeholder="Note sullo stato, avanzamento o motivazioni (facoltative)">${esc(existing?.notes||'')}</textarea></label><div class="full" style="display:flex;justify-content:flex-end;gap:6px"><button type="button" id="cancelActionObjectiveBtn" class="btn">Annulla</button><button type="button" id="saveActionObjectiveBtn" class="btn primary">${currentUser?.role==='STORE'?'SALVA OBJ':(existing?'Aggiorna OBJ':'Aggiungi OBJ')}</button></div></div>`;apTasksOpen(existing,index);$('#cancelActionObjectiveBtn').onclick=()=>{editor.classList.add('hidden');editor.innerHTML=''};$('#saveActionObjectiveBtn').onclick=()=>{const obj={objective_id:existing?.objective_id||'',objective_text:$('#apObjText').value.trim(),actions:$('#apObjActions').value.trim(),tools:$('#apObjTools')?.value.trim()||existing?.tools||'',status:actionPlanStatusKey($('#apObjStatus').value),notes:$('#apObjNotes').value.trim(),tasks:currentUser?.role==='STORE'?apTaskRead():(existing?.tasks||[])};if(currentUser?.role==='STORE'&&obj.tasks.some(t=>!t.task.trim()||!String(t.tools||'').trim()||!t.owner.trim()||!AP_TIMING_OPTIONS.includes(String(t.timing_monitoraggio||''))||t.checkpoints.some(c=>(!!c.date||!!String(c.note||'').trim()||!!c.contingency)&&(!c.date||!String(c.note||'').trim()||!c.contingency)))){toast('Completa Azione, Strumenti, Owner, Timing e ogni checkpoint inserito; oppure salva la bozza dall’Action Plan.',true);return}if(!obj.objective_text||!obj.actions||(currentUser?.role!=='STORE'&&!obj.tools)){toast(currentUser?.role==='STORE'?'Compila Dato/Obiettivo e Strategia':'Compila Dato/Obiettivo, Azioni e Strumenti',true);return}if(existing)actionPlanDraftObjectives[index]=obj;else actionPlanDraftObjectives.push(obj);editor.classList.add('hidden');editor.innerHTML='';renderActionPlanObjectivesDraft();toast(existing?'OBJ aggiornato':'OBJ aggiunto')}}
-async function saveActionPlanForm(e,planId,isDraft=false){e.preventDefault();if(currentUser?.role==='STORE'&&actionPlanStoreSaving)return;if(currentUser?.role==='STORE')apCaptureOpenObjectiveDraft();if(!isDraft&&!actionPlanDraftObjectives.length){toast('Inserisci almeno un OBJ',true);return}const payload={plan_id:planId||'',store_id:actionPlanDraftStoreId,plan_date:$('#apDate').value,period_year:Number($('#apYear').value),period_fraction:$('#apFraction').value,premise:currentUser?.role==='STORE'?($('#apPremise').value.trim()+'\n[APYTD1:'+btoa(JSON.stringify({...apYtdRead(),period:apYtdRead('app-')}))+']'):$('#apPremise').value.trim(),is_draft:!!isDraft,objectives:actionPlanDraftObjectives.map(o=>({objective_id:o.objective_id||'',objective_text:o.objective_text,actions:o.actions,tools:o.tools,status:actionPlanStatusKey(o.status),notes:o.notes||'',tasks:o.tasks===undefined?undefined:o.tasks}))};if(currentUser?.role==='STORE'&&(!apYtdCalculate(apYtdRead())||!apYtdCalculate(apYtdRead('app-')))){toast('Completa correttamente sia la PRE-ANALISI YTD sia l’ANALISI PERIODO ACTION PLAN prima di salvare.',true);return}if(!isDraft&&!payload.premise){toast(currentUser?.role==='STORE'?'Inserisci l’ANALISI':'Inserisci la PREMESSA',true);return}if(!isDraft&&currentUser?.role==='STORE'){if(payload.objectives.some(o=>!o.objective_text?.trim()||!o.actions?.trim())){toast('Compila Dato/Obiettivo e Strategia o usa SALVA BOZZA.',true);return}if(payload.objectives.some(o=>!(o.tasks||[]).length||(o.tasks||[]).some(t=>!String(t.task||'').trim()||!String(t.tools||'').trim()||!String(t.owner||'').trim()||!AP_TIMING_OPTIONS.includes(String(t.timing_monitoraggio||''))||(t.checkpoints||[]).some(c=>(!!c.date||!!String(c.note||'').trim()||!!c.contingency)&&(!c.date||!String(c.note||'').trim()||!c.contingency))))){toast('Ogni obiettivo richiede almeno un’azione completa. Completa eventuali checkpoint (data, note, contingenza) oppure usa SALVA BOZZA.',true);return}}const buttons=[...($('#actionPlanForm')?.querySelectorAll('.modal-actions button')||[])];if(currentUser?.role==='STORE')actionPlanStoreSaving=true;buttons.forEach(b=>b.disabled=true);try{const saved=await window.agendaCloudApi.request('saveActionPlan',payload);actionPlanCache=actionPlanCache||{plans:[]};const i=actionPlanCache.plans.findIndex(x=>String(x.plan_id)===String(saved.plan_id));if(i>=0)actionPlanCache.plans[i]=saved;else actionPlanCache.plans.unshift(saved);actionPlanReportCache=null;closeModal(true);renderActionPlans();toast(isDraft?'Bozza Action Plan salvata':'Action Plan salvato')}catch(err){toast(err.message||'Salvataggio Action Plan non riuscito',true)}finally{actionPlanStoreSaving=false;buttons.forEach(b=>{if(b.isConnected)b.disabled=false})}}
+async function saveActionPlanForm(e,planId,isDraft=false){e.preventDefault();if(currentUser?.role==='STORE'&&actionPlanStoreSaving)return;if(currentUser?.role==='STORE')apCaptureOpenObjectiveDraft();if(!isDraft&&!actionPlanDraftObjectives.length){toast('Inserisci almeno un OBJ',true);return}const payload={plan_id:planId||'',store_id:actionPlanDraftStoreId,plan_date:$('#apDate').value,period_year:Number($('#apYear').value),period_fraction:$('#apFraction').value,premise:currentUser?.role==='STORE'?($('#apPremise').value.trim()+'\n[APYTD1:'+btoa(JSON.stringify({...apYtdRead(),period:apYtdRead('app-')}))+']'):$('#apPremise').value.trim(),is_draft:!!isDraft,objectives:actionPlanDraftObjectives.map(o=>({objective_id:o.objective_id||'',objective_text:o.objective_text,actions:o.actions,tools:o.tools,status:actionPlanStatusKey(o.status),notes:o.notes||'',tasks:o.tasks===undefined?undefined:o.tasks}))};if(currentUser?.role==='STORE'&&(!apYtdCalculate(apYtdRead())||!apYtdCalculate(apYtdRead('app-')))){toast('Completa correttamente sia la PRE-ANALISI YTD sia l’ANALISI PERIODO ACTION PLAN prima di salvare.',true);return}if(!isDraft&&!payload.premise){toast(currentUser?.role==='STORE'?'Inserisci l’ANALISI':'Inserisci la PREMESSA',true);return}if(!isDraft&&currentUser?.role==='STORE'){if(payload.objectives.some(o=>!o.objective_text?.trim()||!o.actions?.trim())){toast('Compila Dato/Obiettivo e Strategia o usa SALVA BOZZA.',true);return}if(payload.objectives.some(o=>!(o.tasks||[]).length||(o.tasks||[]).some(t=>!String(t.task||'').trim()||!String(t.tools||'').trim()||!String(t.owner||'').trim()||!AP_TIMING_OPTIONS.includes(String(t.timing_monitoraggio||''))||(t.checkpoints||[]).some(c=>(!!c.date||!!String(c.note||'').trim()||!!c.contingency)&&(!c.date||!String(c.note||'').trim()||!c.contingency))))){toast('Ogni obiettivo richiede almeno un’azione completa. Completa eventuali checkpoint (data, note, contingenza) oppure usa SALVA BOZZA.',true);return}}const buttons=[...($('#actionPlanForm')?.querySelectorAll('.modal-actions button')||[])];if(currentUser?.role==='STORE')actionPlanStoreSaving=true;buttons.forEach(b=>b.disabled=true);try{const saved=await window.agendaCloudApi.request('saveActionPlan',payload);++actionPlanLoadSequence;actionPlanCache=actionPlanCache||{plans:[]};const i=actionPlanCache.plans.findIndex(x=>String(x.plan_id)===String(saved.plan_id));if(i>=0)actionPlanCache.plans[i]=saved;else actionPlanCache.plans.unshift(saved);actionPlanReportCache=null;closeModal(true);renderActionPlans();toast(isDraft?'Bozza Action Plan salvata':'Action Plan salvato')}catch(err){toast(err.message||'Salvataggio Action Plan non riuscito',true)}finally{actionPlanStoreSaving=false;buttons.forEach(b=>{if(b.isConnected)b.disabled=false})}}
 function actionPlanPdfImageFit(doc,src,x,y,maxW,maxH){if(!src)return;try{const p=doc.getImageProperties(src),ratio=Math.min(maxW/p.width,maxH/p.height),w=p.width*ratio,h=p.height*ratio;doc.addImage(src,'PNG',x,y+(maxH-h)/2,w,h)}catch(err){console.warn('Logo PDF non disponibile',err)}}
 function actionPlanPdfStatusColor(status){const s=actionPlanStatusKey(status);return s==='ACHIEVED'?[78,126,93]:s==='NOT_ACHIEVED'?[160,78,76]:[80,105,130]}
 function actionPlanPdfFileName(plan){const st=actionPlanStore(plan.store_id),store=String(st?.code??st?.name??'NEGOZIO').replace(/[^a-z0-9_-]+/gi,'_'),period=String(actionPlanPeriodLabel(plan)||'PERIODO').replace(/\s+/g,'_'),date=String(plan?.plan_date||'').replace(/[^0-9-]+/g,'');return `Action_Plan_${store}_${period}_${date}.pdf`}
