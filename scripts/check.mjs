@@ -131,4 +131,10 @@ assert.ok(app.includes('actionPlanStoreRevision!==submittedRevision'),'Must pres
 assert.ok(app.includes('editorForm.dataset.planId=String(saved.plan_id)'),'Second submit must reuse confirmed plan ID');
 assert.ok(app.includes('planForm.dataset.planId||null'),'Submit handler must read updated ID');
 assert.ok(app.includes('if(!saved?.plan_id||!String(saved.plan_id).trim())'),'Cannot confirm Action Plan without server plan ID');
+
+assert.ok(app.includes('function submitNewCalendarEvent(payload,temp,successMessage)'),'Shared event-create handler missing');
+assert.ok(app.includes('calendarEventRequiresVerification(err)'),'Unconfirmed event state missing');
+assert.ok(app.includes('function confirmedCalendarEventId(saved)'),'Server event ID confirmation missing');
+assert.ok(app.includes('function unresolvedCalendarEvents()'),'Pending-event unload guard missing');
+assert.ok(app.includes('await submitNewCalendarEvent(payload,temp,'),'Event creation must use shared handler');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
