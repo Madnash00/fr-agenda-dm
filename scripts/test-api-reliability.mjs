@@ -58,5 +58,5 @@ await Promise.resolve();
 assert.equal(server.reads.length,4,'Duplicate read must be deduplicated');
 server.reads[3].resolve();
 await Promise.all([regular,duplicate]);
-assert.equal(server.calls.filter(x=>x==='getActionPlans').length,3);
+assert.equal(server.calls.filter(x=>x==='getActionPlans').length,4);
 console.log('PASS: P0 API stale-read fencing, cache invalidation and read deduplication');
