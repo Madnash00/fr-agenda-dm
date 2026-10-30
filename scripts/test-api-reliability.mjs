@@ -41,19 +41,22 @@ server.reads[1].resolve();
 const newResult=await freshRead;
 assert.equal(newResult.value,'new');
 server.reads[0].resolve();
+for(let i=0;i<8;i++)await Promise.resolve();
+assert.equal(server.reads.length,3,'Stale response must trigger a new verified fetch');
+server.reads[2].resolve();
 const originalResult=await firstRead;
 assert.equal(originalResult.value,'new','Late pre-write reply must refresh, not restore stale data');
 const cached=await api.request('getActionPlans');
 assert.equal(cached.value,'new','Cache must retain post-write data');
-assert.equal(server.calls.filter(x=>x==='getActionPlans').length,2,'No redundant read on fresh cache');
+assert.equal(server.calls.filter(x=>x==='getActionPlans').length,3,'No redundant read on fresh cache');
 
 // Concurrent identical reads are deduplicated. Explicit force bypasses a pending non-forced read.
 api.clearCache('actionPlan');
 const regular=api.request('getActionPlans');
 const duplicate=api.request('getActionPlans');
 await Promise.resolve();
-assert.equal(server.reads.length,3,'Duplicate read must be deduplicated');
-server.reads[2].resolve();
+assert.equal(server.reads.length,4,'Duplicate read must be deduplicated');
+server.reads[3].resolve();
 await Promise.all([regular,duplicate]);
 assert.equal(server.calls.filter(x=>x==='getActionPlans').length,3);
 console.log('PASS: P0 API stale-read fencing, cache invalidation and read deduplication');
