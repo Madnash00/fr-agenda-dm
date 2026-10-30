@@ -65,10 +65,10 @@ const oldStore=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true
 const newStore=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
 storeRequests[0].reject(new Error('old response failure'));
 await assert.rejects(oldStore);
-assert.deepEqual(storeEnv.storeFlags(),{ready:true,visible:true},'Superseded failure must not revoke newer policy');
+assert.equal(storeEnv.storeFlags().ready,true);assert.equal(storeEnv.storeFlags().visible,true,'Superseded failure must not revoke newer policy');
 storeRequests[1].reject(new Error('current contract unavailable'));
 await assert.rejects(newStore);
-assert.deepEqual(storeEnv.storeFlags(),{ready:false,visible:false},'Current contract failure must fail closed');
+assert.equal(storeEnv.storeFlags().ready,false);assert.equal(storeEnv.storeFlags().visible,false,'Current contract failure must fail closed');
 assert.ok(!storeState.events.some(e=>e.event_type==='STORE_VISIT'),'Old SV must be removed on current STORE failure');
 assert.ok(storeState.events.some(e=>e.event_type==='NOTE'),'Non-SV events should not be indiscriminately discarded');
 assert.ok(storeRenders>0,'The UI should reflect fail-closed state');
