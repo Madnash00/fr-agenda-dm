@@ -60,3 +60,22 @@ server.reads[3].resolve();
 await Promise.all([regular,duplicate]);
 assert.equal(server.calls.filter(x=>x==='getActionPlans').length,4);
 console.log('PASS: P0 API stale-read fencing, cache invalidation and read deduplication');
+
+
+const storeRequests=[];
+const storeApi=environment.makeApi({endpoint:'https://example.invalid/test',getToken:()=> 'session-a',fetchFn:async(_url,opts)=>{
+ const body=JSON.parse(opts.body);
+ if(body.action==='getStoreCalendarContext'){const pending=deferred();storeRequests.push({body,pending});await pending.promise;return {json:async()=>({ok:true,data:{store:body.store_id,filter:body.filter?.region}})}}
+ return {json:async()=>({ok:true,data:{}})};
+}});
+const east=storeApi.request('getStoreCalendarContext',{store_id:'one',filter:{region:'EAST'}});
+const west=storeApi.request('getStoreCalendarContext',{store_id:'one',filter:{region:'WEST'}});
+await Promise.resolve();
+assert.equal(storeRequests.length,2,'Nested filter variants must not share an inflight request');
+storeRequests[0].pending.resolve();storeRequests[1].pending.resolve();
+assert.equal((await east).filter,'EAST');assert.equal((await west).filter,'WEST');
+const again=storeApi.request('getStoreCalendarContext',{store_id:'one',filter:{region:'EAST'}});
+await Promise.resolve();
+assert.equal(storeRequests.length,3,'STORE calendar context must always fetch fresh server permissions');
+storeRequests[2].pending.resolve();await again;
+console.log('PASS: STORE permission read bypasses cache and nested filter requests remain independent');
