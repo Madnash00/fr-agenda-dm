@@ -23,4 +23,11 @@ assert.equal(await failed,false);
 assert.equal(queue.get(key).value,12);assert.equal(requests.length,3);
 const retry=ctx.run();assert.equal(requests[3].data.entries[0].value,12);requests[3].d.resolve({saved:1});
 assert.equal(await retry,true);assert.equal(statuses.at(-1)[0],'Salvato');
+// A successful HTTP response with incomplete persistence acknowledgement is not success.
+queue.set(key,entry(18));
+const incomplete=ctx.run();requests[4].d.resolve({saved:0});
+assert.equal(await incomplete,false,'Reject incomplete write acknowledgements');
+assert.equal(queue.get(key).value,18,'Retain unconfirmed edits for explicit recovery');
+assert.equal(statuses.at(-1)[1],'error');
+assert.equal(requests.length,5,'Do not blindly retry ambiguous writes');
 console.log('PASS: serialized holiday saves, newest-value preservation and explicit retry');
