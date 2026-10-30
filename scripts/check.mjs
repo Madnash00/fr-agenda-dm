@@ -137,4 +137,6 @@ assert.ok(app.includes('calendarEventRequiresVerification(err)'),'Unconfirmed ev
 assert.ok(app.includes('function confirmedCalendarEventId(saved)'),'Server event ID confirmation missing');
 assert.ok(app.includes('function unresolvedCalendarEvents()'),'Pending-event unload guard missing');
 assert.ok(app.includes('await submitNewCalendarEvent(payload,temp,'),'Event creation must use shared handler');
+assert.ok(app.includes("if(!dir.length)throw new AgendaApiError('STORE_CALENDAR_SCOPE_EMPTY'") && app.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;',app.indexOf('function setStoreCalendarContract('))>app.indexOf('if(!dir.length)throw new AgendaApiError',app.indexOf('function setStoreCalendarContract(')),'STORE policy must validate store directory before committing visibility');
+assert.ok(app.includes('calendar-pending-event'),'Calendar pending events need desktop state');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
