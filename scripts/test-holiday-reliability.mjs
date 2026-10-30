@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-const src=readFileSync('assets/js/app.js','utf8'),start=src.indexOf('let holidaySaveInFlight=null;'),end=src.indexOf('function addHolidayEmployee(){',start);
+const src=readFileSync('assets/js/app.js','utf8'),start=src.indexOf('let holidaySaveInFlight=null,holidaySaveRetryRequired=false;'),end=src.indexOf('function addHolidayEmployee(){',start);
 assert.ok(start>=0&&end>start);
 const requests=[],queue=new Map(),statuses=[];
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject}}
@@ -21,7 +21,7 @@ assert.equal(await first,true);assert.equal(await parallel,true);assert.equal(qu
 queue.set(key,entry(10));const failed=ctx.run();queue.set(key,entry(12));requests[2].d.reject(new Error('connection interrupted'));
 assert.equal(await failed,false);
 assert.equal(queue.get(key).value,12);assert.equal(requests.length,3);
-const retry=ctx.run();assert.equal(requests[3].data.entries[0].value,12);requests[3].d.resolve({saved:1});
+const blocked=await ctx.run();assert.equal(blocked,false,'Automatic retry after failed write must be blocked');assert.equal(requests.length,3);const retry=ctx.run(true);assert.equal(requests[3].data.entries[0].value,12);requests[3].d.resolve({saved:1});
 assert.equal(await retry,true);assert.equal(statuses.at(-1)[0],'Salvato');
 // A successful HTTP response with incomplete persistence acknowledgement is not success.
 queue.set(key,entry(18));
