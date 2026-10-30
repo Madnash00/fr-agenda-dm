@@ -323,13 +323,19 @@ async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=f
  const rangeKey=from+'|'+to,freshUntil=calendarRangeFreshUntil.get(rangeKey)||0;
  // STORE visibility is authorization-sensitive: do not use the local range shortcut.
  if(currentUser?.role!=='STORE'&&!force&&!expectedEventId&&freshUntil>Date.now())return app.events.filter(e=>e.event_date>=from&&e.event_date<=to);
+ const requestUser=currentUser,requestApp=app,requestToken=String(window.AgendaSession?.getToken?.()||'');
  const days=calendarSyncDays(from,to),revision=++calendarSyncRevision;
  for(const day of days)calendarSyncLatestByDate.set(day,revision);
  calendarSyncContractRevision=revision;
  const action=currentUser?.role==='STORE'?'getStoreCalendarContext':'getCalendar';
  const cal=await window.agendaCloudApi.request(action,{from,to,__silent:silent,__force:force});
+ // Never apply a reply from a previous account/session or an obsolete app snapshot.
+ if(currentUser!==requestUser||app!==requestApp||String(window.AgendaSession?.getToken?.()||'')!==requestToken)return [];
  // Only the newest response may change visibility and directory policy.
- if(calendarSyncContractRevision===revision){
+ const currentContract=calendarSyncContractRevision===revision;
+ // STORE authorization state is not per-date: an older policy reply must never update the view.
+ if(currentUser?.role==='STORE'&&!currentContract)return [];
+ if(currentContract){
   if(currentUser?.role==='STORE')setStoreCalendarContract(cal||{});
   syncStoreVisitVisibilityState(cal);
  }
