@@ -56,11 +56,12 @@ const storeEnv={
  storeVisitsVisibilityReady:true,storeVisitsVisibleToStores:true,calendarSyncContractRevision:0,
  window:{AgendaSession:{getToken:()=>storeToken},agendaCloudApi:{request(){const d=deferred();storeRequests.push(d);return d.promise}}},
  AgendaApiError:class extends Error{},localEventFromServer:e=>({...e,id:String(e.event_id)}),
- setStoreCalendarContract(){},syncStoreVisitVisibilityState(){},
+ setStoreCalendarContract(cal){if(typeof cal?.store_visits_visible_to_stores!=='boolean')throw new Error('invalid contract');storeEnv.storeFlagsUpdate(cal.store_visits_visible_to_stores)},syncStoreVisitVisibilityState(){},
  storeCalendarReady:()=>true,renderCalendar:()=>{storeRenders++},toast(){}
 };
 vm.createContext(storeEnv);
 vm.runInContext(source.slice(start,end)+';this.syncStoreTest=syncCalendarRangeFromServer;this.storeFlags=()=>({ready:storeVisitsVisibilityReady,visible:storeVisitsVisibleToStores});',storeEnv);
+storeEnv.storeFlagsUpdate=visible=>{storeEnv.storeVisitsVisibilityReady=Boolean(visible||!visible);storeEnv.storeVisitsVisibleToStores=visible};
 const oldStore=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
 const newStore=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
 storeRequests[0].reject(new Error('old response failure'));
@@ -72,5 +73,24 @@ assert.equal(storeEnv.storeFlags().ready,false);assert.equal(storeEnv.storeFlags
 assert.ok(!storeState.events.some(e=>e.event_type==='STORE_VISIT'),'Old SV must be removed on current STORE failure');
 assert.ok(storeState.events.some(e=>e.event_type==='NOTE'),'Non-SV events should not be indiscriminately discarded');
 assert.ok(storeRenders>0,'The UI should reflect fail-closed state');
+// After an outage, a verified response must restore visibility and reconcile the affected range.
+const recovery=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
+storeRequests[2].resolve({store_visits_visible_to_stores:true,events:[
+ {event_id:'SV-RECOVERED',event_date:'2026-11-05',event_type:'STORE_VISIT'},
+ {event_id:'NOTE-RECOVERED',event_date:'2026-11-05',event_type:'NOTE'}
+]});
+await recovery;
+assert.equal(storeEnv.storeFlags().ready,true,'A verified response must restore readiness');
+assert.equal(storeEnv.storeFlags().visible,true,'A verified visible policy must restore SV display');
+assert.ok(storeState.events.some(e=>e.id==='SV-RECOVERED'),'Recovered SV must reappear after authorized refresh');
+const hidden=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
+storeRequests[3].resolve({store_visits_visible_to_stores:false,events:[
+ {event_id:'SV-MUST-NOT-RENDER',event_date:'2026-11-05',event_type:'STORE_VISIT'},
+ {event_id:'NOTE-VISIBLE',event_date:'2026-11-05',event_type:'NOTE'}
+]});
+await hidden;
+assert.equal(storeEnv.storeFlags().visible,false,'A verified hidden policy must be respected');
+assert.ok(!storeState.events.some(e=>e.event_type==='STORE_VISIT'),'SV must be filtered even if backend returns SV with hidden policy');
+assert.ok(storeState.events.some(e=>e.id==='NOTE-VISIBLE'),'Authorized notes should remain usable');
 console.log('PASS: STORE visibility fails closed and superseded failures cannot revoke newer state');
 
