@@ -79,3 +79,37 @@ await Promise.resolve();
 assert.equal(storeRequests.length,3,'STORE calendar context must always fetch fresh server permissions');
 storeRequests[2].pending.resolve();await again;
 console.log('PASS: STORE permission read bypasses cache and nested filter requests remain independent');
+
+
+const queued=[];
+const fakeTimers=[];
+let session='alpha';
+const clockEnv={
+ window:{AgendaAdminContext:null,dispatchEvent(){}},
+ sessionStorage:{getItem(){return null},setItem(){},removeItem(){},get length(){return 0},key(){return null}},
+ AbortController,Date,Map,Set,Promise,JSON,Error,Math,Number,String,console,clearTimeout,
+ setTimeout(fn){fakeTimers.push(fn);return fakeTimers.length},
+ CustomEvent:environment.CustomEvent
+};
+vm.createContext(clockEnv);
+vm.runInContext(source.slice(0,cut)+';this.makeApi=createAgendaApi;',clockEnv);
+const clockApi=clockEnv.makeApi({endpoint:'https://example.invalid/test',getToken:()=>session,fetchFn:async(_url,options)=>{const data=JSON.parse(options.body);queued.push(data.action);return {json:async()=>({ok:true,data:{value:queued.length}})}}});
+await clockApi.request('getActionPlans');
+assert.equal(queued.length,1);
+const replay=await clockApi.request('getActionPlans',{__cacheTtl:1});
+assert.equal(queued.length,1,'Fresh entry must serve cache');
+const staleKeyValue=clockApi.prime('getActionPlans',{}, {value:'persisted'},1);
+// Explicitly test that an expired-fresh but still stale-eligible entry schedules a background refresh.
+const originalNow=Date.now;
+try{
+ Date.now=()=>originalNow()+2000;
+ const stale=await clockApi.request('getActionPlans');
+ assert.ok(fakeTimers.length>0,'Stale response should schedule a background revalidation');
+ session='beta';
+ clockApi.clearCache();
+ const before=queued.length;
+ fakeTimers.splice(0).forEach(fn=>fn());
+ await Promise.resolve();
+ assert.equal(queued.length,before,'Scheduled refresh from old session must not issue a request');
+}finally{Date.now=originalNow}
+console.log('PASS: deferred refresh is scoped to the original session');
