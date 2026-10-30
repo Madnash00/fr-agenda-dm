@@ -160,3 +160,17 @@ La PR #38 resta draft; nessun merge o deployment del frontend, backend o databas
 **Validazione effettuata:** controlli di sintassi e invarianti statici in `scripts/check.mjs`, suite frontend di CI (run [41041965858](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41041965858): SUCCESS). **Non eseguito** un test E2E del modulo con editing concorrente e rete reale.
 
 **Rischio aperto:** nella creazione di un nuovo piano senza `plan_id`, una richiesta già confermata lato server ma la cui risposta è persa può risultare ambigua. Non è sicuro proporre un nuovo invio automatico: serve verifica del contratto di idempotenza e/o lettura di riconciliazione lato backend. La protezione di revisione riguarda l'editor NEGOZIO, non costituisce un lock concorrente cross-user. Produzione e Apps Script non modificati.
+
+## Tranche QA — salvataggio Action Plan e risposte ambigue (30 ottobre 2026)
+
+È stato aggiunto `scripts/test-action-plan-reliability.mjs` alla pipeline Frontend quality. Il test esegue l'effettivo handler di salvataggio frontend in un ambiente Node VM isolato con risposte backend sintetiche e differite, senza credenziali né dati reali.
+
+Scenari verificati automaticamente:
+- Un doppio click durante il primo salvataggio non produce una seconda richiesta API.
+- Una modifica locale effettuata mentre la scrittura è in corso non viene scartata né fa chiudere il modulo quando arriva la risposta della versione precedente.
+- Dopo la prima creazione, l'identificativo restituito dal server viene usato nel successivo invio, impedendo una seconda creazione nel caso in cui l'ID sia stato effettivamente ricevuto.
+- Una risposta senza `plan_id` non viene considerata una conferma valida e non chiude il modulo.
+
+Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41042804498) ha esito SUCCESS.
+
+**Limiti:** il caso di creazione riuscita lato server con risposta completamente persa rimane non risolto; la riconciliazione senza duplicati richiede identificativi idempotenti o ricerca sicura nella sorgente Apps Script realmente distribuita. Il test non dimostra atomicità, persistenza Google Sheets, isolamento tra utenti, o comportamento E2E del browser. Nessun cambiamento sul backend o sulla produzione.
