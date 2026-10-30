@@ -4,7 +4,7 @@ import vm from 'node:vm';
 const source=fs.readFileSync('assets/js/app.js','utf8');
 const start=source.indexOf('const calendarSyncLatestByDate=new Map();'),end=source.indexOf('async function syncCalendarDateFromServer(',start);
 assert.ok(start>0&&end>start);
-function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}}
+function deferred(){let resolve,reject;const promise=new Promise((r,j)=>{resolve=r;reject=j});return {promise,resolve,reject}}
 const responses=[],cache=new Map(),state={events:[]};let envToken='session-one';
 const env={Map,Set,Date,String,Number,Promise,console,app:state,calendarRangeFreshUntil:cache,currentUser:{role:'ADMIN'},window:{AgendaSession:{getToken:()=>envToken},agendaCloudApi:{request(){const d=deferred();responses.push(d);return d.promise}}},storeVisitsVisibilityReady:false,storeVisitsVisibleToStores:true,AgendaApiError:class extends Error{},syncStoreVisitVisibilityState(){},localEventFromServer:e=>({...e,id:String(e.event_id)}),setStoreCalendarContract(){}};
 vm.createContext(env);
@@ -46,3 +46,31 @@ await obsolete;
 assert.deepEqual(state.events.map(e=>e.id),beforeSessionEvents,'Old account response must not mutate calendar');
 envToken='session-one';
 console.log('PASS: calendar range overlap, session isolation and exact-key reconciliation');
+
+const storeRequests=[];
+let storeToken='store-session',storeRenders=0;
+const storeState={events:[{id:'SV-OLD',event_date:'2026-11-05',event_type:'STORE_VISIT'},{id:'NOTE-OLD',event_date:'2026-11-05',event_type:'NOTE'}],stores:[{id:'S1'}]};
+const storeEnv={
+ Map,Set,Date,String,Number,Promise,console,
+ app:storeState,currentUser:{role:'STORE',store_id:'S1'},calendarRangeFreshUntil:new Map(),
+ storeVisitsVisibilityReady:true,storeVisitsVisibleToStores:true,calendarSyncContractRevision:0,
+ window:{AgendaSession:{getToken:()=>storeToken},agendaCloudApi:{request(){const d=deferred();storeRequests.push(d);return d.promise}}},
+ AgendaApiError:class extends Error{},localEventFromServer:e=>({...e,id:String(e.event_id)}),
+ setStoreCalendarContract(){},syncStoreVisitVisibilityState(){},
+ storeCalendarReady:()=>true,renderCalendar:()=>{storeRenders++},toast(){}
+};
+vm.createContext(storeEnv);
+vm.runInContext(source.slice(start,end)+';this.syncStoreTest=syncCalendarRangeFromServer;this.storeFlags=()=>({ready:storeVisitsVisibilityReady,visible:storeVisitsVisibleToStores});',storeEnv);
+const oldStore=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
+const newStore=storeEnv.syncStoreTest('2026-11-05','2026-11-05',null,{force:true});
+storeRequests[0].reject(new Error('old response failure'));
+await assert.rejects(oldStore);
+assert.deepEqual(storeEnv.storeFlags(),{ready:true,visible:true},'Superseded failure must not revoke newer policy');
+storeRequests[1].reject(new Error('current contract unavailable'));
+await assert.rejects(newStore);
+assert.deepEqual(storeEnv.storeFlags(),{ready:false,visible:false},'Current contract failure must fail closed');
+assert.ok(!storeState.events.some(e=>e.event_type==='STORE_VISIT'),'Old SV must be removed on current STORE failure');
+assert.ok(storeState.events.some(e=>e.event_type==='NOTE'),'Non-SV events should not be indiscriminately discarded');
+assert.ok(storeRenders>0,'The UI should reflect fail-closed state');
+console.log('PASS: STORE visibility fails closed and superseded failures cannot revoke newer state');
+
