@@ -333,6 +333,7 @@ async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=f
  for(const day of days)calendarSyncLatestByDate.set(day,revision);
  calendarSyncContractRevision=revision;
  const action=currentUser?.role==='STORE'?'getStoreCalendarContext':'getCalendar';
+ try{
  const cal=await window.agendaCloudApi.request(action,{from,to,__silent:silent,__force:force});
  // Never apply a reply from a previous account/session or an obsolete app snapshot.
  if(currentUser!==requestUser||app!==requestApp||String(window.AgendaSession?.getToken?.()||'')!==requestToken)return [];
@@ -357,6 +358,19 @@ async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=f
  calendarSyncInvalidateOverlappingFreshness(from,to);
  if(currentDays.size===days.length)calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
  return fresh
+ }catch(err){
+  // Fail closed on current STORE request failure or invalid visibility contract.
+  // A superseded response must never revoke newer verified permissions.
+  if(requestUser?.role==='STORE'&&currentUser===requestUser&&app===requestApp&&String(window.AgendaSession?.getToken?.()||'')===requestToken&&calendarSyncContractRevision===revision){
+   const wasReady=storeVisitsVisibilityReady;
+   storeVisitsVisibleToStores=false;storeVisitsVisibilityReady=false;
+   app.events=app.events.filter(e=>e.event_type!=='STORE_VISIT');
+   calendarSyncInvalidateOverlappingFreshness(from,to);
+   if(storeCalendarReady())renderCalendar();
+   if(wasReady)toast('Visibilità SV non verificabile: le SV sono nascoste fino a un aggiornamento riuscito.',true);
+  }
+  throw err;
+ }
 }
 async function syncCalendarDateFromServer(date,expectedEventId=null){return syncCalendarRangeFromServer(date,date,expectedEventId,{force:!!expectedEventId})}
 async function syncVisibleCalendarFromServer(force=false){if(!anchorMonday||!$('#weeksView'))return [];const dates=calendarDates();if(!dates.length)return [];return syncCalendarRangeFromServer(isoDate(dates[0]),isoDate(dates.at(-1)),null,{force})}
