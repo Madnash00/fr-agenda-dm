@@ -18,3 +18,17 @@ jobs:
           node-version: '22'
       - name: Validate static application
         run: node scripts/check.mjs
+      - name: Test API write and read races
+        run: node scripts/test-api-reliability.mjs
+      - name: Test holiday batch save races
+        run: node scripts/test-holiday-reliability.mjs
+      - name: Test Action Plan save races
+        run: node scripts/test-action-plan-reliability.mjs
+      - name: Test calendar synchronization races
+        run: node scripts/test-calendar-sync.mjs
+      - name: Test actual STORE contract validation
+        run: node scripts/test-store-contract.mjs
+      - name: Test calendar creation acknowledgments
+        run: node scripts/test-calendar-create.mjs
+      - name: Synthetic client cache benchmark
+        run: node scripts/benchmark-api-client.mjs

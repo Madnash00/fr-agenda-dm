@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const src=readFileSync('assets/js/app.js','utf8'),start=src.indexOf('let holidaySaveInFlight=null,holidaySaveRetryRequired=false;'),end=src.indexOf('function addHolidayEmployee(){',start);
+assert.ok(start>=0&&end>start);
+const requests=[],queue=new Map(),statuses=[];
+function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject}}
+const ctx={Map,Promise,currentUser:{role:'STORE',store_id:'A'},holidayPlanQueue:queue,holidayPlanTimer:null,clearTimeout(){},setHolidaySaveStatus:(t,s)=>statuses.push([t,s]),toast(){},window:{agendaCloudApi:{request:(action,data)=>{assert.equal(action,'saveHolidayPlanBatch');const d=deferred();requests.push({data,d});return d.promise}}}};
+vm.createContext(ctx);
+vm.runInContext(src.slice(start,end)+';this.run=flushHolidayPlanQueue;',ctx);
+const key='E|2026-10-30',entry=value=>({employee_id:'E',plan_date:'2026-10-30',value});
+queue.set(key,entry(4));const first=ctx.run(),parallel=ctx.run();
+assert.equal(requests.length,1);
+queue.set(key,entry(7));requests[0].d.resolve({saved:1});
+for(let n=0;n<20;n++)await Promise.resolve();
+assert.equal(requests.length,2);
+assert.equal(requests[1].data.entries[0].value,7);
+assert.notEqual(statuses.at(-1)[0],'Salvato');
+requests[1].d.resolve({saved:1});
+assert.equal(await first,true);assert.equal(await parallel,true);assert.equal(queue.size,0);
+queue.set(key,entry(10));const failed=ctx.run();queue.set(key,entry(12));requests[2].d.reject(new Error('connection interrupted'));
+assert.equal(await failed,false);
+assert.equal(queue.get(key).value,12);assert.equal(requests.length,3);
+const blocked=await ctx.run();assert.equal(blocked,false,'Automatic retry after failed write must be blocked');assert.equal(requests.length,3);const retry=ctx.run(true);assert.equal(requests[3].data.entries[0].value,12);requests[3].d.resolve({saved:1});
+assert.equal(await retry,true);assert.equal(statuses.at(-1)[0],'Salvato');
+// A successful HTTP response with incomplete persistence acknowledgement is not success.
+queue.set(key,entry(18));
+const incomplete=ctx.run();requests[4].d.resolve({saved:0});
+assert.equal(await incomplete,false,'Reject incomplete write acknowledgements');
+assert.equal(queue.get(key).value,18,'Retain unconfirmed edits for explicit recovery');
+assert.equal(statuses.at(-1)[1],'error');
+assert.equal(requests.length,5,'Do not blindly retry ambiguous writes');
+console.log('PASS: serialized holiday saves, newest-value preservation and explicit retry');

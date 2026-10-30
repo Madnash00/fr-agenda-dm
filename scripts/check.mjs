@@ -69,7 +69,7 @@ assert.ok(app.includes('ensureMobileAgendaClickDelegation()') && !app.includes("
 for(const k of ['reportRequestSequence','overtimeCheckRequestSequence','rmCalendarRequestSequence','holidayConsolidatedRequestSequence'])assert.ok(app.includes(k),'Latest request guard missing: '+k);
 assert.ok(api.includes("if(keys.length<=48)return"),'Avoid parsing persistent cache entries when pruning is not required');
 assert.ok(app.includes("if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibilityReady||!storeVisitsVisibleToStores))"),'STORE SV must fail closed before verified visibility');
-assert.ok(app.includes("storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;\n storeVisitsVisibilityReady=true;\n if(!dir.length)"),'STORE privacy must be applied after checking DM ownership');
+const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContract('),app.indexOf('function storeCalendarReady()'));assert.ok(storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))")>=0&&storeContractSource.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;')>storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))"),'STORE privacy must be applied only after DM ownership and store scope checks');
 // Store-only holiday and overtime UX regression locks.
 assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
 assert.ok(app.includes('store-disposal-badge')&&app.includes('SPETTANTE AC 31/12')&&app.includes('<th>GODUTO</th>'),'Store employee consolidated columns must remain');
@@ -125,4 +125,18 @@ assert.ok(app.includes("period:apYtdRead('app-')"),'Action-period KPI values mus
 assert.ok(app.includes('STEP 01 / 03')&&app.includes('STEP 02 / 03')&&app.includes('STEP 03 / 03'),'Three-stage workflow required');
 assert.ok(app.includes("document.getElementById('app-next').onclick")&&app.includes("document.getElementById('app-back').onclick"),'Back/forward navigation must be available on period analysis');
 assert.ok(read('assets/css/app.css').includes('.apy-workflow .apy-period-hero'),'Dedicated period-analysis presentation missing');
+
+// Action Plan in-flight changes must remain editable and target the confirmed plan ID.
+assert.ok(app.includes('actionPlanStoreRevision!==submittedRevision'),'Must preserve unsaved in-flight Action Plan edits');
+assert.ok(app.includes('editorForm.dataset.planId=String(saved.plan_id)'),'Second submit must reuse confirmed plan ID');
+assert.ok(app.includes('planForm.dataset.planId||null'),'Submit handler must read updated ID');
+assert.ok(app.includes('if(!saved?.plan_id||!String(saved.plan_id).trim())'),'Cannot confirm Action Plan without server plan ID');
+
+assert.ok(app.includes('function submitNewCalendarEvent(payload,temp,successMessage)'),'Shared event-create handler missing');
+assert.ok(app.includes('calendarEventRequiresVerification(err)'),'Unconfirmed event state missing');
+assert.ok(app.includes('function confirmedCalendarEventId(saved)'),'Server event ID confirmation missing');
+assert.ok(app.includes('function unresolvedCalendarEvents()'),'Pending-event unload guard missing');
+assert.ok(app.includes('await submitNewCalendarEvent(payload,temp,'),'Event creation must use shared handler');
+assert.ok(app.includes("if(!dir.length)throw new AgendaApiError('STORE_CALENDAR_SCOPE_EMPTY'") && app.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;',app.indexOf('function setStoreCalendarContract('))>app.indexOf('if(!dir.length)throw new AgendaApiError',app.indexOf('function setStoreCalendarContract(')),'STORE policy must validate store directory before committing visibility');
+assert.ok(app.includes('calendar-pending-event'),'Calendar pending events need desktop state');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
