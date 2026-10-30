@@ -226,3 +226,13 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **QA:** aggiunto `scripts/test-calendar-create.mjs` al workflow CI. Copre: conferma ricevuta dopo cambio account, conferma con ID valido, risposta senza ID e rifiuto esplicito server. I test sono isolati in Node VM con promesse controllate e nessun accesso a database o credenziali reali. Workflow [41057973089](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41057973089): test di qualità superati.
 
 **Limite:** non è verificata la persistenza in Apps Script né il comportamento browser end-to-end. La difesa da risposta tardiva previene mutazioni cross-session nel client ma non interrompe una scrittura già inviata al server. PR #38 draft, nessuna distribuzione produzione.
+
+## Tranche — visibilità SV e stato degli eventi in attesa su desktop (30 ottobre 2026)
+
+**Problema individuato:** il codice `setStoreCalendarContract` impostava `storeVisitsVisibleToStores` e `storeVisitsVisibilityReady` prima di aver terminato tutti i controlli su negozi attivi, ownership DM, conteggi e appartenenza del negozio autenticato. Un contratto invalido poteva così mutare parzialmente la visibilità locale. Inoltre la vista desktop rendeva le pillole degli eventi `TMP:` senza il marcatore visivo di conferma mancante già utilizzato nella vista mobile.
+
+**Correzione:** lo stato di visibilità viene ora applicato solo dopo il superamento delle verifiche del contratto di calendario NEGOZIO. Nella griglia desktop le pillole degli eventi provvisori sono marcate `calendar-pending-event`, con descrizione accessibile del loro stato; anche le note e le chiamate in colonna DM sono segnalate. Il tooltip aggiunge `CONFERMA DA VERIFICARE` o `SALVATAGGIO IN CORSO` senza alterare il testo originale.
+
+**QA:** aggiornati gli invarianti in `scripts/check.mjs` per verificare l'ordine dei controlli sull'ownership DM prima del commit del flag; l'asserzione precedente presumeva erroneamente il vecchio ordine del codice. La suite GitHub Actions include i test comportamentali API, ferie, Action Plan, sincronizzazione calendario e creazione eventi. Workflow [41059061943](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41059061943): tutti i singoli job risultano superati.
+
+**Limiti:** validazione statica degli indicatori desktop, senza screenshot e senza browser reale. L'app continua a richiedere la verifica lato Apps Script che le SV oscurate siano escluse dalla risposta backend. La PR resta draft e non distribuita; nessun dato aziendale è stato scritto.
