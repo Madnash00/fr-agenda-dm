@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source=fs.readFileSync('assets/js/app.js','utf8');
-const start=source.indexOf('const calendarSyncRequestSequence=new Map();'),end=source.indexOf('async function syncCalendarDateFromServer(',start);
+const start=source.indexOf('const calendarSyncLatestByDate=new Map();'),end=source.indexOf('async function syncCalendarDateFromServer(',start);
 assert.ok(start>0&&end>start);
 function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}}
 const responses=[],cache=new Map(),state={events:[]};
@@ -26,4 +26,15 @@ const unmatched=env.syncTest('2026-10-01','2026-10-31',null,{force:true});
 responses[3].resolve({events:[{event_id:'SERVER-2',event_date:'2026-10-04'}]});
 await unmatched;
 assert.ok(state.events.some(e=>e.id==='TMP:ANOTHER'),'An unrelated event must not reconcile by matching date');
-console.log('PASS: calendar response sequencing and exact-key pending reconciliation');
+
+const overlapOld=env.syncTest('2026-11-01','2026-11-03',null,{force:true});
+const overlapNew=env.syncTest('2026-11-02','2026-11-04',null,{force:true});
+responses[5].resolve({events:[{event_id:'NEW-OVERLAP',event_date:'2026-11-02'}]});
+await overlapNew;
+responses[4].resolve({events:[{event_id:'OLD-ONLY',event_date:'2026-11-01'},{event_id:'OLD-OVERLAP',event_date:'2026-11-02'}]});
+await overlapOld;
+assert.ok(state.events.some(e=>e.id==='NEW-OVERLAP'),'Newer overlapping date must survive');
+assert.ok(state.events.some(e=>e.id==='OLD-ONLY'),'Non-overlapping date from older request must remain available');
+assert.ok(!state.events.some(e=>e.id==='OLD-OVERLAP'),'Older overlapping result must not overwrite');
+
+console.log('PASS: calendar range overlap, ordering and exact-key reconciliation');
