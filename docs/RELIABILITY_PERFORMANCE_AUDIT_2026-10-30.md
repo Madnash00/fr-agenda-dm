@@ -206,3 +206,13 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **Test:** esteso `scripts/test-calendar-sync.mjs` con due intervalli parzialmente sovrapposti, risolti in ordine inverso. Verificati la conservazione dell'evento più recente nel giorno sovrapposto e il mantenimento del dato valido in un giorno non sovrapposto. Suite completa GitHub Actions [41056528246](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41056528246), test inclusi, verificata senza accesso ai dati reali.
 
 **Limiti:** la revisione vive nella sessione frontend, non è un `record_version` server-side. Non sono stati collaudati browser reali, visibilità SV dal server, read-after-write Google Sheets, latenza p50/p95 reali o autorizzazioni tra DM differenti. PR #38 ancora draft; nessun deployment frontend/backend.
+
+## Tranche — isolamento sessione e contratto SV nel calendario (30 ottobre 2026)
+
+**Difetto da ispezione codice:** il controllo per-date delle risposte del calendario impediva conflitti tra intervalli ma non confrontava l'identità o il token di sessione all'arrivo della risposta. Una lettura avviata prima di logout o cambio account poteva potenzialmente aggiornare la vista del nuovo utente.
+
+**Correzione:** `syncCalendarRangeFromServer` cattura oggetto `currentUser`, riferimento allo stato `app` e token `AgendaSession` al lancio; dopo la risposta, se il contesto è cambiato, la lettura viene scartata senza aggiornare eventi o contratto di visibilità. Per l'utente NEGOZIO, una lettura il cui contratto di visibilità sia superato viene scartata interamente, senza aggiornare nemmeno i giorni non sovrapposti.
+
+**Test:** `scripts/test-calendar-sync.mjs` esegue un cambio di token durante una richiesta differita e verifica che i dati di una risposta della sessione precedente non modifichino il calendario. La pipeline contiene anche i test su intervalli sovrapposti, ferie, Action Plan, cache e controllo statico degli asset. Test CI del codice: [41057359609](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41057359609) con singoli job superati.
+
+**Rischio residuo:** un token locale e una revisione frontend non sostituiscono le autorizzazioni applicate dal backend. Non è ancora verificato che Apps Script escluda le SV dalle risposte quando la visibilità è disattivata; non sono state misurate latenze reali o testate sessioni multiutente live. Nessuna pubblicazione su main.
