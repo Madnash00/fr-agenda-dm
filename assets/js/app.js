@@ -278,7 +278,7 @@ window.addEventListener('agenda-page-loading-start',agendaPageLoadStart);
 window.addEventListener('agenda-page-loading-end',agendaPageLoadEnd);
 
 function savedEventPayload(result){if(result&&typeof result==='object'&&result.event&&typeof result.event==='object')return {...result,...result.event};return result&&typeof result==='object'?result:{}}
-function localEventFromServer(e,fallback={}){const src={...(fallback||{}),...savedEventPayload(e)},eventId=src.event_id||src.id||fallback?.event_id||fallback?.id||fallback?.client_key||newClientEventKey(),date=src.event_date||fallback?.event_date||'',storeId=src.store_id??fallback?.store_id??null,userId=src.user_id??fallback?.user_id??currentUser?.id??null;return {id:String(eventId),event_id:String(eventId),event_date:String(date||'').slice(0,10),end_date:src.end_date?String(src.end_date).slice(0,10):null,event_type:src.event_type||fallback?.event_type,store_id:storeId?String(storeId):null,user_id:userId?String(userId):null,note:src.note??fallback?.note??null,raw_text:src.raw_text??fallback?.raw_text??null,date_precision:src.date_precision||fallback?.date_precision||'DAY',editable_by_store:src.editable_by_store===true||String(src.editable_by_store)==='true'||String(src.editable_by_store)==='1'?1:0,source_key:src.source_key||fallback?.source_key||null,source_year:src.source_year||fallback?.source_year||null,source_week:src.source_week||fallback?.source_week||null,source_cell:src.source_cell||fallback?.source_cell||null,created_at:src.created_at||fallback?.created_at||new Date().toISOString(),updated_at:src.updated_at||new Date().toISOString()}}
+function localEventFromServer(e,fallback={}){const src={...(fallback||{}),...savedEventPayload(e)},eventId=src.event_id||src.id||fallback?.event_id||fallback?.id||fallback?.client_key||newClientEventKey(),date=src.event_date||fallback?.event_date||'',storeId=src.store_id??fallback?.store_id??null,userId=src.user_id??fallback?.user_id??currentUser?.id??null;return {id:String(eventId),event_id:String(eventId),event_date:String(date||'').slice(0,10),end_date:src.end_date?String(src.end_date).slice(0,10):null,event_type:src.event_type||fallback?.event_type,store_id:storeId?String(storeId):null,user_id:userId?String(userId):null,note:src.note??fallback?.note??null,raw_text:src.raw_text??fallback?.raw_text??null,date_precision:src.date_precision||fallback?.date_precision||'DAY',editable_by_store:src.editable_by_store===true||String(src.editable_by_store)==='true'||String(src.editable_by_store)==='1'?1:0,client_key:src.client_key||fallback?.client_key||null,source_key:src.source_key||fallback?.source_key||null,source_year:src.source_year||fallback?.source_year||null,source_week:src.source_week||fallback?.source_week||null,source_cell:src.source_cell||fallback?.source_cell||null,created_at:src.created_at||fallback?.created_at||new Date().toISOString(),updated_at:src.updated_at||new Date().toISOString()}}
 function applySavedEvent(e,fallback={}){const x=localEventFromServer(e,fallback),i=app.events.findIndex(v=>String(v.id)===String(x.id)),old=i>=0?app.events[i]:null;if(i>=0)app.events[i]=x;else app.events.push(x);if(currentUser?.role==='ADMIN'&&(x.event_type==='STORE_VISIT'||old?.event_type==='STORE_VISIT'))scheduleCalendarStoreStatsRefresh();return x}function removeSavedEvent(id){const old=app.events.find(e=>String(e.id)===String(id));app.events=app.events.filter(e=>String(e.id)!==String(id));if(currentUser?.role==='ADMIN'&&old?.event_type==='STORE_VISIT')scheduleCalendarStoreStatsRefresh()}
 function optimisticInsertEvent(payload){const tempId='TMP:'+String(payload.client_key||newClientEventKey()),temp=localEventFromServer({...payload,event_id:tempId,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},payload);temp.pending_status='saving';app.events.push(temp);return temp}
 function optimisticReplaceEvent(tempId,saved,payload){app.events=app.events.filter(e=>String(e.id)!==String(tempId));return applySavedEvent(saved,payload)}
@@ -306,16 +306,24 @@ async function submitNewCalendarEvent(payload,temp,successMessage){
 }
 
 function restoreLocalEvent(snapshot){const i=app.events.findIndex(e=>String(e.id)===String(snapshot.id));if(i>=0)app.events[i]=snapshot;else app.events.push(snapshot)}
+async const calendarSyncRequestSequence=new Map();
+function syncCalendarRequestIsCurrent(key,sequence){return calendarSyncRequestSequence.get(key)===sequence}
 async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=false,silent=false}={}){
  const rangeKey=`${from}|${to}`,freshUntil=calendarRangeFreshUntil.get(rangeKey)||0;
  if(!force&&!expectedEventId&&freshUntil>Date.now())return app.events.filter(e=>e.event_date>=from&&e.event_date<=to);
+ const sequence=(calendarSyncRequestSequence.get(rangeKey)||0)+1;calendarSyncRequestSequence.set(rangeKey,sequence);
  const action=currentUser?.role==='STORE'?'getStoreCalendarContext':'getCalendar',cal=await window.agendaCloudApi.request(action,{from,to,__silent:silent,__force:force});
+ const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED'&&!(currentUser?.role==='STORE'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores&&e.event_type==='STORE_VISIT')).map(e=>localEventFromServer(e));
+ if(expectedEventId&&!fresh.some(e=>String(e.id)===String(expectedEventId)))throw new AgendaApiError('WRITE_VERIFY_FAILED',"Il salvataggio è stato eseguito ma l'evento non è stato riletto dal calendario centrale. Riprova senza chiudere la finestra.");
+ // Earlier responses for the same range may not replace a more recently requested version.
+ if(!syncCalendarRequestIsCurrent(rangeKey,sequence))return fresh;
  if(currentUser?.role==='STORE')setStoreCalendarContract(cal||{});
  syncStoreVisitVisibilityState(cal);
- const fresh=(cal?.events||[]).filter(e=>e.event_type!=='DELETED'&&!(currentUser?.role==='STORE'&&storeVisitsVisibilityReady&&!storeVisitsVisibleToStores&&e.event_type==='STORE_VISIT')).map(e=>localEventFromServer(e));
- const pending=app.events.filter(e=>String(e.id).startsWith('TMP:')&&e.event_date>=from&&e.event_date<=to);
-  app.events=app.events.filter(e=>e.event_date<from||e.event_date>to).concat(fresh,pending);calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
- if(expectedEventId&&!fresh.some(e=>String(e.id)===String(expectedEventId)))throw new AgendaApiError('WRITE_VERIFY_FAILED',"Il salvataggio è stato eseguito ma l'evento non è stato riletto dal calendario centrale. Riprova senza chiudere la finestra.");return fresh
+ // Reconcile only when the backend returns the exact client_key, never by date/text heuristics.
+ const confirmedKeys=new Set(fresh.filter(e=>e.client_key).map(e=>String(e.client_key)));
+ const pending=app.events.filter(e=>String(e.id).startsWith('TMP:')&&e.event_date>=from&&e.event_date<=to&&!confirmedKeys.has(String(e.client_key||'')));
+ app.events=app.events.filter(e=>e.event_date<from||e.event_date>to).concat(fresh,pending);calendarRangeFreshUntil.set(rangeKey,Date.now()+30000);
+ return fresh
 }
 async function syncCalendarDateFromServer(date,expectedEventId=null){return syncCalendarRangeFromServer(date,date,expectedEventId,{force:!!expectedEventId})}
 async function syncVisibleCalendarFromServer(force=false){if(!anchorMonday||!$('#weeksView'))return [];const dates=calendarDates();if(!dates.length)return [];return syncCalendarRangeFromServer(isoDate(dates[0]),isoDate(dates.at(-1)),null,{force})}
