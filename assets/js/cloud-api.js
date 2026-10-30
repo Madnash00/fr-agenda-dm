@@ -29,12 +29,13 @@ const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
 });
 const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
 function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSessionExpired=()=>{}}={}){
- const responseCache=new Map(),inflight=new Map(),inflightControllers=new Set(),domainGenerations=new Map(),pendingWrites=new Map(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';let requestEpoch=0;
+ const responseCache=new Map(),inflight=new Map(),inflightControllers=new Set(),domainGenerations=new Map(),pendingWrites=new Map(),scheduledRefreshes=new Set(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';let requestEpoch=0;
  const generation=domain=>domainGenerations.get(domain)||0;
  const bumpGeneration=domain=>domainGenerations.set(domain,generation(domain)+1);
  const trackWrite=(domain,promise)=>{let group=pendingWrites.get(domain);if(!group){group=new Set();pendingWrites.set(domain,group)}group.add(promise)};
- const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
- const stableKey=(action,payload)=>action+'|'+JSON.stringify(payload,Object.keys(payload).sort());
+ const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
+ const stableValue=value=>Array.isArray(value)?value.map(stableValue):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,stableValue(value[k])])):value;
+ const stableKey=(action,payload)=>action+'|'+JSON.stringify(stableValue(payload));
  const smallHash=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
  const tokenScope=()=>smallHash(String(getToken()||'guest'));
  const persistentKey=key=>PERSIST_PREFIX+tokenScope()+'.'+smallHash(key);
@@ -44,8 +45,9 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
  const writePersistent=(key,action,value,freshUntil,staleUntil)=>{try{const raw=JSON.stringify({value,freshUntil,staleUntil,domain:domainOf(action),storedAt:Date.now()});if(raw.length>850000)return;sessionStorage.setItem(persistentKey(key),raw);prunePersistent()}catch(_){}};
  const clearPersistent=domain=>{try{const prefix=PERSIST_PREFIX+tokenScope()+'.',keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(!k||!k.startsWith(prefix))continue;if(!domain){keys.push(k);continue}try{const x=JSON.parse(sessionStorage.getItem(k)||'null');if(x?.domain===domain)keys.push(k)}catch(_){keys.push(k)}}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
  const clearAllPersistent=()=>{try{const keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k?.startsWith(PERSIST_PREFIX))keys.push(k)}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
- const clearCache=domain=>{if(!domain){requestEpoch++;inflightControllers.forEach(c=>c.abort());inflightControllers.clear();inflight.clear();responseCache.clear();domainGenerations.clear();clearAllPersistent();return}bumpGeneration(domain);for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
+ const clearCache=domain=>{if(!domain){requestEpoch++;inflightControllers.forEach(c=>c.abort());inflightControllers.clear();inflight.clear();scheduledRefreshes.clear();pendingWrites.clear();responseCache.clear();domainGenerations.clear();clearAllPersistent();return}bumpGeneration(domain);for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
  const invalidateForWrite=action=>(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]).forEach(clearCache);
+ const refreshStale=(key,action,data)=>{if(scheduledRefreshes.has(key)||inflight.has(key+'|forced'))return;scheduledRefreshes.add(key);setTimeout(()=>{scheduledRefreshes.delete(key);request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{})},0)};
  const remember=(action,key,value,ttl)=>{const freshUntil=Date.now()+ttl,staleUntil=freshUntil+Math.max(30000,ttl*(AGENDA_CACHE_STALE_FACTOR-1)),entry={value,freshUntil,staleUntil,domain:domainOf(action)};responseCache.set(key,entry);writePersistent(key,action,value,freshUntil,staleUntil);return value};
  async function request(action,data={}){
   if(!endpoint||endpoint.includes('INCOLLA_URL_'))throw new AgendaApiError('API_UNAVAILABLE','Configura AGENDA_API_ENDPOINT nell\'index.html.');
@@ -56,11 +58,11 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
   // Reads wait for pending writes in their own domain, not unrelated actions.
   if(isRead){const pending=pendingWrites.get(domain);if(pending?.size){await Promise.allSettled([...pending]);assertCurrentSession()}}
   else if(action!=='login')writeDomains.forEach(clearCache);
-  const readGeneration=generation(domain),key=smallHash(sessionToken)+'|'+stableKey(action,payload)+'|v'+readGeneration,now=Date.now(),inflightKey=key+(force?'|forced':'');
+  const readGeneration=generation(domain),key=isRead?smallHash(sessionToken)+'|'+stableKey(action,payload)+'|v'+readGeneration:null,now=Date.now(),inflightKey=isRead?key+(force?'|forced':''):null;
   if(isRead&&force)payload.__server_force=true;
   if(isRead&&!force&&ttl>0){
-   const hit=responseCache.get(key);if(hit){if(hit.freshUntil>now)return hit.value;if(hit.staleUntil>now){if(!inflight.has(key))setTimeout(()=>request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{}),0);return hit.value}}
-   const disk=readPersistent(key);if(disk){const entry={value:disk.value,freshUntil:Number(disk.freshUntil||disk.expires||0),staleUntil:Number(disk.staleUntil||disk.expires||0),domain:disk.domain||domainOf(action)};responseCache.set(key,entry);if(entry.freshUntil>now)return entry.value;if(entry.staleUntil>now){if(!inflight.has(key))setTimeout(()=>request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{}),0);return entry.value}}
+   const hit=responseCache.get(key);if(hit){if(hit.freshUntil>now)return hit.value;if(hit.staleUntil>now){refreshStale(key,action,data);return hit.value}}
+   const disk=readPersistent(key);if(disk){const entry={value:disk.value,freshUntil:Number(disk.freshUntil||disk.expires||0),staleUntil:Number(disk.staleUntil||disk.expires||0),domain:disk.domain||domainOf(action)};responseCache.set(key,entry);if(entry.freshUntil>now)return entry.value;if(entry.staleUntil>now){refreshStale(key,action,data);return entry.value}}
   }
   if(isRead&&inflight.has(inflightKey))return inflight.get(inflightKey);
   const emitBusy=!silent&&!background&&!AGENDA_SOFT_BUSY_ACTIONS.has(action);const emitPageLoad=isRead&&!silent&&!background;
