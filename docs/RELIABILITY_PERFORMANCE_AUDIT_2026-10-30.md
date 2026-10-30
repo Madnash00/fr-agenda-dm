@@ -133,3 +133,20 @@ Durante l'ispezione di `cloud-api.js` sono stati rilevati due problemi dimostrab
 **Prestazioni:** questa modifica elimina una categoria di lavoro differito obsoleto, ma non è disponibile una misura reale prima/dopo del numero di chiamate o dei millisecondi risparmiati. Non viene dichiarato alcun miglioramento quantitativo. Staging E2E, benchmark calendario e read-after-write backend restano aperti.
 
 **Distribuzione:** nessun merge su `main`, nessuna modifica a Sheets e nessun deploy Apps Script.
+
+## Tranche successiva — discovery Drive e baseline sintetica (30 ottobre 2026)
+
+### Verifica dell'archivio
+È stato verificato attraverso metadata Google Drive un documento denominato `AGENDA_DM_DATABASE` e un backup di AGENDA DM datato 28 ottobre 2026. La presenza e il nome di tali file **non dimostrano** che il deployment Apps Script attualmente attivo li utilizzi; la verifica richiede il sorgente deployment identificato o un endpoint diagnostico autorizzato. Per prudenza **non sono stati letti né modificati i record operativi del database**.
+
+### Benchmark del client
+Aggiunto `scripts/benchmark-api-client.mjs` al CI, con endpoint mock e dati sintetici, nessuna credenziale o scrittura di produzione. Esito del workflow [41039946312](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41039946312):
+- Campione: 120 chiamate ripetute.
+- Risposte da cache: 119/120.
+- Richieste inviate al mock: 3 totali, comprendendo due successive variazioni di filtro/ambito.
+- Latenza della chiamata cached-side sintetica: p50 0,0117 ms, p95 0,0422 ms.
+
+**Interpretazione obbligatoria:** misura eseguita in GitHub Actions con API mock, non un benchmark di rete o di interfaccia utente. Non può essere confrontata con i target UX, né supporta affermazioni su p50/p95 di Google Apps Script o sull'accelerazione del calendario. La baseline reale prima/dopo resta N/D.
+
+### Deployment
+La PR #38 resta draft; nessun merge o deployment del frontend, backend o database. Il collaudo end-to-end dei ruoli e delle scritture persistenti resta indispensabile.
