@@ -17,4 +17,6 @@ jobs:
         with:
           node-version: '22'
       - name: Validate static application
-        run: node scripts/check.mjs\n      - name: Test API write and read races\n        run: node scripts/test-api-reliability.mjs
+        run: node scripts/check.mjs
+      - name: Test API write and read races
+        run: node scripts/test-api-reliability.mjs
