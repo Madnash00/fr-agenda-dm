@@ -29,7 +29,10 @@ const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
 });
 const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);
 function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSessionExpired=()=>{}}={}){
- const responseCache=new Map(),inflight=new Map(),inflightControllers=new Set(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';let requestEpoch=0;
+ const responseCache=new Map(),inflight=new Map(),inflightControllers=new Set(),domainGenerations=new Map(),pendingWrites=new Map(),PERSIST_PREFIX='agenda.dm.fastcache.r28.';let requestEpoch=0;
+ const generation=domain=>domainGenerations.get(domain)||0;
+ const bumpGeneration=domain=>domainGenerations.set(domain,generation(domain)+1);
+ const trackWrite=(domain,promise)=>{let group=pendingWrites.get(domain);if(!group){group=new Set();pendingWrites.set(domain,group)}group.add(promise)};
  const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
  const stableKey=(action,payload)=>action+'|'+JSON.stringify(payload,Object.keys(payload).sort());
  const smallHash=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
@@ -41,21 +44,25 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
  const writePersistent=(key,action,value,freshUntil,staleUntil)=>{try{const raw=JSON.stringify({value,freshUntil,staleUntil,domain:domainOf(action),storedAt:Date.now()});if(raw.length>850000)return;sessionStorage.setItem(persistentKey(key),raw);prunePersistent()}catch(_){}};
  const clearPersistent=domain=>{try{const prefix=PERSIST_PREFIX+tokenScope()+'.',keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(!k||!k.startsWith(prefix))continue;if(!domain){keys.push(k);continue}try{const x=JSON.parse(sessionStorage.getItem(k)||'null');if(x?.domain===domain)keys.push(k)}catch(_){keys.push(k)}}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
  const clearAllPersistent=()=>{try{const keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k?.startsWith(PERSIST_PREFIX))keys.push(k)}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
- const clearCache=domain=>{if(!domain){requestEpoch++;inflightControllers.forEach(c=>c.abort());inflightControllers.clear();inflight.clear();responseCache.clear();clearAllPersistent();return}for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
+ const clearCache=domain=>{if(!domain){requestEpoch++;inflightControllers.forEach(c=>c.abort());inflightControllers.clear();inflight.clear();responseCache.clear();domainGenerations.clear();clearAllPersistent();return}bumpGeneration(domain);for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
  const invalidateForWrite=action=>(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]).forEach(clearCache);
  const remember=(action,key,value,ttl)=>{const freshUntil=Date.now()+ttl,staleUntil=freshUntil+Math.max(30000,ttl*(AGENDA_CACHE_STALE_FACTOR-1)),entry={value,freshUntil,staleUntil,domain:domainOf(action)};responseCache.set(key,entry);writePersistent(key,action,value,freshUntil,staleUntil);return value};
  async function request(action,data={}){
   if(!endpoint||endpoint.includes('INCOLLA_URL_'))throw new AgendaApiError('API_UNAVAILABLE','Configura AGENDA_API_ENDPOINT nell\'index.html.');
   const silent=!!data.__silent,force=!!data.__force,background=!!data.__background,explicitTtl=Number(data.__cacheTtl),payload={...data},sessionToken=String(getToken()||''),startedEpoch=requestEpoch;
   const assertCurrentSession=()=>{if(startedEpoch!==requestEpoch||String(getToken()||'')!==sessionToken)throw new AgendaApiError('STALE_SESSION','Richiesta della sessione precedente ignorata.')};
-  delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;if(window.AgendaAdminContext?.admin_mode){payload.admin_mode=true;payload.target_dm_id=window.AgendaAdminContext.target_dm_id;}
-  const isRead=readActions.has(action),ttl=Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0),key=smallHash(sessionToken)+'|'+stableKey(action,payload),now=Date.now();
+  delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;delete payload.__staleRetry;if(window.AgendaAdminContext?.admin_mode){payload.admin_mode=true;payload.target_dm_id=window.AgendaAdminContext.target_dm_id;}
+  const isRead=readActions.has(action),domain=domainOf(action),writeDomains=isRead?[]:(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]),ttl=Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0);
+  // Reads wait for pending writes in their own domain, not unrelated actions.
+  if(isRead){const pending=pendingWrites.get(domain);if(pending?.size){await Promise.allSettled([...pending]);assertCurrentSession()}}
+  else if(action!=='login')writeDomains.forEach(clearCache);
+  const readGeneration=generation(domain),key=smallHash(sessionToken)+'|'+stableKey(action,payload)+'|v'+readGeneration,now=Date.now(),inflightKey=key+(force?'|forced':'');
   if(isRead&&force)payload.__server_force=true;
   if(isRead&&!force&&ttl>0){
    const hit=responseCache.get(key);if(hit){if(hit.freshUntil>now)return hit.value;if(hit.staleUntil>now){if(!inflight.has(key))setTimeout(()=>request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{}),0);return hit.value}}
    const disk=readPersistent(key);if(disk){const entry={value:disk.value,freshUntil:Number(disk.freshUntil||disk.expires||0),staleUntil:Number(disk.staleUntil||disk.expires||0),domain:disk.domain||domainOf(action)};responseCache.set(key,entry);if(entry.freshUntil>now)return entry.value;if(entry.staleUntil>now){if(!inflight.has(key))setTimeout(()=>request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{}),0);return entry.value}}
   }
-  if(isRead&&inflight.has(key))return inflight.get(key);
+  if(isRead&&inflight.has(inflightKey))return inflight.get(inflightKey);
   const emitBusy=!silent&&!background&&!AGENDA_SOFT_BUSY_ACTIONS.has(action);const emitPageLoad=isRead&&!silent&&!background;
   const controller=isRead&&typeof AbortController!=='undefined'?new AbortController():null;if(controller)inflightControllers.add(controller);
   const task=(async()=>{
@@ -64,15 +71,22 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
     let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})})}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.')}
     assertCurrentSession();let body;try{body=await response.json()}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Risposta API non valida.')}assertCurrentSession();
     if(!body?.ok){const err=new AgendaApiError(body?.error?.code||'API_ERROR',body?.error?.message||'Errore API.',body?.requestId);if(err.code==='SESSION_EXPIRED'){clearCache();onSessionExpired()}throw err}
+    if(isRead&&generation(domain)!==readGeneration){
+     if(Number(data.__staleRetry||0)<2)return request(action,{...data,__force:true,__silent:true,__staleRetry:Number(data.__staleRetry||0)+1});
+     throw new AgendaApiError('STALE_READ','I dati sono cambiati durante il caricamento. Aggiorna la sezione.');
+    }
     if(isRead&&ttl>0)remember(action,key,body.data,ttl);
     if(!isRead&&action!=='login')invalidateForWrite(action);
     return body.data;
    }finally{if(controller)inflightControllers.delete(controller);if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-end',{detail:{action}}))}
   })();
-  if(isRead)inflight.set(key,task);
-  try{return await task}finally{if(isRead&&inflight.get(key)===task)inflight.delete(key)}
+  if(isRead)inflight.set(inflightKey,task);else for(const d of writeDomains)trackWrite(d,task);
+  try{return await task}finally{
+   if(isRead){if(inflight.get(inflightKey)===task)inflight.delete(inflightKey)}
+   else for(const d of writeDomains){const group=pendingWrites.get(d);group?.delete(task);if(group&&!group.size)pendingWrites.delete(d)}
+  }
  }
- function prime(action,data,value,ttlOverride){if(value===undefined||value===null)return;const payload={...(data||{})};delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;const ttl=Math.max(1000,Number(ttlOverride)||AGENDA_READ_CACHE_TTL[action]||60000),key=tokenScope()+'|'+stableKey(action,payload);remember(action,key,value,ttl)}
+ function prime(action,data,value,ttlOverride){if(value===undefined||value===null)return;const payload={...(data||{})};delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;const ttl=Math.max(1000,Number(ttlOverride)||AGENDA_READ_CACHE_TTL[action]||60000),key=tokenScope()+'|'+stableKey(action,payload)+'|v'+generation(domainOf(action));remember(action,key,value,ttl)}
  return{request,prime,clearCache,clearDomain:clearCache,login:(username,password)=>request('login',{username,password}),logout:()=>request('logout',{})}
 }
 const XLSX_CDN_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
