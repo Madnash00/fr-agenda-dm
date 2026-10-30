@@ -174,3 +174,13 @@ Scenari verificati automaticamente:
 Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41042804498) ha esito SUCCESS.
 
 **Limiti:** il caso di creazione riuscita lato server con risposta completamente persa rimane non risolto; la riconciliazione senza duplicati richiede identificativi idempotenti o ricerca sicura nella sorgente Apps Script realmente distribuita. Il test non dimostra atomicità, persistenza Google Sheets, isolamento tra utenti, o comportamento E2E del browser. Nessun cambiamento sul backend o sulla produzione.
+
+## Tranche P0 — creazione eventi calendario con risposta ambigua (30 ottobre 2026)
+
+**Difetto identificato:** gli handler `createEventFromQuick` e `saveInfoVarieEvent` eliminavano immediatamente l'evento provvisorio dopo qualunque errore, anche in caso di rete interrotta dopo l'elaborazione lato server. Questo può far apparire fallita una scrittura che potrebbe invece essere stata registrata e incentivare inserimenti duplicati.
+
+**Correzione reversibile:** i due handler ora passano per `submitNewCalendarEvent`. Solo una risposta con identificativo evento valido è trattata come salvataggio confermato. In caso di `API_UNAVAILABLE` o conferma priva di ID, l'evento provvisorio viene mantenuto con stato `unconfirmed`, messaggio esplicito e avviso di verificare prima di reinserire. Sono stati aggiunti un avviso nel dettaglio evento, un marcatore nella vista mobile e protezioni da modifica degli eventi con ID temporaneo. Logout e chiusura scheda segnalano la presenza di eventi ancora in attesa di conferma. Gli errori server esplicitamente restituiti continuano a rimuovere la previsione ottimistica.
+
+**Verifiche:** controlli statici e sintassi in `scripts/check.mjs`; GitHub Actions run [41045806871](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41045806871): SUCCESS. Non è stato ancora eseguito un test browser end-to-end.
+
+**Limiti importanti:** la mancata risposta non consente di sapere se l'evento esista nel database. Gli avvisi temporanei sono conservati solo nella sessione corrente e non costituiscono una coda offline persistente. Una risposta `getCalendar` non contiene necessariamente il `client_key` nel modello locale, per cui non è stata introdotta riconciliazione automatica tra eventi temporanei e persistiti: potrebbero comparire entrambi finché l'utente verifica. Non si effettuano retry di `createEvent` senza un contratto idempotente del backend effettivamente distribuito. Permessi e infrastruttura Apps Script invariati. Nessun merge né distribuzione in produzione.
