@@ -903,7 +903,7 @@ async function flushHolidayPlanQueue(){
  holidaySaveInFlight=(async()=>{
   while(holidayPlanQueue.size&&isCurrent()){
    const batch=[...holidayPlanQueue.values()];holidayPlanQueue.clear();setHolidaySaveStatus('Salvataggio in corso…');
-   try{await window.agendaCloudApi.request('saveHolidayPlanBatch',{entries:batch,__silent:true})}
+   try{const saved=await window.agendaCloudApi.request('saveHolidayPlanBatch',{entries:batch,__silent:true});if(!saved||Number(saved.saved)!==batch.length)throw new Error('Il server non ha confermato tutte le celle del planning. Verifica i dati prima di riprovare.')}
    catch(err){
     if(isCurrent())for(const x of batch){const key=`${x.employee_id}|${x.plan_date}`;if(!holidayPlanQueue.has(key))holidayPlanQueue.set(key,x)}
     if(isCurrent()){setHolidaySaveStatus('Non salvato · Riprova','error');toast(err.message||'Salvataggio ferie non confermato. Verifica prima di riprovare.',true)}
