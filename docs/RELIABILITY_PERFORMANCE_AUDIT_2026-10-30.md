@@ -256,3 +256,13 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **Risultato:** suite `Frontend quality` del run [41061354704](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41061354704): tutti i job, compreso il nuovo test di sincronizzazione calendario, conclusi con SUCCESS.
 
 **Limiti:** il test usa un contratto simulato e verifica il flusso di applicazione della policy frontend, non certifica la validazione integrale del contratto da parte di `setStoreCalendarContract` né il comportamento del backend reale. Nessun test E2E, nessuna scrittura dati aziendali, nessun deployment. PR #38 ancora draft.
+
+## Tranche QA — validazione effettiva contratto NEGOZIO (30 ottobre 2026)
+
+**Nuova verifica comportamentale:** creato `scripts/test-store-contract.mjs`, eseguito nel workflow di qualità. A differenza del precedente mock che sostituiva la funzione di validazione con uno stub, questo test isola ed esegue la vera `setStoreCalendarContract` di `app.js` con dati sintetici. Verifica un contratto valido, poi casi con DM differente, negozio di altro DM, `store_count` incoerente, versione contratto errata, identità del proprio negozio incoerente e flag SV mancante. Controlla che i contratti non validi non cambino visibilità, directory, store list né contratto precedente. Verifica anche l'accettazione di un contratto valido con SV nascoste.
+
+**Esito:** workflow GitHub Actions [41064095698](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41064095698) SUCCESS, incluso lo step “Test actual STORE contract validation”. Nessuna modifica applicativa in questa tranche: implementazione di test e aggiornamento pipeline.
+
+**Backend:** il frontend contiene un URL di deployment `/exec` e una build attesa `2026-10-08-rm-iphone-icon-r31`; la copia Apps Script menzionata nel progetto dichiara una build differente. Senza accesso autorizzato al progetto Apps Script e alla sua lista deployment non è possibile attribuire con certezza il codice attivo o certificare il filtering SV lato server. Non è stato effettuato alcun accesso a dati aziendali o test con account reali.
+
+**Ambito non coperto:** E2E browser, test server `SV VISIBILI/NASCOSTE` per utenti NEGOZIO, read-after-write su Sheets, benchmark di calendario prima/dopo e verifica di idempotenza nel backend. PR #38 ancora draft, produzione invariata.
