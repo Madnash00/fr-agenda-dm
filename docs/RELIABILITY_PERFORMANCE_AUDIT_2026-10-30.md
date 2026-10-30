@@ -216,3 +216,13 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **Test:** `scripts/test-calendar-sync.mjs` esegue un cambio di token durante una richiesta differita e verifica che i dati di una risposta della sessione precedente non modifichino il calendario. La pipeline contiene anche i test su intervalli sovrapposti, ferie, Action Plan, cache e controllo statico degli asset. Test CI del codice: [41057359609](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41057359609) con singoli job superati.
 
 **Rischio residuo:** un token locale e una revisione frontend non sostituiscono le autorizzazioni applicate dal backend. Non è ancora verificato che Apps Script escluda le SV dalle risposte quando la visibilità è disattivata; non sono state misurate latenze reali o testate sessioni multiutente live. Nessuna pubblicazione su main.
+
+## Tranche P0 — creazione evento e cambio sessione (30 ottobre 2026)
+
+**Difetto da codice:** `submitNewCalendarEvent` avviava la scrittura con un utente e, al ricevimento tardivo della risposta, modificava lo stato `app.events` senza controllare che l'identità e la sessione fossero ancora quelle originarie. Un risultato proveniente dall'account precedente poteva quindi aggiornare il calendario del nuovo account.
+
+**Correzione:** la creazione cattura `currentUser`, lo stato `app` e il token all'inizio. Prima di applicare tanto una risposta di successo quanto una risposta d'errore, ricontrolla che il contesto non sia cambiato. In caso contrario non aggiorna eventi, rendering o notifiche del nuovo utente.
+
+**QA:** aggiunto `scripts/test-calendar-create.mjs` al workflow CI. Copre: conferma ricevuta dopo cambio account, conferma con ID valido, risposta senza ID e rifiuto esplicito server. I test sono isolati in Node VM con promesse controllate e nessun accesso a database o credenziali reali. Workflow [41057973089](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41057973089): test di qualità superati.
+
+**Limite:** non è verificata la persistenza in Apps Script né il comportamento browser end-to-end. La difesa da risposta tardiva previene mutazioni cross-session nel client ma non interrompe una scrittura già inviata al server. PR #38 draft, nessuna distribuzione produzione.
