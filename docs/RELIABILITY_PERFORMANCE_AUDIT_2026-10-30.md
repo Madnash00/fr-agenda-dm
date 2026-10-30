@@ -98,3 +98,12 @@ La copia mostra `LockService.getScriptLock()` sulle mutazioni del planning ferie
 Nel client, lo stato di salvataggio ora richiede una risposta `saved` esattamente pari al numero di celle inviate. In caso contrario mantiene le modifiche pendenti ed espone l'errore. Il contratto deve essere verificato sul deployment reale prima del merge.
 
 **Limite di ambito:** questi sono test unitari/sintetici su codice frontend. Non verificano atomicità, serializzazione cross-user o persistenza Google Sheets. I target p50/p95 e le prestazioni del calendario sono ancora privi di baseline reale. La PR deve restare draft sino al collaudo autorizzato.
+
+## Aggiornamento affidabilità — riprova esplicita e protezione sessioni
+
+- Il planning ferie espone ora il pulsante **RIPROVA SALVATAGGIO** solo in presenza di una scrittura non confermata. Dopo un errore non partono nuovi batch automatici senza un'azione esplicita dell'utente. Le modifiche successive restano in coda.
+- Il logout con modifiche ferie ancora pendenti richiede una conferma che avverte del rischio. Il salvataggio non viene dichiarato completato al termine del logout.
+- La coda di scrittura conserva l'ambito negozio e la sessione iniziale; un esito tardivo non deve modificare lo stato visualizzato dopo un cambio sessione.
+- È stato aggiunto un pulsante di recupero con etichetta esplicita e focus visibile; il nuovo comportamento è controllato dal test `scripts/test-holiday-reliability.mjs` con errore di rete e riprova manuale.
+
+**Limiti:** le modifiche non sono pubblicate; nessuna persistenza reale Google Sheets è stata collaudata, e la build Apps Script distribuita rimane non confermata. Le letture e i salvataggi delle altre sezioni richiedono ulteriore verifica. Non sono disponibili benchmark comparabili prima/dopo per il calendario e i report.
