@@ -22,3 +22,5 @@ jobs:
         run: node scripts/test-api-reliability.mjs
       - name: Test holiday batch save races
         run: node scripts/test-holiday-reliability.mjs
+      - name: Synthetic client cache benchmark
+        run: node scripts/benchmark-api-client.mjs
