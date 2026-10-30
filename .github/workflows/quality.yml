@@ -26,6 +26,8 @@ jobs:
         run: node scripts/test-action-plan-reliability.mjs
       - name: Test calendar synchronization races
         run: node scripts/test-calendar-sync.mjs
+      - name: Test actual STORE contract validation
+        run: node scripts/test-store-contract.mjs
       - name: Test calendar creation acknowledgments
         run: node scripts/test-calendar-create.mjs
       - name: Synthetic client cache benchmark
