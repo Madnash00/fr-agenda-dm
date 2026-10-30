@@ -24,5 +24,7 @@ jobs:
         run: node scripts/test-holiday-reliability.mjs
       - name: Test Action Plan save races
         run: node scripts/test-action-plan-reliability.mjs
+      - name: Test calendar synchronization races
+        run: node scripts/test-calendar-sync.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
