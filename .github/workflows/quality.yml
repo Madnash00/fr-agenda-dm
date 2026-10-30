@@ -20,3 +20,5 @@ jobs:
         run: node scripts/check.mjs
       - name: Test API write and read races
         run: node scripts/test-api-reliability.mjs
+      - name: Test holiday batch save races
+        run: node scripts/test-holiday-reliability.mjs
