@@ -246,3 +246,13 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **Test comportamentale:** esteso `scripts/test-calendar-sync.mjs` con due richieste STORE in ordine inverso: il fallimento della precedente non revoca la policy, quello della richiesta attuale disabilita la visualizzazione e rimuove SV obsolete senza cancellare le NOTE. Suite di test con server sintetico, senza account aziendali o dati reali.
 
 **Rischio aperto:** eliminare le SV dal client non certifica che il backend abbia cessato di restituirle; resta indispensabile il test autorizzativo server-side. Nessun browser E2E e nessuna baseline prestazionale reale eseguiti. PR #38 ancora draft; produzione invariata.
+
+## Tranche QA — recupero contratto calendario NEGOZIO dopo errore (30 ottobre 2026)
+
+**Obiettivo:** verificare il percorso di recupero successivo al fail-closed delle SV, non soltanto il fallimento della richiesta.
+
+**Test introdotti:** in `scripts/test-calendar-sync.mjs` sono state aggiunte simulazioni che partono da una visibilità non verificabile, applicano una risposta valida con SV abilitate e verificano il ritorno delle SV; successivamente simulano una risposta con visibilità disabilitata e controllano che le SV non appaiano neppure quando presenti nel payload del mock, preservando le NOTE. Il test copre anche le risposte fuori ordine già testate.
+
+**Risultato:** suite `Frontend quality` del run [41061354704](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41061354704): tutti i job, compreso il nuovo test di sincronizzazione calendario, conclusi con SUCCESS.
+
+**Limiti:** il test usa un contratto simulato e verifica il flusso di applicazione della policy frontend, non certifica la validazione integrale del contratto da parte di `setStoreCalendarContract` né il comportamento del backend reale. Nessun test E2E, nessuna scrittura dati aziendali, nessun deployment. PR #38 ancora draft.
