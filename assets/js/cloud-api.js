@@ -47,14 +47,23 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
  const clearAllPersistent=()=>{try{const keys=[];for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k?.startsWith(PERSIST_PREFIX))keys.push(k)}keys.forEach(k=>sessionStorage.removeItem(k))}catch(_){}};
  const clearCache=domain=>{if(!domain){requestEpoch++;inflightControllers.forEach(c=>c.abort());inflightControllers.clear();inflight.clear();scheduledRefreshes.clear();pendingWrites.clear();responseCache.clear();domainGenerations.clear();clearAllPersistent();return}bumpGeneration(domain);for(const [k,v] of responseCache)if(v?.domain===domain)responseCache.delete(k);clearPersistent(domain)};
  const invalidateForWrite=action=>(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]).forEach(clearCache);
- const refreshStale=(key,action,data)=>{if(scheduledRefreshes.has(key)||inflight.has(key+'|forced'))return;scheduledRefreshes.add(key);setTimeout(()=>{scheduledRefreshes.delete(key);request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{})},0)};
+ const refreshStale=(key,action,data)=>{
+  if(scheduledRefreshes.has(key)||inflight.has(key+'|forced'))return;
+  const scheduledEpoch=requestEpoch,scheduledToken=String(getToken()||''),domain=domainOf(action),scheduledGeneration=generation(domain);
+  scheduledRefreshes.add(key);
+  setTimeout(()=>{
+   scheduledRefreshes.delete(key);
+   if(requestEpoch!==scheduledEpoch||String(getToken()||'')!==scheduledToken||generation(domain)!==scheduledGeneration)return;
+   request(action,{...data,__silent:true,__force:true,__background:true}).catch(()=>{});
+  },0)
+ };
  const remember=(action,key,value,ttl)=>{const freshUntil=Date.now()+ttl,staleUntil=freshUntil+Math.max(30000,ttl*(AGENDA_CACHE_STALE_FACTOR-1)),entry={value,freshUntil,staleUntil,domain:domainOf(action)};responseCache.set(key,entry);writePersistent(key,action,value,freshUntil,staleUntil);return value};
  async function request(action,data={}){
   if(!endpoint||endpoint.includes('INCOLLA_URL_'))throw new AgendaApiError('API_UNAVAILABLE','Configura AGENDA_API_ENDPOINT nell\'index.html.');
   const silent=!!data.__silent,force=!!data.__force,background=!!data.__background,explicitTtl=Number(data.__cacheTtl),payload={...data},sessionToken=String(getToken()||''),startedEpoch=requestEpoch;
   const assertCurrentSession=()=>{if(startedEpoch!==requestEpoch||String(getToken()||'')!==sessionToken)throw new AgendaApiError('STALE_SESSION','Richiesta della sessione precedente ignorata.')};
   delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;delete payload.__staleRetry;if(window.AgendaAdminContext?.admin_mode){payload.admin_mode=true;payload.target_dm_id=window.AgendaAdminContext.target_dm_id;}
-  const isRead=readActions.has(action),domain=domainOf(action),writeDomains=isRead?[]:(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]),ttl=Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0);
+  const isRead=readActions.has(action),domain=domainOf(action),writeDomains=isRead?[]:(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]),ttl=action==='getStoreCalendarContext'?0:Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0);
   // Reads wait for pending writes in their own domain, not unrelated actions.
   if(isRead){const pending=pendingWrites.get(domain);if(pending?.size){await Promise.allSettled([...pending]);assertCurrentSession()}}
   else if(action!=='login')writeDomains.forEach(clearCache);
