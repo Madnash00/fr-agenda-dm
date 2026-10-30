@@ -82,7 +82,7 @@ const hoursUI=read('assets/js/personnel-hours.js');
 assert.ok(hoursUI.includes("employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows"),'DM selected-store employee report must exclude zero worked hours only');
 const consolidated=app.slice(app.indexOf('function renderHolidayConsolidated()'),app.indexOf('async function loadHolidayConsolidatedReport(',app.indexOf('function renderHolidayConsolidated()')));
 assert.ok(consolidated.includes('consolidated-disposal-kpi')&&consolidated.includes('consolidated-regular-kpi'),'Holiday KPI colors must share disposal logic');
-assert.ok(consolidated.includes('<th>Smaltimento 31/12</th>')&&consolidated.includes("store-disposal-badge ${paceClass(x.disposal_pct)}"),'Store summary percent must use employee disposal badge');
+assert.ok(consolidated.includes('<th>SMALTIMENTO 31/12</th>')&&consolidated.includes("store-disposal-badge ${paceClass(x.disposal_pct)}"),'Store summary percent must retain disposal badge with requested heading');
 assert.ok(consolidated.includes("if(legend)legend.classList.remove('hidden')"),'DM must see year-progress disposal legend');
 const budgetView=app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.indexOf('function renderStoreOvertimeBudget()',app.indexOf('function overtimeBudgetPanelMarkup(p)')));
 assert.ok(budgetView.includes("['Budget disponibile fino ad oggi',budget]")&&budgetView.includes("['Risparmiato',remaining]")&&!budgetView.includes("['Scostamento',delta]"),'NEGOZIO budget cards should have requested labels and no scostamento');
