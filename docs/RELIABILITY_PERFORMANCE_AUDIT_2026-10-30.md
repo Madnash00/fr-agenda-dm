@@ -121,3 +121,15 @@ Durante l'ispezione di `cloud-api.js` sono stati rilevati due problemi dimostrab
 **CI:** GitHub Actions run [41038222802](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41038222802) ha completato con esito SUCCESS sul commit `0e2f3a06b894be53bbae2d24b05f1b8ba7a14cee`.
 
 **Limitazioni:** il test dimostra il comportamento client, non l'effettiva esclusione delle SV dai payload Apps Script. Persistenza Google Sheets, controllo di ruoli in backend e benchmark dei tempi in browser non sono ancora certificati. Non è stato effettuato alcun deploy su `main` o Apps Script.
+
+## Tranche aggiuntiva — refresh asincroni e perimetro di sessione (30 ottobre 2026)
+
+**Rischio individuato:** un refresh stale-while-revalidate già pianificato mediante `setTimeout` poteva essere avviato dopo logout, cambio token o mutazione del dominio. Il codice precedente svuotava la coda logica, ma non invalidava esplicitamente l'esecuzione futura del callback.
+
+**Modifica:** in `assets/js/cloud-api.js`, ogni refresh pianificato registra epoca della sessione, token e generazione del dominio e ricontrolla questi tre elementi prima di avviare `request()`. È inoltre imposto TTL 0 a `getStoreCalendarContext` anche se il chiamante prova a fornire `__cacheTtl`: il contesto NEGOZIO rimane una lettura server, non una cache riutilizzabile per autorizzazioni.
+
+**Test:** `scripts/test-api-reliability.mjs` comprende ora un caso con timer simulato che cambia sessione e invalida la cache prima dell'esecuzione del callback. Il workflow [41039094796](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41039094796) ha restituito `SUCCESS` al commit `193a65fe8679e44cf76b33609661eff8cee6f577`. I test sono sintetici; non provano il comportamento del backend Apps Script.
+
+**Prestazioni:** questa modifica elimina una categoria di lavoro differito obsoleto, ma non è disponibile una misura reale prima/dopo del numero di chiamate o dei millisecondi risparmiati. Non viene dichiarato alcun miglioramento quantitativo. Staging E2E, benchmark calendario e read-after-write backend restano aperti.
+
+**Distribuzione:** nessun merge su `main`, nessuna modifica a Sheets e nessun deploy Apps Script.
