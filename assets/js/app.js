@@ -129,12 +129,12 @@ function setStoreCalendarContract(cal){
  if(Number(cal?.calendar_contract_version)!==STORE_CALENDAR_POLICY.contractVersion)throw new AgendaApiError('STORE_CALENDAR_VERSION_INVALID','Versione contratto calendario NEGOZIO non allineata al backend.');
  if(!serverAdmin||!expectedAdmin||serverAdmin!==expectedAdmin)throw new AgendaApiError('STORE_CALENDAR_ADMIN_INVALID','Associazione DM del negozio non coerente. Effettua logout/login dopo aver pubblicato il backend aggiornato.');
  if(!own||own!==String(currentUser.store_id||''))throw new AgendaApiError('STORE_CALENDAR_OWN_STORE_INVALID','Identità del negozio non coerente nel calendario.');
- storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;
- storeVisitsVisibilityReady=true;
  if(!dir.length)throw new AgendaApiError('STORE_CALENDAR_SCOPE_EMPTY','Nessun negozio attivo disponibile nel distretto associato.');
  if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Il perimetro calendario contiene negozi non appartenenti al DM associato.');
  if(!dir.some(st=>String(st.id)===own))throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Il proprio negozio non è presente nel perimetro calendario del DM.');
  const declared=Number(cal?.store_count);if(!Number.isFinite(declared)||declared!==dir.length)throw new AgendaApiError('STORE_CALENDAR_SCOPE_INVALID','Perimetro calendario incompleto: numero negozi non coerente.');
+ storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;
+ storeVisitsVisibilityReady=true;
  storeCalendarDirectory=dir;storeCalendarContract=Object.freeze({policy,scope,view,adminId:serverAdmin,ownStoreId:own,storeCount:dir.length,ready:true});
  if(app)app.stores=dir.slice();
 }
@@ -457,8 +457,8 @@ function eventsForTrack(events,track){if(track==='DM')return events.filter(e=>e.
 function renderTransposedStoreCell(st,d,idx,track,regionEdge=false,dayMeta){
   const ds=dayMeta.ds,events=idx.get(eventDateKey(st.id,ds))||[],filtered=eventsForTrack(events,track),tip=tooltipTextForEvents(filtered,track);
   let chips='';
-  if(track==='NOTE')chips=filtered.length?`<button class="event-chip note" data-event="${filtered[0].id}" data-store="${st.id}" data-date="${ds}" data-track="NOTE" aria-label="Nota">N</button>`:'';
-  else chips=filtered.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;return `<button class="event-chip ${m.cls}" data-event="${e.id}" data-store="${st.id}" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label)}">${m.abbr}</button>`}).join('');
+  if(track==='NOTE')chips=filtered.length?`<button class="event-chip note ${calendarPendingLabel(filtered[0])?'calendar-pending-event':''}" data-event="${filtered[0].id}" data-store="${st.id}" data-date="${ds}" data-track="NOTE" aria-label="${esc('Nota'+(calendarPendingLabel(filtered[0])?' · '+calendarPendingLabel(filtered[0]):''))}">N</button>`:'';
+  else chips=filtered.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;return `<button class="event-chip ${m.cls} ${calendarPendingLabel(e)?'calendar-pending-event':''}" data-event="${e.id}" data-store="${st.id}" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label+(calendarPendingLabel(e)?' · '+calendarPendingLabel(e):''))}">${m.abbr}</button>`}).join('');
   const weekend=dayMeta.isWeekend,sunday=dayMeta.isSunday,today=dayMeta.isToday;
   const own=currentUser.role==='STORE'&&String(st.id)===String(currentUser.store_id);
   return `<td class="store-cell cell-click ${regionEdge?'region-edge':''} ${own?'own-store-col':''} ${weekend?'weekend':''} ${sunday?'sunday':''} ${today?'today':''} ${track==='NOTE'&&filtered.length?'has-note':''}" data-cell data-store="${st.id}" data-date="${ds}" data-track="${track}" ${tip?`data-tooltip="${esc(tip)}"`:''}><div class="day-cell">${chips}</div></td>`
@@ -471,9 +471,9 @@ function renderTransposedDmCell(d,idx,track,dayMeta){
   else if(track==='NOTE')filtered=events.filter(e=>e.event_type==='NOTE');
   const tip=tooltipTextForEvents(filtered,track);
   const holidays=filtered.filter(e=>e.event_type==='DM_HOLIDAY'),calls=filtered.filter(e=>e.event_type==='CALL_DISTRICT'),notes=filtered.filter(e=>e.event_type==='NOTE');
-  let chips=holidays.map(e=>{const m=typeMeta[e.event_type];return `<button class="event-chip ${m.cls}" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label)}">${m.abbr}</button>`}).join('');
-  if(track==='SM'&&calls.length)chips+=calls.map(e=>`<button class="event-chip call-district" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="SM" aria-label="Call Distretto" ${e.note?`data-tooltip="${esc(tooltipTextForEvents([e],'SM'))}"`:''}>${typeMeta.CALL_DISTRICT.abbr}</button>`).join('');
-  if(track==='NOTE'&&notes.length)chips+=`<button class="info-flag" data-info-flag data-store="DM" data-date="${ds}" data-track="NOTE" aria-label="Info varie" data-tooltip="${esc(tooltipTextForEvents(notes,'NOTE'))}">⚑</button>`;
+  let chips=holidays.map(e=>{const m=typeMeta[e.event_type];return `<button class="event-chip ${m.cls} ${calendarPendingLabel(e)?'calendar-pending-event':''}" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="${track}" aria-label="${esc(m.label+(calendarPendingLabel(e)?' · '+calendarPendingLabel(e):''))}">${m.abbr}</button>`}).join('');
+  if(track==='SM'&&calls.length)chips+=calls.map(e=>`<button class="event-chip call-district ${calendarPendingLabel(e)?'calendar-pending-event':''}" data-event="${e.id}" data-store="DM" data-date="${ds}" data-track="SM" aria-label="${esc('Call Distretto'+(calendarPendingLabel(e)?' · '+calendarPendingLabel(e):''))}" ${e.note?`data-tooltip="${esc(tooltipTextForEvents([e],'SM'))}"`:''}>${typeMeta.CALL_DISTRICT.abbr}</button>`).join('');
+  if(track==='NOTE'&&notes.length)chips+=`<button class="info-flag ${notes.some(e=>calendarPendingLabel(e))?'calendar-pending-event':''}" data-info-flag data-store="DM" data-date="${ds}" data-track="NOTE" aria-label="${esc('Info varie'+(notes.some(e=>calendarPendingLabel(e))?' · CONFERMA DA VERIFICARE':''))}" data-tooltip="${esc(tooltipTextForEvents(notes,'NOTE'))}">⚑</button>`;
   const weekend=dayMeta.isWeekend,sunday=dayMeta.isSunday,today=dayMeta.isToday;
   return `<td class="dm-absence-cell cell-click ${weekend?'weekend':''} ${sunday?'sunday':''} ${today?'today':''}" data-cell data-store="DM" data-date="${ds}" data-track="${track}" ${tip?`data-tooltip="${esc(tip)}"`:''}><div class="day-cell">${chips}</div></td>`
 }
@@ -571,7 +571,7 @@ async function loadCalendarStoreStats(force=false){
  return calendarStoreStatsLoading;
 }
 function scheduleCalendarStoreStatsRefresh(){if(currentUser?.role!=='ADMIN')return;clearTimeout(calendarStoreStatsRefreshTimer);calendarStoreStatsRefreshTimer=setTimeout(()=>loadCalendarStoreStats(true),500)}
-function tooltipTextForEvents(events,track){if(!events.length)return '';return events.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;if(!eventTextVisibleToCalendarViewer(e))return m.label;const current=(e.note||'').trim(),original=(e.raw_text||'').trim();let txt=m.label;if(current)txt+=`\n${current}`;else if(original)txt+=`\n${original}`;if(e.source_key&&original&&current&&original!==current)txt+=`\nOrigine Excel: ${original}`;return txt}).join('\n\n')}
+function tooltipTextForEvents(events,track){if(!events.length)return '';return events.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;if(!eventTextVisibleToCalendarViewer(e))return m.label;const current=(e.note||'').trim(),original=(e.raw_text||'').trim();let txt=m.label;if(calendarPendingLabel(e))txt+=' · '+calendarPendingLabel(e);if(current)txt+=`\n${current}`;else if(original)txt+=`\n${original}`;if(e.source_key&&original&&current&&original!==current)txt+=`\nOrigine Excel: ${original}`;return txt}).join('\n\n')}
 function wireHoverTooltip(){if($('#hoverTooltip'))return;const tip=document.createElement('div');tip.id='hoverTooltip';tip.className='hover-tooltip';document.body.appendChild(tip);const place=e=>{const pad=12,w=tip.offsetWidth||260,h=tip.offsetHeight||60;let x=e.clientX+12,y=e.clientY+14;if(x+w>window.innerWidth-pad)x=e.clientX-w-12;if(y+h>window.innerHeight-pad)y=e.clientY-h-12;tip.style.left=Math.max(pad,x)+'px';tip.style.top=Math.max(pad,y)+'px'};document.addEventListener('mouseover',e=>{const statsEl=e.target.closest?.('[data-store-stats-id]');if(statsEl&&currentUser?.role==='ADMIN'){const id=statsEl.dataset.storeStatsId;tip.dataset.storeStatsId=id;tip.classList.add('store-stats');tip.innerHTML=calendarStoreStatsHtml(id);tip.classList.add('show');place(e);loadCalendarStoreStats(false);return}const el=e.target.closest?.('[data-tooltip]');if(!el||!el.dataset.tooltip)return;delete tip.dataset.storeStatsId;tip.classList.remove('store-stats');tip.textContent=el.dataset.tooltip;tip.classList.add('show');place(e)});document.addEventListener('mousemove',e=>{if(tip.classList.contains('show'))place(e)});document.addEventListener('mouseout',e=>{const el=e.target.closest?.('[data-store-stats-id],[data-tooltip]');if(el&&!el.contains(e.relatedTarget)){tip.classList.remove('show','store-stats');delete tip.dataset.storeStatsId}})}
 function eventSummary(e){const m=typeMeta[e.event_type]||typeMeta.NOTE;const raw=e.note||e.raw_text||'';return {m,raw}}
 function eventSummaryForViewer(e,track){const out=eventSummary(e);if(!eventTextVisibleToCalendarViewer(e))return {m:out.m,raw:''};return out}
