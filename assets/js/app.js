@@ -919,7 +919,7 @@ async function flushHolidayPlanQueue(forceRetry=false){
   return false;
  })();
  holidaySaveInFlight=activeSave;
- try{return await activeSave}finally{if(holidaySaveInFlight===activeSave)holidaySaveInFlight=null;setHolidaySaveStatus(holidaySaveRetryRequired?'Non salvato · Riprova':holidayPlanQueue.size?'Salvataggio in corso…':'Salvato',holidaySaveRetryRequired?'error':holidayPlanQueue.size?'':'ok')}
+ try{return await activeSave}finally{if(holidaySaveInFlight===activeSave)holidaySaveInFlight=null;if(isCurrent())setHolidaySaveStatus(holidaySaveRetryRequired?'Non salvato · Riprova':holidayPlanQueue.size?'Salvataggio in corso…':'Salvato',holidaySaveRetryRequired?'error':holidayPlanQueue.size?'':'ok')}
 }
 function addHolidayEmployee(){
  if(currentUser?.role!=='STORE')return;
