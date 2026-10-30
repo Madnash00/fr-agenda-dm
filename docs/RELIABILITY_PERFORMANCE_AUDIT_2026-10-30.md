@@ -150,3 +150,13 @@ Aggiunto `scripts/benchmark-api-client.mjs` al CI, con endpoint mock e dati sint
 
 ### Deployment
 La PR #38 resta draft; nessun merge o deployment del frontend, backend o database. Il collaudo end-to-end dei ruoli e delle scritture persistenti resta indispensabile.
+
+## Tranche P0 — Action Plan, modifiche durante il salvataggio (30 ottobre 2026)
+
+**Difetto accertato da codice:** nel flusso `saveActionPlanForm`, i pulsanti venivano disabilitati ma non i campi. Una modifica successiva all'avvio del salvataggio poteva essere perduta: la risposta precedente chiudeva sempre il modale e riportava “salvato”, anche se l'utente aveva aggiunto testo o cambiato un input durante l'attesa.
+
+**Correzione frontend:** il modulo NEGOZIO registra una revisione locale incrementale; al ritorno della scrittura chiude il modale soltanto se tale revisione è identica a quella inviata. In caso contrario mantiene la compilazione aperta, segnala che la versione precedente è stata confermata e richiede un nuovo salvataggio. Il form mantiene l'ID del piano restituito dal backend così il successivo invio viene indirizzato al record esistente invece di essere sempre trattato come nuova creazione. Una risposta priva di `plan_id` non viene riconosciuta come salvataggio verificato.
+
+**Validazione effettuata:** controlli di sintassi e invarianti statici in `scripts/check.mjs`, suite frontend di CI (run [41041965858](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41041965858): SUCCESS). **Non eseguito** un test E2E del modulo con editing concorrente e rete reale.
+
+**Rischio aperto:** nella creazione di un nuovo piano senza `plan_id`, una richiesta già confermata lato server ma la cui risposta è persa può risultare ambigua. Non è sicuro proporre un nuovo invio automatico: serve verifica del contratto di idempotenza e/o lettura di riconciliazione lato backend. La protezione di revisione riguarda l'editor NEGOZIO, non costituisce un lock concorrente cross-user. Produzione e Apps Script non modificati.
