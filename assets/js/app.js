@@ -306,7 +306,7 @@ async function submitNewCalendarEvent(payload,temp,successMessage){
 }
 
 function restoreLocalEvent(snapshot){const i=app.events.findIndex(e=>String(e.id)===String(snapshot.id));if(i>=0)app.events[i]=snapshot;else app.events.push(snapshot)}
-async const calendarSyncRequestSequence=new Map();
+const calendarSyncRequestSequence=new Map();
 function syncCalendarRequestIsCurrent(key,sequence){return calendarSyncRequestSequence.get(key)===sequence}
 async function syncCalendarRangeFromServer(from,to,expectedEventId=null,{force=false,silent=false}={}){
  const rangeKey=`${from}|${to}`,freshUntil=calendarRangeFreshUntil.get(rangeKey)||0;
