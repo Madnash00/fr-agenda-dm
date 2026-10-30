@@ -1895,3 +1895,7 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 .apy-workflow #apy-plan-stage .action-plan-modal-grid>.full{order:-1}
 .apy-workflow #apy-plan-stage .action-plan-modal-grid>.full textarea{min-height:130px;border-radius:9px}
 @media(max-width:760px){.apy-workflow .apy-footer .apy-back-button{width:100%}}
+
+/* Unconfirmed holiday writes: visible, explicit user-controlled retry. */
+#retryHolidaySaveBtn{font-weight:850;border:1px solid #dba9ac;background:#fff6f6;color:#842e35;min-height:30px;padding:6px 10px}
+#retryHolidaySaveBtn:focus-visible{outline:2px solid #9a426a;outline-offset:2px}
