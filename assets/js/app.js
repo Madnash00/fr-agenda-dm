@@ -290,11 +290,16 @@ function calendarEventRequiresVerification(error){return ['API_UNAVAILABLE','WRI
 function unresolvedCalendarEvents(){return (app.events||[]).filter(e=>String(e.id).startsWith('TMP:'))}
 function calendarPendingLabel(event){return String(event?.id||'').startsWith('TMP:')?(event.pending_status==='unconfirmed'?'CONFERMA DA VERIFICARE':'SALVATAGGIO IN CORSO'):''}
 async function submitNewCalendarEvent(payload,temp,successMessage){
+ const requestUser=currentUser,requestApp=app,requestToken=String(window.AgendaSession?.getToken?.()||'');
+ const stillCurrent=()=>currentUser===requestUser&&app===requestApp&&String(window.AgendaSession?.getToken?.()||'')===requestToken;
  try{
   const saved=await window.agendaCloudApi.request('createEvent',payload);
+  // The request may finish after logout/login. Never apply its result to another user's calendar.
+  if(!stillCurrent())return;
   if(!confirmedCalendarEventId(saved))throw new AgendaApiError('WRITE_CONFIRMATION_MISSING','Il server non ha confermato l’identificativo dell’evento.');
   optimisticReplaceEvent(temp.id,saved,payload);renderCalendar();toast(successMessage);
  }catch(err){
+  if(!stillCurrent())return;
   if(calendarEventRequiresVerification(err)){
    const local=app.events.find(e=>String(e.id)===String(temp.id));
    if(local)local.pending_status='unconfirmed';
