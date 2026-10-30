@@ -194,3 +194,15 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **Nuovo test eseguibile:** `scripts/test-calendar-sync.mjs` con risposta vecchia arrivata dopo la nuova, deduplicazione per `client_key` e conservazione del provvisorio senza corrispondenza. Il test è ora incluso nel workflow di qualità; la suite comprende anche API, ferie, Action Plan e benchmark mock. Il workflow [41051646604](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41051646604) ha superato tutti i passaggi di validazione e i test.
 
 **Limitazioni:** la sequenza attuale è distinta per stringa `from|to`; non rappresenta una revisione transazionale delle scritture cross-user né garantisce che intervalli sovrapposti non richiedano ulteriori test. La riconciliazione funziona solo quando il backend effettivo include `client_key` nella risposta; senza tale dato l'evento resta in attesa di verifica. I test sono sintetici: nessun E2E reale, benchmark Chrome comparabile o prova di read-after-write su Google Sheets. La PR rimane draft; nessun deploy di frontend o Apps Script e nessuna modifica ai dati di produzione.
+
+## Tranche — richieste calendario con intervalli sovrapposti (30 ottobre 2026)
+
+**Problema confermato:** la protezione precedente era associata alla stringa esatta `from|to`; due intervalli diversi, ma sovrapposti, potevano quindi rimpiazzare in ordine errato gli stessi giorni.
+
+**Correzione:** introduzione della revisione delle letture per singola data (UTC, giorno ISO) e applicazione limitata ai giorni di cui la risposta possiede ancora la revisione più recente. Le date non sovrapposte della risposta precedente restano utilizzabili, mentre quelle già aggiornate da una richiesta successiva non vengono sovrascritte. Invalidazione anche delle scorciatoie di freschezza che coprono intervalli sovrapposti.
+
+**Visibilità SV:** la risposta del calendario NEGOZIO non utilizza più la scorciatoia locale di 30 secondi; viene richiesta al server. Solo la risposta con revisione più recente può aggiornare il contratto di visibilità/directory, e gli eventi SV restituiti sono filtrati in base al flag di quella risposta. Questa protezione frontend **non sostituisce** il test backend obbligatorio che, a visibilità disattivata, le SV non vengano restituite affatto.
+
+**Test:** esteso `scripts/test-calendar-sync.mjs` con due intervalli parzialmente sovrapposti, risolti in ordine inverso. Verificati la conservazione dell'evento più recente nel giorno sovrapposto e il mantenimento del dato valido in un giorno non sovrapposto. Suite completa GitHub Actions [41056528246](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41056528246), test inclusi, verificata senza accesso ai dati reali.
+
+**Limiti:** la revisione vive nella sessione frontend, non è un `record_version` server-side. Non sono stati collaudati browser reali, visibilità SV dal server, read-after-write Google Sheets, latenza p50/p95 reali o autorizzazioni tra DM differenti. PR #38 ancora draft; nessun deployment frontend/backend.
