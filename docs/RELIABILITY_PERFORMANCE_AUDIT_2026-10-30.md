@@ -236,3 +236,13 @@ Il workflow GitHub Actions [41042804498](https://github.com/Madnash00/fr-agenda-
 **QA:** aggiornati gli invarianti in `scripts/check.mjs` per verificare l'ordine dei controlli sull'ownership DM prima del commit del flag; l'asserzione precedente presumeva erroneamente il vecchio ordine del codice. La suite GitHub Actions include i test comportamentali API, ferie, Action Plan, sincronizzazione calendario e creazione eventi. Workflow [41059061943](https://github.com/Madnash00/fr-agenda-dm/actions/runs/41059061943): tutti i singoli job risultano superati.
 
 **Limiti:** validazione statica degli indicatori desktop, senza screenshot e senza browser reale. L'app continua a richiedere la verifica lato Apps Script che le SV oscurate siano escluse dalla risposta backend. La PR resta draft e non distribuita; nessun dato aziendale è stato scritto.
+
+## Tranche — fail closed delle SV dopo errore calendario STORE (30 ottobre 2026)
+
+**Difetto residuo:** quando `getStoreCalendarContext` o la validazione del relativo contratto fallivano dopo un caricamento precedente valido, il frontend poteva conservare la visibilità SV precedente. La sola eccezione non invalidava il dato locale, nonostante il suo stato autorizzativo non fosse più verificabile.
+
+**Correzione:** `syncCalendarRangeFromServer` tratta l'errore del caricamento corrente dello STORE come perdita della conferma del contratto: porta a false i flag di visibilità/validazione, elimina le SV presenti in `app.events`, invalida le scorciatoie di cache per gli intervalli sovrapposti e aggiorna il calendario quando il contratto directory rimane valido. Una risposta/errore superata da una richiesta più recente non può invece annullare una policy attuale verificata. Il client informa l'utente quando una policy precedentemente confermata diventa non verificabile. Nessuna modifica delle autorizzazioni backend.
+
+**Test comportamentale:** esteso `scripts/test-calendar-sync.mjs` con due richieste STORE in ordine inverso: il fallimento della precedente non revoca la policy, quello della richiesta attuale disabilita la visualizzazione e rimuove SV obsolete senza cancellare le NOTE. Suite di test con server sintetico, senza account aziendali o dati reali.
+
+**Rischio aperto:** eliminare le SV dal client non certifica che il backend abbia cessato di restituirle; resta indispensabile il test autorizzativo server-side. Nessun browser E2E e nessuna baseline prestazionale reale eseguiti. PR #38 ancora draft; produzione invariata.
