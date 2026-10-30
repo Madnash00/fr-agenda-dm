@@ -5,8 +5,8 @@ const source=fs.readFileSync('assets/js/app.js','utf8');
 const start=source.indexOf('const calendarSyncLatestByDate=new Map();'),end=source.indexOf('async function syncCalendarDateFromServer(',start);
 assert.ok(start>0&&end>start);
 function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}}
-const responses=[],cache=new Map(),state={events:[]};
-const env={Map,Set,Date,String,Number,Promise,console,app:state,calendarRangeFreshUntil:cache,currentUser:{role:'ADMIN'},storeVisitsVisibilityReady:false,storeVisitsVisibleToStores:true,AgendaApiError:class extends Error{},window:{agendaCloudApi:{request(){const d=deferred();responses.push(d);return d.promise}}},syncStoreVisitVisibilityState(){},localEventFromServer:e=>({...e,id:String(e.event_id)}),setStoreCalendarContract(){}};
+const responses=[],cache=new Map(),state={events:[]};let envToken='session-one';
+const env={Map,Set,Date,String,Number,Promise,console,app:state,calendarRangeFreshUntil:cache,currentUser:{role:'ADMIN'},window:{AgendaSession:{getToken:()=>envToken},agendaCloudApi:{request(){const d=deferred();responses.push(d);return d.promise}}},storeVisitsVisibilityReady:false,storeVisitsVisibleToStores:true,AgendaApiError:class extends Error{},syncStoreVisitVisibilityState(){},localEventFromServer:e=>({...e,id:String(e.event_id)}),setStoreCalendarContract(){}};
 vm.createContext(env);
 vm.runInContext(source.slice(start,end)+';this.syncTest=syncCalendarRangeFromServer;',env);
 const old=env.syncTest('2026-10-01','2026-10-31',null,{force:true});
@@ -37,4 +37,12 @@ assert.ok(state.events.some(e=>e.id==='NEW-OVERLAP'),'Newer overlapping date mus
 assert.ok(state.events.some(e=>e.id==='OLD-ONLY'),'Non-overlapping date from older request must remain available');
 assert.ok(!state.events.some(e=>e.id==='OLD-OVERLAP'),'Older overlapping result must not overwrite');
 
-console.log('PASS: calendar range overlap, ordering and exact-key reconciliation');
+
+const beforeSessionEvents=state.events.map(e=>e.id);
+const obsolete=env.syncTest('2026-12-01','2026-12-02',null,{force:true});
+envToken='session-two';
+responses[6].resolve({events:[{event_id:'FOREIGN',event_date:'2026-12-01'}]});
+await obsolete;
+assert.deepEqual(state.events.map(e=>e.id),beforeSessionEvents,'Old account response must not mutate calendar');
+envToken='session-one';
+console.log('PASS: calendar range overlap, session isolation and exact-key reconciliation');
