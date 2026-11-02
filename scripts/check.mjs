@@ -173,7 +173,7 @@ assert.ok(app.includes("if(!dir.length)throw new AgendaApiError('STORE_CALENDAR_
 assert.ok(app.includes('calendar-pending-event'),'Calendar pending events need desktop state');
 console.log('PASS: markup, external assets, script order, cache versions, JavaScript syntax, seed data and required features');
 
-assert.ok(app.includes('function actionPlanDmConfirm(')&&app.includes("actionPlanDmConfirm(planId?"),'DM explicit confirmation for save required');
+assert.ok(app.includes('function actionPlanDmConfirm(')&&app.includes("await actionPlanDmConfirm(planId?"),'DM explicit confirmation for save required');
 assert.ok(app.includes("actionPlanDmConfirm('ELIMINARE")&&html.includes('id="newActionPlanDmBtn"'),'DM deletion confirmation and create button required');
 assert.ok(app.includes('const impacts=[')&&app.includes('const max=Math.max(1,...d.impacts.map'),'Signed KPI impact chart required');
 assert.ok(read('assets/css/app.css').includes('.apy-impact-chart')&&read('assets/css/app.css').includes('height:calc(100dvh - 16px)'),'Action Plan viewport fit styles required');
