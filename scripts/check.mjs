@@ -177,3 +177,15 @@ assert.ok(app.includes('function actionPlanDmConfirm(')&&app.includes("await act
 assert.ok(app.includes("actionPlanDmConfirm('ELIMINARE")&&html.includes('id="newActionPlanDmBtn"'),'DM deletion confirmation and create button required');
 assert.ok(app.includes('const impacts=[')&&app.includes('const max=Math.max(1,...d.impacts.map'),'Signed KPI impact chart required');
 assert.ok(read('assets/css/app.css').includes('.apy-impact-chart')&&read('assets/css/app.css').includes('height:calc(100dvh - 16px)'),'Action Plan viewport fit styles required');
+
+// Action Plan initial metadata and 2 review charts must survive the four-stage wizard.
+assert.ok(app.includes("details.id='ap-details-step'")&&app.includes("STEP 01 / 04 · DATI ACTION PLAN"),'Action Plan opens with metadata step');
+assert.ok(app.includes("id=\"apDetailsStore\"")&&app.includes("selector.querySelector('select').disabled=true"),'DM may select own store for new plan, but not transfer existing plan');
+assert.ok(app.includes('analysisGrid.append(analysisField)')&&app.includes('stage.insertBefore(analysisGrid'),'ANALISI remains in final step');
+assert.ok(app.includes('PERIODO ACTION PLAN<input id="apFraction" type="text" maxlength="60"'),'Action Plan accepts free period descriptions');
+assert.ok(app.includes("data="")===false || app.includes('apYtdRead('),'KPI inputs remain connected');
+assert.ok(app.includes("function apYtdReviewCharts()")&&app.includes("id='ap-review-charts'"),'Final stage shows both YTD and AP charts');
+assert.ok(app.includes("g[0]==='02'?' apy-panel-traffic'"),'Traffic panel order preserved, with CR AC immediately before delta CR');
+assert.ok(app.includes("REPORT STORE REVIEW da inizio anno fino alla fine dell’ultimo mese consolidato."),'YTD source note visible');
+assert.ok(app.includes('class="apy-impact-up"')&&app.includes('class="apy-impact-down"'),'Signed KPI bars use common horizontal zero line');
+assert.ok(read('assets/css/app.css').includes('#actionPlanForm .apy-review-charts')&&read('assets/css/app.css').includes('#actionPlanForm #apPremise{font-weight:400'),'Action Plan charts readable and ANALISI not bold');
