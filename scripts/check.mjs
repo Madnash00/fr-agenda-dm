@@ -73,7 +73,7 @@ const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContra
 // Store-only holiday and overtime UX regression locks.
 assert.ok(html.includes('id="holidayPlanningAuditPanel"')&&html.includes('id="holidayPlanningAuditTable"'),'DM planning audit panel must be below the grid');
 assert.ok(app.includes("function holidayPlanningAuditIsDm(){return currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'}"),'Only DM profile may see planning audit');
-assert.ok(app.includes("request('getHolidayPlanningAudit'")&&app.includes("String(e.actor_role||'').toUpperCase()==='STORE'"),'Planning audit must rely on server actions attributed to STORE');
+assert.ok(app.includes("request('getHolidayPlanningAudit'")&&app.includes("String(event.actor_role||'').toUpperCase()!=='STORE'"),'Planning audit must rely on server actions attributed to STORE');
 assert.ok(app.includes("holidayPlanningAuditRequestSequence")&&app.includes("data.next_cursor"),'Planning audit must paginate and ignore stale responses');
 
 assert.ok(html.includes('id="holidayPlanningAuditFilterEmployee"')&&html.includes('id="holidayPlanningAuditFilterDate"')&&html.includes('id="holidayPlanningAuditFilterWeek"')&&html.includes('id="holidayPlanningAuditFilterMonth"')&&html.includes('id="holidayPlanningAuditFilterField"'),'Holiday audit needs 5 independent planning filters');
