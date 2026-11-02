@@ -154,7 +154,7 @@ assert.ok(app.includes("periodSaved=saved.period&&typeof saved.period==='object'
 assert.ok(app.includes("body('apy-',saved)")&&app.includes("body('app-',periodSaved)"),'Independent YTD and action-period input sets required');
 assert.ok(app.includes("apYtdRender('app-')")&&app.includes("apYtdCalculate(apYtdRead('app-'))"),'Action-period calculations and validation required');
 assert.ok(app.includes("period:apYtdRead('app-')"),'Action-period KPI values must persist independently of legacy YTD fields');
-assert.ok(app.includes('STEP 01 / 03')&&app.includes('STEP 02 / 03')&&app.includes('STEP 03 / 03'),'Three-stage workflow required');
+assert.ok(app.includes('STEP 01 / 04')&&app.includes('STEP 02 / 04')&&app.includes('STEP 03 / 04')&&app.includes('STEP 04 / 04'),'Four-stage Action Plan workflow required');
 assert.ok(app.includes("document.getElementById('app-next').onclick")&&app.includes("document.getElementById('app-back').onclick"),'Back/forward navigation must be available on period analysis');
 assert.ok(read('assets/css/app.css').includes('.apy-workflow .apy-period-hero'),'Dedicated period-analysis presentation missing');
 
