@@ -1991,3 +1991,11 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
  #actionPlanForm .apy-impact-chart{grid-template-columns:1fr}
  #modalRoot .modal.wide:has(#actionPlanForm) .modal-body{overflow-y:auto}
 }
+
+/* Conferma DM per conto del negozio: popup con comandi espliciti. */
+.ap-dm-confirm-backdrop{position:fixed;inset:0;z-index:150;display:grid;place-items:center;background:rgba(18,24,31,.62);padding:12px}
+.ap-dm-confirm{width:min(490px,100%);background:#fff;border:1px solid #ead2da;border-radius:13px;padding:22px;box-shadow:0 18px 55px rgba(0,0,0,.22)}
+.ap-dm-confirm h3{font-size:16px;margin:0 0 12px;color:#8a2453}
+.ap-dm-confirm p{font-size:13px;line-height:1.5;margin:7px 0}
+.ap-dm-confirm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.ap-dm-confirm-actions .btn{min-width:108px}
