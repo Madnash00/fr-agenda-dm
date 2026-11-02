@@ -768,6 +768,61 @@ function holidayMetrics(emp){
  const total=holidayHours(emp.residual_ap_hours)+holidayHours(emp.projected_ac_hours),planned=holidayPlanningCache?.plannedTotals?.[String(emp.employee_id)]||0,residual=total-planned,pct=total>0?planned/total*100:0;
  return {total,planned,residual,pct}
 }
+
+/* Registro DM: il server deve attribuire autore, timestamp e prima/dopo.
+   Il client non genera log, non assume che l'audit generale sia completo. */
+let holidayPlanningAuditRequestSequence=0;
+let holidayPlanningAuditState={rows:[],nextCursor:null,storeId:'',year:0,loading:false};
+function holidayPlanningAuditIsDm(){return currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'}
+function holidayPlanningAuditFormatValue(v){if(v===null||v===undefined||v==='')return '—';if(typeof v==='object')return JSON.stringify(v);return String(v)}
+function renderHolidayPlanningAudit(){
+ const host=$('#holidayPlanningAuditTable'),more=$('#holidayPlanningAuditMore'),meta=$('#holidayPlanningAuditMeta');
+ if(!host||!more||!meta)return;
+ const state=holidayPlanningAuditState;
+ if(state.loading&&!state.rows.length){host.innerHTML='<div class="empty">Caricamento registro attività…</div>';more.classList.add('hidden');return}
+ if(!state.rows.length){host.innerHTML='<div class="empty">Nessuna attività registrata per il periodo e il negozio selezionati.</div>';more.classList.add('hidden');meta.textContent='';return}
+ const rows=state.rows.map(e=>{
+  const date=new Date(e.created_at),when=Number.isFinite(date.getTime())?date.toLocaleString('it-IT'):'—';
+  const actor=String(e.actor_display_name||e.actor_username||'—'),store=String(e.store_name||e.store_code||'—');
+  const event=[e.employee_name,e.plan_date,e.field_label].filter(Boolean).join(' · ')||'—';
+  const detail=[e.old_value!==undefined?'Prima: '+holidayPlanningAuditFormatValue(e.old_value):'',e.new_value!==undefined?'Dopo: '+holidayPlanningAuditFormatValue(e.new_value):'',e.details||''].filter(Boolean).join(' · ')||'—';
+  return '<tr><td>'+esc(when)+'</td><td>'+esc(store)+'</td><td>'+esc(actor)+'</td><td>'+esc(e.action_label||e.action||'Modifica')+'</td><td>'+esc(event)+'</td><td>'+esc(detail)+'</td></tr>';
+ }).join('');
+ host.innerHTML='<table class="data-table"><thead><tr><th>Data e ora</th><th>Negozio</th><th>Chi</th><th>Attività</th><th>Dipendente / data / campo</th><th>Variazione</th></tr></thead><tbody>'+rows+'</tbody></table>';
+ meta.textContent=state.rows.length+' attività visualizzate · anno '+state.year+(state.nextCursor?' · altre attività disponibili':'');
+ more.classList.toggle('hidden',!state.nextCursor);
+ const btn=$('#loadMoreHolidayPlanningAudit');if(btn)btn.disabled=state.loading;
+}
+async function loadHolidayPlanningAudit(reset=true){
+ const panel=$('#holidayPlanningAuditPanel');if(!panel)return;
+ if(!holidayPlanningAuditIsDm()){panel.classList.add('hidden');holidayPlanningAuditRequestSequence++;return}
+ panel.classList.remove('hidden');
+ const storeId=String(holidayCurrentStoreId()||''),year=Number($('#holidayYear')?.value)||new Date().getFullYear();
+ if(!storeId){$('#holidayPlanningAuditTable').innerHTML='<div class="empty">Seleziona un negozio.</div>';return}
+ if(!reset&&(!holidayPlanningAuditState.nextCursor||holidayPlanningAuditState.loading))return;
+ const cursor=reset?'':holidayPlanningAuditState.nextCursor;
+ const sequence=reset?++holidayPlanningAuditRequestSequence:holidayPlanningAuditRequestSequence;
+ if(reset)holidayPlanningAuditState={rows:[],nextCursor:null,storeId,year,loading:true};
+ else holidayPlanningAuditState.loading=true;
+ renderHolidayPlanningAudit();
+ try{
+  const data=await window.agendaCloudApi.request('getHolidayPlanningAudit',{store_id:storeId,year,limit:100,cursor,__force:true,__silent:true});
+  if(sequence!==holidayPlanningAuditRequestSequence||!holidayPlanningAuditIsDm()||String(holidayCurrentStoreId()||'')!==storeId||Number($('#holidayYear')?.value)!==year)return;
+  if(!data||!Array.isArray(data.events))throw Error('Risposta del registro attività non valida.');
+  const valid=data.events.filter(e=>e&&typeof e==='object'&&String(e.actor_role||'').toUpperCase()==='STORE');
+  const ids=new Set(holidayPlanningAuditState.rows.map(e=>String(e.audit_id)));
+  holidayPlanningAuditState.rows.push(...valid.filter(e=>!ids.has(String(e.audit_id))&&ids.add(String(e.audit_id))));
+  holidayPlanningAuditState.nextCursor=typeof data.next_cursor==='string'&&data.next_cursor?data.next_cursor:null;
+  holidayPlanningAuditState.loading=false;renderHolidayPlanningAudit();
+ }catch(err){
+  if(sequence!==holidayPlanningAuditRequestSequence)return;
+  holidayPlanningAuditState.loading=false;
+  $('#holidayPlanningAuditTable').innerHTML='<div class="empty">Registro non disponibile. Verificare la disponibilità del servizio audit sul backend.</div>';
+  $('#holidayPlanningAuditMeta').textContent='';
+  $('#holidayPlanningAuditMore').classList.add('hidden');
+  console.warn('Registro Planning Ferie non disponibile:',err);
+ }
+}
 let holidayPlanningRequestSequence=0;
 async function loadHolidayPlanning(force=false){
  const requestSequence=++holidayPlanningRequestSequence;
@@ -775,6 +830,7 @@ async function loadHolidayPlanning(force=false){
  const requestedYear=Number($('#holidayYear')?.value)||new Date().getFullYear();
  void loadHolidayPeriodYear(requestedYear,force).then(()=>{if(Number($('#holidayYear')?.value)===requestedYear&&holidayPlanningCache&&!holidayPlanningCache.all_stores&&Number(holidayPlanningCache.year)===requestedYear)renderHolidayGrid()}).catch(()=>{});
  const storeId=holidayCurrentStoreId(),year=Number($('#holidayYear')?.value)||new Date().getFullYear();
+ void loadHolidayPlanningAudit(true);
  if(!storeId){$('#holidayEmployeeSummary').innerHTML='<div class="empty">Nessun negozio disponibile.</div>';$('#holidayPlanningGrid').innerHTML='<div class="empty">Nessun negozio disponibile.</div>';return}
  try{
   if(holidayPlanningAllStoresSelected()){
@@ -1660,6 +1716,8 @@ function wire(){
  wireHolidayPeriodsEditor();
  wireHoverTooltip();
  wireActionPlanPdfDownload();
+ if($('#reloadHolidayPlanningAudit'))$('#reloadHolidayPlanningAudit').onclick=()=>loadHolidayPlanningAudit(true);
+ if($('#loadMoreHolidayPlanningAudit'))$('#loadMoreHolidayPlanningAudit').onclick=()=>loadHolidayPlanningAudit(false);
  if($('#reloadAgendaDmBtn'))$('#reloadAgendaDmBtn').onclick=()=>loadAgendaDm(true);if($('#saveStoreMenuBtn'))$('#saveStoreMenuBtn').onclick=saveStoreMenuSettings;if($('#appParametersForm'))$('#appParametersForm').onsubmit=saveAppParameters;if($('#rmAdminProfileBtn'))$('#rmAdminProfileBtn').onclick=toggleRMAdminMode;
  if($('#rmCalFitBtn'))$('#rmCalFitBtn').onclick=toggleRMCalendarFit;if($('#rmCalPrev'))$('#rmCalPrev').onclick=()=>shiftRMCalendar(-1);if($('#rmCalNext'))$('#rmCalNext').onclick=()=>shiftRMCalendar(1);if($('#rmCalToday'))$('#rmCalToday').onclick=()=>{rmCalendarAnchorDate=isoDate(new Date());syncRMCalendarControls();loadRMCalendar(true)};if($('#reloadRMCalendarBtn'))$('#reloadRMCalendarBtn').onclick=()=>loadRMCalendar(true);if($('#rmCalendarView'))$('#rmCalendarView').onchange=e=>{rmCalendarView=e.target.value;loadRMCalendar()};if($('#rmCalendarDate'))$('#rmCalendarDate').onchange=e=>{rmCalendarAnchorDate=e.target.value;loadRMCalendar()};if($('#rmCalendarDm'))$('#rmCalendarDm').onchange=e=>{rmCalendarDmId=e.target.value;renderRMCalendar()};if($('#reloadRMHolidayBtn'))$('#reloadRMHolidayBtn').onclick=()=>loadRMHolidays(true);if($('#rmHolidayYear'))$('#rmHolidayYear').onchange=()=>loadRMHolidays();if($('#rmHolidayDm'))$('#rmHolidayDm').onchange=()=>loadRMHolidays();if($('#rmHolidayReportType'))$('#rmHolidayReportType').onchange=()=>loadRMHolidays();if($('#rmHolidayReportRegion'))$('#rmHolidayReportRegion').onchange=()=>renderRMHolidayReport();if($('#reloadRMOvertimeBtn'))$('#reloadRMOvertimeBtn').onclick=()=>loadRMOvertime(true);if($('#rmOvertimeDm'))$('#rmOvertimeDm').onchange=()=>loadRMOvertime();if($('#reloadRMActionBtn'))$('#reloadRMActionBtn').onclick=()=>loadRMActionPlans(true);if($('#rmActionYear'))$('#rmActionYear').onchange=()=>loadRMActionPlans();if($('#rmActionFraction'))$('#rmActionFraction').onchange=()=>loadRMActionPlans();$$('.rm-supervision-dm').forEach(sel=>sel.onchange=e=>setRMDmScope(e.target.value,true));
  if(!window.__agendaCalendarResizeBound){window.__agendaCalendarResizeBound=true;window.addEventListener('resize',()=>{requestAnimationFrame(applyCalendarZoom);if(rmCalendarFitActive)requestAnimationFrame(applyRMCalendarFit)})}
