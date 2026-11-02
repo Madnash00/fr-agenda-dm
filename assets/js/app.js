@@ -1498,7 +1498,15 @@ function apYtdSetup(plan){
  while(form.firstChild)stage.append(form.firstChild);
  const details=document.createElement('div');details.id='ap-details-step';details.className='apy-step';
  const planFields=stage.querySelector('.action-plan-modal-grid');
- if(planFields)details.append(planFields);
+ if(planFields){
+  details.append(planFields);
+  const analysisField=planFields.querySelector('label.full');
+  if(analysisField){
+   const analysisGrid=document.createElement('div');analysisGrid.className='action-plan-modal-grid';
+   analysisGrid.append(analysisField);
+   stage.insertBefore(analysisGrid,stage.querySelector('.action-obj-section'));
+  }
+ }
  const dm=currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM';
  if(dm){
   const stores=(app?.stores||[]).filter(x=>x.active).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
