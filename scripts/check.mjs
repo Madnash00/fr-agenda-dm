@@ -189,3 +189,8 @@ assert.ok(app.includes("g[0]==='02'?' apy-panel-traffic'"),'Traffic panel order 
 assert.ok(app.includes("REPORT STORE REVIEW da inizio anno fino alla fine dell’ultimo mese consolidato."),'YTD source note visible');
 assert.ok(app.includes('class="apy-impact-up"')&&app.includes('class="apy-impact-down"'),'Signed KPI bars use common horizontal zero line');
 assert.ok(read('assets/css/app.css').includes('#actionPlanForm .apy-review-charts')&&read('assets/css/app.css').includes('#actionPlanForm #apPremise{font-weight:400'),'Action Plan charts readable and ANALISI not bold');
+
+// Action Plan: ricerca dei periodi personalizzati nei report DM e RM.
+assert.ok(html.includes('id="actionPlanReportFraction" list="actionPlanPeriodChoices"')&&html.includes('id="rmActionFraction" list="rmActionPeriodChoices"'),'I report devono consentire periodi Action Plan personalizzati');
+assert.ok(app.includes('function refreshActionPlanPeriodChoices(')&&app.includes("refreshActionPlanPeriodChoices('actionPlanPeriodChoices'")&&app.includes("refreshActionPlanPeriodChoices('rmActionPeriodChoices'"),'I suggerimenti dei periodi devono derivare dai piani autorizzati');
+assert.ok(app.includes("fraction=String($('#rmActionFraction')?.value||'').trim().toUpperCase()"),'RM deve normalizzare il filtro periodo');
