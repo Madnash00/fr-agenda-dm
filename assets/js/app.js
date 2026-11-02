@@ -1456,15 +1456,25 @@ function apYtdInt(x){return Math.round(x).toLocaleString('it-IT')}
 function apYtdImpactChart(d){
  if(!d||!Array.isArray(d.impacts))return '<div class="apy-help">Inserisci dati validi per visualizzare il grafico.</div>';
  const max=Math.max(1,...d.impacts.map(x=>Math.abs(x[1])));
- return '<div class="apy-impact-chart" role="img" aria-label="Impatto del delta KPI: verde sopra lo zero per incrementi; rosso sotto lo zero per decrementi">'+d.impacts.map(([label,value,unit])=>{
-  const magnitude=Math.max(0,Math.min(100,100*Math.abs(value)/max));
-  const amount=(value>0?'+':'')+apYtdEuro(value);
-  return '<div class="apy-impact-col '+(value<0?'negative':value>0?'positive':'neutral')+'" aria-label="'+esc(l target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4>'+apYtdImpactChart(d)+'<p class="apy-explain">Verde sopra lo zero: incremento · Rosso sotto lo zero: decremento. Ogni KPI è uno scenario controfattuale indipendente costruito sui volumi AC e sul relativo valore AP ricostruito: gli impatti non si sommano. MS è la variazione monetaria del proprio indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
-d.impacts.map(([label,value,unit])=>{
-  const magnitude=Math.min(100,100*Math.abs(value)/max),side=value<0?'negative':'positive',display=(value>0?'+':'')+apYtdEuro(value);
-  return '<div class="apy-impact-row '+side+'"><span class="apy-impact-name">'+label+'</span><span class="apy-impact-track"><span class="apy-impact-left">'+(value<0?'<span class="apy-impact-bar negative" style="width:'+magnitude.toFixed(2)+'%"></span>':'')+'</span><span class="apy-impact-right">'+(value>=0?'<span class="apy-impact-bar positive" style="width:'+magnitude.toFixed(2)+'%"></span>':'')+'</span></span><strong class="apy-impact-value">'+display+'</strong></div>';
- }).join('');
- target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4><div class="apy-impact-chart" role="img" aria-label="Impatto positivo o negativo per KPI rispetto ad AP">'+columns+'</div><p class="apy-explain">Verde: incremento · Rosso: decremento. Ogni KPI è uno scenario controfattuale indipendente costruito sui volumi AC e sul relativo valore AP ricostruito: gli impatti non si sommano. MS è la variazione monetaria del proprio indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
+ return '<div class="apy-impact-chart" role="img" aria-label="Impatto economico per KPI: verde sopra lo zero, rosso sotto">'+d.impacts.map(([label,value,unit])=>{
+  const magnitude=Math.max(0,Math.min(100,100*Math.abs(value)/max)),amount=(value>0?'+':'')+apYtdEuro(value);
+  return '<div class="apy-impact-col '+(value<0?'negative':value>0?'positive':'neutral')+'" aria-label="'+esc(label+': '+amount+(unit==='ms'?' (variazione MS)':''))+'">'
+   +'<div class="apy-impact-up">'+(value>0?'<span class="apy-impact-bar positive" style="height:'+magnitude.toFixed(2)+'%"></span>':'')+'</div>'
+   +'<div class="apy-impact-baseline"></div>'
+   +'<div class="apy-impact-down">'+(value<0?'<span class="apy-impact-bar negative" style="height:'+magnitude.toFixed(2)+'%"></span>':'')+'</div>'
+   +'<div class="apy-impact-value">'+amount+'</div><div class="apy-impact-name">'+esc(label)+'</div></div>';
+ }).join('')+'</div>';
+}
+function apYtdReviewCharts(){
+ const host=document.getElementById('ap-review-charts');if(!host)return;
+ const data=[['YTD · Come sta andando l’anno?',apYtdCalculate(apYtdRead())],['PERIODO ACTION PLAN · Confronto AP',apYtdCalculate(apYtdRead('app-'))]];
+ host.innerHTML=data.map(([title,calc])=>'<section class="apy-review-card"><h4>'+esc(title)+'</h4><p class="apy-review-caption">Impatto economico del delta KPI rispetto ad AP</p>'+apYtdImpactChart(calc)+'</section>').join('');
+}
+function apYtdRender(prefix='apy-'){
+ const v=apYtdRead(prefix),d=apYtdCalculate(v),target=document.getElementById(prefix+'output'),next=document.getElementById(prefix+'next');if(!target||!next)return;next.disabled=!d;
+ for(const [key] of AP_YTD_DEF){const field=document.getElementById(prefix+key)?.closest('.apy-field');if(field){field.classList.toggle('positive',key.endsWith('D')&&v[key]>0);field.classList.toggle('negative',key.endsWith('D')&&v[key]<0)}}
+ if(!d){target.innerHTML='<p class="apy-help">Completa tutti i dati e verifica che il CR sia tra 0 e 100%, i valori AC siano validi e i delta siano superiori a -100%.</p>';return}
+ target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4>'+apYtdImpactChart(d)+'<p class="apy-explain">Verde sopra lo zero: incremento · Rosso sotto lo zero: decremento. Ogni KPI è uno scenario controfattuale indipendente sui volumi AC: gli impatti non si sommano. MS rappresenta la variazione monetaria del relativo indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
  if(typeof apFitActionPlanStage==='function')requestAnimationFrame(apFitActionPlanStage);
 }
 /* Adatta un solo step per volta all'altezza reale della maschera. Layout leggibile
