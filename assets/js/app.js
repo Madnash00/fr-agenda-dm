@@ -1552,14 +1552,17 @@ function renderActionPlans(){
  root.querySelectorAll('[data-action-plan-open]').forEach(b=>b.onclick=()=>openActionPlanEditor(b.dataset.actionPlanOpen));
  if(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'){const create=$('#newActionPlanDmBtn');if(create)create.disabled=!$('#actionPlanStoreFilter')?.value;}
 }
+let actionPlanDmConfirmPending=false;
 function actionPlanDmConfirm(action,storeId){
  if(!(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'))return Promise.resolve(true);
+ if(actionPlanDmConfirmPending)return Promise.resolve(false);
  const store=actionPlanStore(storeId);
  if(!store||!store.active){toast('Negozio del distretto non disponibile o non attivo.',true);return Promise.resolve(false)}
+ actionPlanDmConfirmPending=true;
  return new Promise(resolve=>{
   const overlay=document.createElement('div');overlay.className='ap-dm-confirm-backdrop';overlay.setAttribute('role','presentation');
-  overlay.innerHTML='<div class="ap-dm-confirm" role="alertdialog" aria-modal="true" aria-labelledby="apDmConfirmTitle" aria-describedby="apDmConfirmText"><h3 id="apDmConfirmTitle">ATTENZIONE · OPERAZIONE PER CONTO DEL NEGOZIO</h3><p id="apDmConfirmText">Stai per <strong>'+esc(action)+'</strong> un Action Plan per il negozio <strong>'+esc(actionPlanStoreLabel(storeId))+'</strong>.</p><p>Verifica che il negozio sia corretto prima di procedere.</p><div class="ap-dm-confirm-actions"><button type="button" class="btn" data-ap-dm-cancel>ANNULLA</button><button type="button" class="btn primary" data-ap-dm-accept>CONFERMA</button></div></div>';
-  const prev=document.activeElement,close=(confirmed)=>{document.removeEventListener('keydown',escHandler,true);overlay.remove();prev?.focus?.();resolve(confirmed)};
+  overlay.innerHTML='<div class="ap-dm-confirm" role="alertdialog" aria-modal="true" aria-labelledby="apDmConfirmTitle" aria-describedby="apDmConfirmText"><h3 id="apDmConfirmTitle">ATTENZIONE · OPERAZIONE PER CONTO DEL NEGOZIO</h3><p id="apDmConfirmText">Stai per <strong>'+esc(action)+'</strong> un Action Plan per il negozio <strong>'+esc(actionPlanStoreLabel(storeId))+'</strong>.</p><p>Verifica che il negozio sia corretto prima di procedere.</p>'+(action.startsWith('ELIMINARE')?'<p><strong>Eliminazione irreversibile:</strong> verranno rimossi anche OBJ, task e note.</p>':'')+'<div class="ap-dm-confirm-actions"><button type="button" class="btn" data-ap-dm-cancel>ANNULLA</button><button type="button" class="btn primary" data-ap-dm-accept>CONFERMA</button></div></div>';
+  const prev=document.activeElement,close=(confirmed)=>{document.removeEventListener('keydown',escHandler,true);overlay.remove();actionPlanDmConfirmPending=false;prev?.focus?.();resolve(confirmed)};
   const escHandler=e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close(false)}};
   overlay.querySelector('[data-ap-dm-cancel]').onclick=()=>close(false);
   overlay.querySelector('[data-ap-dm-accept]').onclick=()=>close(true);
@@ -1577,8 +1580,8 @@ actionPlanDraftStoreId=String(storeId);actionPlanDraftObjectives=(plan?.objectiv
 async function deleteActionPlanFromEditor(plan){
  if(currentUser?.role!=='ADMIN'||!plan?.plan_id)return;
  const msg='ATTENZIONE: stai per eliminare definitivamente l’Action Plan del negozio '+actionPlanStoreLabel(plan.store_id)+' ('+actionPlanPeriodLabel(plan)+').\n\nVerranno eliminati anche tutti gli OBJ, i task e le note di monitoraggio collegati.\n\nQuesta operazione è IRREVERSIBILE. Confermi l’eliminazione?';
- if(!(await actionPlanDmConfirm('ELIMINARE definitivamente',plan.store_id)))return;
- if(!window.confirm(msg))return;
+ if(currentUser?.profile_role==='DM'){if(!(await actionPlanDmConfirm('ELIMINARE definitivamente',plan.store_id)))return;}
+ else if(!window.confirm(msg))return;
  const btn=$('#deleteActionPlanBtn');if(btn)btn.disabled=true;
  try{
   const result=await window.agendaCloudApi.request('deleteActionPlan',{plan_id:plan.plan_id});
