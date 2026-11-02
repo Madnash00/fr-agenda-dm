@@ -72,7 +72,7 @@ assert.ok(app.includes("if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibili
 const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContract('),app.indexOf('function storeCalendarReady()'));assert.ok(storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))")>=0&&storeContractSource.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;')>storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))"),'STORE privacy must be applied only after DM ownership and store scope checks');
 // Store-only holiday and overtime UX regression locks.
 assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
-assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>GODUTO AC</th><th>RESIDUO AP+AC</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');
+assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO AC</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
 assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
 assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
@@ -82,15 +82,18 @@ const hoursUI=read('assets/js/personnel-hours.js');
 assert.ok(hoursUI.includes("employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows"),'DM selected-store employee report must exclude zero worked hours only');
 const consolidated=app.slice(app.indexOf('function renderHolidayConsolidated()'),app.indexOf('async function loadHolidayConsolidatedReport(',app.indexOf('function renderHolidayConsolidated()')));
 assert.ok(consolidated.includes('consolidated-disposal-kpi')&&consolidated.includes('consolidated-regular-kpi'),'Holiday KPI colors must share disposal logic');
-const expectedHolidayStoreHeaders=['CODICE','NEGOZIO','DIP','RESIDUO AP','DA SMALTIRE AC','DA SMALTIRE AC+AP','GODUTO AC','RESIDUO AP+AC','SMALTIMENTO 31/12'];
-const expectedHolidayEmployeeHeaders=['DIPENDENTE','RUOLO','RESIDUO AP','DA SMALTIRE AC','DA SMALTIRE AC+AP','GODUTO AC','RESIDUO AP+AC','SMALTIMENTO 31/12'];
+const expectedHolidayStoreHeaders=['CODICE','NEGOZIO','DIP','RESIDUO AP','GODUTO AC','DA SMALTIRE AC','DA SMALTIRE AC+AP','SMALTIMENTO 31/12'];
+const expectedHolidayEmployeeHeaders=['DIPENDENTE','RUOLO','RESIDUO AP','GODUTO AC','DA SMALTIRE AC','DA SMALTIRE AC+AP','SMALTIMENTO 31/12'];
 const storeHolidayView=consolidated.slice(consolidated.indexOf("$('#holidayConsolidatedStores').innerHTML"),consolidated.indexOf('const emps=d.employees||[]'));
 const employeeHolidayView=consolidated.slice(consolidated.indexOf('host.innerHTML=emps.length?'));
 const holidayHeaders=view=>[...view.slice(view.indexOf('<thead>'),view.indexOf('</thead>')).matchAll(/<th>([^<]+)<\/th>/g)].map(m=>m[1]);
 assert.deepEqual(holidayHeaders(storeHolidayView),expectedHolidayStoreHeaders,'Store consolidated header order must match request');
 assert.deepEqual(holidayHeaders(employeeHolidayView),expectedHolidayEmployeeHeaders,'Employee consolidated header order must match request');
-assert.ok(storeHolidayView.includes('holidayHoursFmt(holidayHours(x.remaining_total_hours)-holidayHours(x.used_hours))'),'Store calculated residual must subtract used AC from AC+AP');
-assert.ok(employeeHolidayView.includes('holidayHoursFmt(holidayHours(x.remaining_total_hours)-holidayHours(x.total_used))'),'Employee calculated residual must subtract used AC from AC+AP');
+const holidayRowCellCount=view=>{const row=view.slice(view.indexOf('<tbody>'),view.indexOf('</tbody>'));return (row.match(/<td\b/g)||[]).length};
+assert.equal(holidayRowCellCount(storeHolidayView),expectedHolidayStoreHeaders.length,'Store holiday header and cell counts must align');
+assert.equal(holidayRowCellCount(employeeHolidayView),expectedHolidayEmployeeHeaders.length,'Employee holiday header and cell counts must align');
+assert.ok(!storeHolidayView.includes('<th>RESIDUO AP+AC</th>')&&!storeHolidayView.includes('holidayHoursFmt(holidayHours(x.remaining_total_hours)-holidayHours(x.used_hours))'),'Store residual AP+AC column must be removed');
+assert.ok(!employeeHolidayView.includes('<th>RESIDUO AP+AC</th>')&&!employeeHolidayView.includes('holidayHoursFmt(holidayHours(x.remaining_total_hours)-holidayHours(x.total_used))'),'Employee residual AP+AC column must be removed');
 
 assert.ok(consolidated.includes('<th>SMALTIMENTO 31/12</th>')&&consolidated.includes("store-disposal-badge ${paceClass(x.disposal_pct)}"),'Store summary percent must retain disposal badge with requested heading');
 assert.ok(consolidated.includes("if(legend)legend.classList.remove('hidden')"),'DM must see year-progress disposal legend');
