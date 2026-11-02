@@ -1556,7 +1556,7 @@ function actionPlanDmConfirm(action,storeId){
  if(!(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'))return true;
  const store=actionPlanStore(storeId);
  if(!store||!store.active){toast('Negozio del distretto non disponibile o non attivo.',true);return false;}
- return window.confirm('ATTENZIONE · ACTION PLAN\\n\\nStai per '+action+' per conto del negozio '+actionPlanStoreLabel(storeId)+'.\\n\\nANNULLA = non procedere.\\nCONFERMA = esegui l’operazione.');
+ return window.confirm('ATTENZIONE · ACTION PLAN\n\nStai per '+action+' per conto del negozio '+actionPlanStoreLabel(storeId)+'.\n\nANNULLA = non procedere.\nCONFERMA = esegui l’operazione.');
 }
 function actionPlanDefaultFraction(){const m=new Date().getMonth()+1;return m<=3?'Q1':m<=6?'Q2':m<=9?'Q3':'Q4'}
 function openActionPlanEditor(planId=null){if(!planId&&currentUser?.role==='STORE'){const today=isoDate(new Date()),year=new Date().getFullYear(),fraction=actionPlanDefaultFraction(),prev=(actionPlanCache?.plans||[]).filter(p=>p.is_draft&&String(p.store_id)===String(currentUser.store_id)&&Number(p.period_year)===year&&p.period_fraction===fraction&&p.plan_date===today).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')))[0];if(prev)return openActionPlanEditor(prev.plan_id)}const plan=planId?(actionPlanCache?.plans||[]).find(x=>String(x.plan_id)===String(planId)):null;if(planId&&!plan){toast('Action Plan non disponibile',true);return}if(!plan&&currentUser?.role==='ADMIN'&&currentUser?.profile_role!=='DM'){toast('La creazione per conto del negozio è riservata al DM.',true);return}const storeId=plan?.store_id||(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'?$('#actionPlanStoreFilter')?.value:currentUser?.store_id)||'';
