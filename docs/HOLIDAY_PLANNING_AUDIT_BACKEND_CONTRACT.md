@@ -90,3 +90,27 @@ La riga è puramente **di esempio**, non un evento realmente registrato. Rispond
 2. Pubblicare la nuova versione Apps Script e verificare l'azione con sessioni DM/STORE reali di test.
 3. Verificare GitHub Actions della PR #42.
 4. Solo dopo i test backend e frontend, portare la PR su main e attendere GitHub Pages.
+
+
+## Implementazione predisposta dal Code.gs V13 caricato il 2 novembre 2026
+
+È disponibile nella conversazione un file privato completo `Code_PlanningFerie_Audit_V13_compatibile.gs`, ricavato dal Code.gs caricato dall'utente. Non pubblicare il file integrale nel repository GitHub pubblico, perché include riferimenti all'infrastruttura applicativa.
+
+- Nuovo foglio `HOLIDAY_PLANNING_AUDIT` (22 colonne), inizializzato automaticamente oppure eseguendo dall'editor Apps Script `initializeHolidayPlanningAudit()`.
+- Tutti e cinque i metodi di scrittura delle ferie generano eventi per le **variazioni effettive**; le celle eliminate con un dipendente sono tracciate separatamente.
+- `getHolidayPlanningAudit` è una nuova azione di sola lettura, filtrata per anno dell'operazione in fuso `Europe/Rome`, negozio o `__ALL__`, scope del DM autenticato.
+- L'identità `actor_user_id` e i campi visualizzati sono derivati dalla sessione e dalle anagrafiche server. Un account NEGOZIO condiviso identifica l'account, non necessariamente la persona fisica.
+- La paginazione usa cursori firmati HMAC legati a DM, negozio e anno.
+- `BACKEND_BUILD` resta **`2026-10-30-event-idempotency-v13`**, senza cambiare il contratto della versione attualmente online e senza modifiche a credenziali/password.
+- Test locali simulati: validazione sintattica, inserimento/aggiornamento/eliminazione/riordino, prima-dopo delle celle, ripetizioni no-op, ruolo SM, isolamento tra DM, oltre 200 righe e paginazione firmata. **Non sono test reali sull'Apps Script distribuito**.
+
+**Limite di consistenza di Google Sheets:** le scritture del planning e del nuovo registro sono effettuate sotto lo stesso lock applicativo, ma su fogli distinti, senza transazione atomica multi-foglio. Il codice prepara il foglio prima della modifica e registra dopo la scrittura, ma errori del servizio Sheets tra i due passaggi possono comunque causare un dato modificato privo del corrispondente log. Nessuna garanzia di completezza assoluta in presenza di errori parziali, e nessun recupero automatico dello storico precedente.
+
+### Installazione e verifica obbligatorie
+
+1. Eseguire un backup del Code.gs effettivamente distribuito e del Google Sheet.
+2. Sostituire il Code.gs in Apps Script con il file fornito privatamente all'utente e salvare.
+3. Nell'editor Apps Script eseguire una sola volta `initializeHolidayPlanningAudit()` e verificare `ready: true`, `columns: 22`. La funzione crea l'archivio vuoto, senza cambiare il planning.
+4. Aggiornare la distribuzione Web App esistente a una nuova versione mantenendo lo stesso URL `/exec`.
+5. Collaudare con un account NEGOZIO dedicato e un DM, in un punto vendita di test: almeno un salvataggio ferie, una modifica dipendente, lettura del log, impossibilità di leggere lo storico di un altro DM, assenza di duplicati su ripetizione. Non introdurre dati di test in produzione senza pulizia.
+6. **Solo dopo** comunicazione di riuscita del deployment Apps Script e collaudo, rendere pronta e integrare la PR #42 su `main`.
