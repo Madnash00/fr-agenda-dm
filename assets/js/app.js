@@ -820,7 +820,7 @@ function holidayPlanningAuditFilteredRows(rows){
   if(f.field&&String(e.field_label||'')!==f.field)return false;
   if(f.date&&holidayPlanningAuditPlanDate(e)!==f.date)return false;
   if(f.week&&holidayPlanningAuditWeekKey(e)!==f.week)return false;
-  if(f.month&&holidayPlanningAuditMonthKey(e)!==f.month)return false;
+  if(f.month&&holidayPlanningAuditMonthKey(e)!==String(f.month))return false;
   return true;
  });
 }
@@ -868,7 +868,12 @@ function holidayPlanningAuditUpdateOptions(rows){
   if(values.includes(previous))el.value=previous;else{holidayPlanningAuditFilters[kind]='';el.value='';}
  }
  const month=$('#holidayPlanningAuditFilterMonth');
- if(month&&!month.options.length){month.innerHTML='<option value="">Tutti</option>'+MONTHS.map((name,i)=>'<option value="'+String(i+1).padStart(2,'0')+'">'+esc(name)+'</option>').join('');}
+ if(month){
+  const values=[...new Set(rows.map(holidayPlanningAuditMonthKey).filter(Boolean))].sort();
+  const previous=holidayPlanningAuditFilters.month;
+  month.innerHTML='<option value="">Tutti</option>'+values.map(value=>'<option value="'+esc(value)+'">'+esc(MONTHS[Number(value.slice(5,7))-1]+' '+value.slice(0,4))+'</option>').join('');
+  if(values.includes(previous))month.value=previous;else{holidayPlanningAuditFilters.month='';month.value='';}
+ }
 }
 function holidayPlanningAuditRenderCharts(rows){
  const charts=[['week','#holidayPlanningAuditWeeklyChart'],['month','#holidayPlanningAuditMonthlyChart']];
@@ -923,7 +928,7 @@ function renderHolidayPlanningAudit(){
  const host=$('#holidayPlanningAuditTable'),more=$('#holidayPlanningAuditMore'),meta=$('#holidayPlanningAuditMeta'),notice=$('#holidayPlanningAuditNotice'),peaks=$('#holidayPlanningAuditPeaks');
  if(!host||!more||!meta||!notice)return;
  const state=holidayPlanningAuditState,rows=holidayPlanningAuditScopeRows();
- holidayPlanningAuditUpdateOptions(rows);
+ if(state.complete)holidayPlanningAuditUpdateOptions(rows);
  const filtered=holidayPlanningAuditFilteredRows(rows),visible=filtered.slice(0,state.visibleLimit),dated=filtered.filter(e=>holidayPlanningAuditPlanDate(e)).length;
  const hours=Math.round(filtered.reduce((n,e)=>n+holidayPlanningAuditHoursChanged(e),0)*100)/100;
  meta.textContent=filtered.length+' modifiche filtrate · '+holidayHoursFmt(hours)+' ore variate · '+visible.length+' righe visualizzate · anno planning '+state.year;
@@ -964,7 +969,7 @@ async function loadHolidayPlanningAudit(reset=true){
  const old=holidayPlanningAuditState,changed=storeId!==old.storeId||year!==old.year;
  if(!reset&&(old.loading||old.complete))return;
  if(reset){
-  if(changed)holidayPlanningAuditResetFilters();
+  if(changed){holidayPlanningAuditFilters={employee:'',date:'',week:'',month:'',field:''};for(const id of ['Employee','Date','Week','Month','Field']){const el=$('#holidayPlanningAuditFilter'+id);if(el)el.value='';}}
   const lastYear=Math.max(2026,Number(new Intl.DateTimeFormat('en-GB',{year:'numeric',timeZone:'Europe/Rome'}).format(new Date())));
   // Il backend V13 filtra per anno dell'operazione. Leggiamo tutti gli anni di attività
   // dalla prima attivazione, poi selezioniamo l'anno della data PLANNING sul client.
