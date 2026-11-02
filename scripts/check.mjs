@@ -71,6 +71,11 @@ assert.ok(api.includes("if(keys.length<=48)return"),'Avoid parsing persistent ca
 assert.ok(app.includes("if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibilityReady||!storeVisitsVisibleToStores))"),'STORE SV must fail closed before verified visibility');
 const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContract('),app.indexOf('function storeCalendarReady()'));assert.ok(storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))")>=0&&storeContractSource.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;')>storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))"),'STORE privacy must be applied only after DM ownership and store scope checks');
 // Store-only holiday and overtime UX regression locks.
+assert.ok(html.includes('id="holidayPlanningAuditPanel"')&&html.includes('id="holidayPlanningAuditTable"'),'DM planning audit panel must be below the grid');
+assert.ok(app.includes("function holidayPlanningAuditIsDm(){return currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'}"),'Only DM profile may see planning audit');
+assert.ok(app.includes("request('getHolidayPlanningAudit'")&&app.includes("String(e.actor_role||'').toUpperCase()==='STORE'"),'Planning audit must rely on server actions attributed to STORE');
+assert.ok(app.includes("holidayPlanningAuditRequestSequence")&&app.includes("data.next_cursor"),'Planning audit must paginate and ignore stale responses');
+assert.ok(app.includes("void loadHolidayPlanningAudit(true);"),'Planning audit must follow holiday plan selection');
 assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
 assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO AC</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
