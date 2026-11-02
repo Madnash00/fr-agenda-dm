@@ -73,8 +73,22 @@ const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContra
 // Store-only holiday and overtime UX regression locks.
 assert.ok(html.includes('id="holidayPlanningAuditPanel"')&&html.includes('id="holidayPlanningAuditTable"'),'DM planning audit panel must be below the grid');
 assert.ok(app.includes("function holidayPlanningAuditIsDm(){return currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'}"),'Only DM profile may see planning audit');
-assert.ok(app.includes("request('getHolidayPlanningAudit'")&&app.includes("String(e.actor_role||'').toUpperCase()==='STORE'"),'Planning audit must rely on server actions attributed to STORE');
+assert.ok(app.includes("request('getHolidayPlanningAudit'")&&app.includes("String(event.actor_role||'').toUpperCase()!=='STORE'"),'Planning audit must rely on server actions attributed to STORE');
 assert.ok(app.includes("holidayPlanningAuditRequestSequence")&&app.includes("data.next_cursor"),'Planning audit must paginate and ignore stale responses');
+
+assert.ok(html.includes('id="holidayPlanningAuditFilterEmployee"')&&html.includes('id="holidayPlanningAuditFilterDate"')&&html.includes('id="holidayPlanningAuditFilterWeek"')&&html.includes('id="holidayPlanningAuditFilterMonth"')&&html.includes('id="holidayPlanningAuditFilterField"'),'Holiday audit needs 5 independent planning filters');
+assert.ok(html.includes('id="holidayPlanningAuditWeeklyChart"')&&html.includes('id="holidayPlanningAuditMonthlyChart"'),'Holiday audit needs weekly and monthly reports');
+assert.ok(app.includes('function holidayPlanningAuditGroupRows(')&&app.includes('function holidayPlanningAuditHoursChanged(')&&app.includes('function openHolidayPlanningAuditPeriod('),'Holiday audit grouping, hour delta and period detail must exist');
+assert.ok(app.includes('state.complete=true')&&app.includes('while(state.yearIndex<state.operationYears.length)'),'Charts must wait for complete server pagination');
+assert.ok(app.includes('indipendentemente dagli altri filtri della tabella'),'Period detail must show all movements of the selected period');
+assert.ok(app.includes('values=[...new Set(rows.map(holidayPlanningAuditMonthKey).filter(Boolean))].sort()'),'Month filter options must match YYYY-MM planning month keys');
+assert.ok(app.includes('if(state.complete)holidayPlanningAuditUpdateOptions(rows);'),'Partial pagination must not reset planning filters');
+assert.ok(app.includes("holidayPlanningAuditState.rows")&&app.includes("holidayPlanningAuditActionYear(e)"),'Cross-year planning changes must be preserved for the report');
+assert.ok(app.includes("Math.abs(after-before)"),'Hours changed must use absolute numeric delta');
+assert.ok(app.includes("function holidayPlanningAuditShowPeriodModal()"),'Clickable periods must expose detail modal');
+
+assert.ok(read('assets/css/app.css').includes('.holiday-audit-chart-row')&&read('assets/css/app.css').includes('.holiday-audit-filters'),'Holiday audit styles must exist');
+
 assert.ok(app.includes("void loadHolidayPlanningAudit(true);"),'Planning audit must follow holiday plan selection');
 assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
 assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO AC</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');

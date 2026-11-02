@@ -14,10 +14,10 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=700089e8fb87c6cb">
+<link rel="stylesheet" href="./assets/css/app.css?v=5d39652b1eb31695">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=e5edb74553114998"></script>
-<script defer src="./assets/js/app.js?v=f2487e62be0d73f1"></script>
+<script defer src="./assets/js/app.js?v=85aeb6d3c2910781"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/personnel-hours.js?v=eb24fe35c15efbe8"></script>
 </head>
@@ -265,7 +265,21 @@
  </div>
  <div id="holidayPlanningAuditPanel" class="card holiday-planning-audit hidden">
   <div class="section-head"><div><h3>Registro attività · Planning Ferie</h3><p class="muted">Modifiche effettuate dagli utenti NEGOZIO · storico disponibile dall’attivazione del nuovo backend.</p></div><button type="button" class="btn small" id="reloadHolidayPlanningAudit">Aggiorna registro</button></div>
+  <div class="holiday-audit-filters" id="holidayPlanningAuditFilters">
+   <label>DIPENDENTE<input id="holidayPlanningAuditFilterEmployee" type="search" placeholder="Cerca dipendente" autocomplete="off"></label>
+   <label>DATA PLANNING<input id="holidayPlanningAuditFilterDate" type="date"></label>
+   <label>WEEK PLANNING<select id="holidayPlanningAuditFilterWeek"><option value="">Tutte</option></select></label>
+   <label>MESE PLANNING<select id="holidayPlanningAuditFilterMonth"><option value="">Tutti</option></select></label>
+   <label>CAMPO<select id="holidayPlanningAuditFilterField"><option value="">Tutti</option></select></label>
+   <button id="holidayPlanningAuditClearFilters" type="button" class="btn small">Azzera filtri</button>
+  </div>
   <div id="holidayPlanningAuditMeta" class="holiday-view-note"></div>
+  <div id="holidayPlanningAuditNotice" class="holiday-view-note" aria-live="polite"></div>
+  <div class="holiday-audit-reports">
+   <div class="holiday-audit-report"><h4>Variazioni per WEEK</h4><div class="holiday-audit-chart-caption"><span class="holiday-audit-legend-count">Modifiche</span><span class="holiday-audit-legend-hours">Ore variate</span></div><div id="holidayPlanningAuditWeeklyChart" class="holiday-audit-chart" aria-label="Andamento modifiche per settimana"></div></div>
+   <div class="holiday-audit-report"><h4>Variazioni per MESE</h4><div class="holiday-audit-chart-caption"><span class="holiday-audit-legend-count">Modifiche</span><span class="holiday-audit-legend-hours">Ore variate</span></div><div id="holidayPlanningAuditMonthlyChart" class="holiday-audit-chart" aria-label="Andamento modifiche per mese"></div></div>
+  </div>
+  <div id="holidayPlanningAuditPeaks" class="holiday-audit-peaks" aria-live="polite"></div>
   <div id="holidayPlanningAuditTable" class="table-scroll"><div class="empty">Seleziona un negozio per visualizzare il registro.</div></div>
   <div id="holidayPlanningAuditMore" class="hidden" style="display:flex;justify-content:center;padding-top:10px"><button type="button" class="btn small" id="loadMoreHolidayPlanningAudit">Carica altre attività</button></div>
  </div>
