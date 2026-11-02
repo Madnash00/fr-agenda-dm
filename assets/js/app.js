@@ -1453,12 +1453,14 @@ function apYtdCalculate(v){
 }
 function apYtdEuro(x){return Number(x).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0})}
 function apYtdInt(x){return Math.round(x).toLocaleString('it-IT')}
-function apYtdRender(prefix='apy-'){
- const v=apYtdRead(prefix),d=apYtdCalculate(v),target=document.getElementById(prefix+'output'),next=document.getElementById(prefix+'next');if(!target||!next)return;next.disabled=!d;
- for(const [key] of AP_YTD_DEF){const field=document.getElementById(prefix+key)?.closest('.apy-field');if(field){field.classList.toggle('positive',key.endsWith('D')&&v[key]>0);field.classList.toggle('negative',key.endsWith('D')&&v[key]<0)}}
- if(!d){target.innerHTML='<p class="apy-help">Completa tutti i dati e verifica che il CR sia tra 0 e 100%, i valori AC siano validi e i delta siano superiori a -100%.</p>';return}
+function apYtdImpactChart(d){
+ if(!d||!Array.isArray(d.impacts))return '<div class="apy-help">Inserisci dati validi per visualizzare il grafico.</div>';
  const max=Math.max(1,...d.impacts.map(x=>Math.abs(x[1])));
- const columns=d.impacts.map(([label,value,unit])=>{
+ return '<div class="apy-impact-chart" role="img" aria-label="Impatto del delta KPI: verde sopra lo zero per incrementi; rosso sotto lo zero per decrementi">'+d.impacts.map(([label,value,unit])=>{
+  const magnitude=Math.max(0,Math.min(100,100*Math.abs(value)/max));
+  const amount=(value>0?'+':'')+apYtdEuro(value);
+  return '<div class="apy-impact-col '+(value<0?'negative':value>0?'positive':'neutral')+'" aria-label="'+esc(l target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4>'+apYtdImpactChart(d)+'<p class="apy-explain">Verde sopra lo zero: incremento · Rosso sotto lo zero: decremento. Ogni KPI è uno scenario controfattuale indipendente costruito sui volumi AC e sul relativo valore AP ricostruito: gli impatti non si sommano. MS è la variazione monetaria del proprio indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
+d.impacts.map(([label,value,unit])=>{
   const magnitude=Math.min(100,100*Math.abs(value)/max),side=value<0?'negative':'positive',display=(value>0?'+':'')+apYtdEuro(value);
   return '<div class="apy-impact-row '+side+'"><span class="apy-impact-name">'+label+'</span><span class="apy-impact-track"><span class="apy-impact-left">'+(value<0?'<span class="apy-impact-bar negative" style="width:'+magnitude.toFixed(2)+'%"></span>':'')+'</span><span class="apy-impact-right">'+(value>=0?'<span class="apy-impact-bar positive" style="width:'+magnitude.toFixed(2)+'%"></span>':'')+'</span></span><strong class="apy-impact-value">'+display+'</strong></div>';
  }).join('');
@@ -1469,7 +1471,7 @@ function apYtdRender(prefix='apy-'){
    prima di tutto: sotto la soglia minima lo scroll rimane disponibile per accessibilità. */
 function apFitActionPlanStage(){
  const body=document.querySelector('#modalRoot .modal:has(#actionPlanForm) .modal-body');
- const step=[document.getElementById('apy-pre'),document.getElementById('app-period-analysis'),document.getElementById('apy-plan-stage')].find(x=>x&&!x.classList.contains('hidden'));
+ const step=[document.getElementById('ap-details-step'),document.getElementById('apy-pre'),document.getElementById('app-period-analysis'),document.getElementById('apy-plan-stage')].find(x=>x&&!x.classList.contains('hidden'));
  if(!body||!step)return;
  step.style.zoom='1';body.style.overflowY='hidden';
  const natural=step.scrollHeight,available=Math.max(100,body.clientHeight-5),ratio=natural>0?Math.min(1,available/natural):1;
@@ -1492,16 +1494,16 @@ function apYtdSetup(plan){
   const f=AP_YTD_DEF.find(x=>x[0]===k),isDelta=k.endsWith('D'),val=Number.isFinite(Number(values[k]))&&values[k]!==''&&values[k]!=null?Number(values[k]).toLocaleString('it-IT',{maximumFractionDigits:2}):'';
   return '<label class="apy-field"><span>'+f[1]+'</span><div><input type="text" inputmode="decimal" autocomplete="off" data-apy-input id="'+prefix+k+'" value="'+esc(val)+'" placeholder="'+(isDelta?'+/- 0,0':'0,00')+'"><b>'+f[2]+'</b></div></label>';
  }).join('');
- const body=(prefix,values)=>groups.map(g=>'<section class="apy-panel"><h4><span>'+g[0]+'</span>'+g[1]+'</h4><div class="apy-grid">'+fields(g[2],prefix,values)+'</div></section>').join('')+
+ const body=(prefix,values)=>groups.map(g=>'<section class="apy-panel'+(g[0]==='02'?' apy-panel-traffic':'')+'"><h4><span>'+g[0]+'</span>'+g[1]+'</h4><div class="apy-grid">'+fields(g[2],prefix,values)+'</div></section>').join('')+
   '<section class="apy-panel"><h4><span>04</span>Impatto economico</h4><div id="'+prefix+'output"></div></section>';
- pre.innerHTML='<header class="apy-hero"><small>STEP 01 / 03 · PRE-ANALISI YTD</small><h3>Partiamo dai numeri.</h3><p>Inserisci i 13 indicatori YTD riferiti allo stesso periodo. Il grafico si aggiorna in tempo reale.</p></header>'
+ pre.innerHTML='<header class="apy-hero"><small>STEP 02 / 04 · PRE-ANALISI YTD</small><h3>PARTIAMO DAI NUMERI - Come sta andando l’anno?</h3><p>Inserisci i 13 indicatori YTD riferiti allo stesso periodo. Il grafico si aggiorna in tempo reale.</p><p class="apy-source-caption">I dati devono essere estratti da REPORT STORE REVIEW da inizio anno fino alla fine dell’ultimo mese consolidato.</p></header>'
  +body('apy-',saved)
- +'<footer class="apy-footer"><p>Delta % rispetto ad AP, non differenze in punti percentuali. Le stime sono scenari indipendenti, non sommabili.</p><button type="button" class="btn primary" id="apy-next" disabled>CONTINUA ALL’ANALISI PERIODO →</button></footer>';
- period.innerHTML='<header class="apy-hero apy-period-hero"><small>STEP 02 / 03 · DATI STESSO PERIODO AP DELL’ACTION PLAN</small><h3>Com’è andato lo scorso anno il periodo che andiamo ad affrontare?</h3><p>Inserisci i KPI AC e i rispettivi delta vs AP del periodo Action Plan: il sistema ricostruisce i valori AP usando le formule inverse. Non vengono copiati i valori YTD.</p><p class="apy-period-reference">Periodo selezionato: <strong id="app-period-name"></strong></p></header>'
+ +'<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="apy-details-back">← DATI ACTION PLAN</button><p>Delta % rispetto ad AP, non differenze in punti percentuali. Le stime sono scenari indipendenti, non sommabili.</p><button type="button" class="btn primary" id="apy-next" disabled>CONTINUA ALL’ANALISI PERIODO →</button></footer>';
+ period.innerHTML='<header class="apy-hero apy-period-hero"><small>STEP 03 / 04 · DATI STESSO PERIODO AP DELL’ACTION PLAN</small><h3>Com’è andato lo scorso anno il periodo che andiamo ad affrontare?</h3><p>Inserisci i KPI AC e i rispettivi delta vs AP del periodo Action Plan: il sistema ricostruisce i valori AP usando le formule inverse. Non vengono copiati i valori YTD.</p><p class="apy-period-reference">Periodo selezionato: <strong id="app-period-name"></strong></p></header>'
  +body('app-',periodSaved)
  +'<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="app-back">← TORNA ALL’ANALISI YTD</button><p>Il grafico riguarda solo il periodo Action Plan. Le opportunità di incasso sono indipendenti e non devono essere sommate.</p><button type="button" class="btn primary" id="app-next" disabled>CONTINUA ALL’ANALISI →</button></footer>';
  const intro=document.createElement('header');intro.className='apy-hero';
- intro.innerHTML='<small>STEP 03 / 03 · ACTION PLAN</small><h3>Dall’analisi all’azione.</h3><p>Riporta le conclusioni nel campo ANALISI e definisci obiettivi, strategia, responsabilità e monitoraggio.</p><button type="button" class="btn" id="apy-back">← TORNA ALL’ANALISI PERIODO</button>';
+ intro.innerHTML='<small>STEP 04 / 04 · ACTION PLAN</small><h3>Dall’analisi all’azione.</h3><p>Rivedi i due grafici di impatto economico, poi riporta le conclusioni nel campo ANALISI e definisci obiettivi, strategia, responsabilità e monitoraggio.</p><button type="button" class="btn" id="apy-back">← TORNA ALL’ANALISI PERIODO</button>';
  stage.prepend(intro);form.classList.add('apy-workflow');form.append(pre,period,stage);
  const setPeriodName=()=>{const el=document.getElementById('app-period-name');if(el)el.textContent=String(document.getElementById('apYear')?.value||'—')+' · '+String(document.getElementById('apFraction')?.value||'—')};
  const showStep=step=>{
