@@ -1440,7 +1440,16 @@ function apYtdCalculate(v){
  const factor=k=>1+v[k]/100,ticketsAC=v.sales/v.atv,visitsAC=ticketsAC/(v.cr/100),visitsAP=visitsAC/factor('visD'),crAP=v.cr/factor('crD'),ticketsAP=visitsAP*crAP/100,salesAP=v.sales/factor('salesD'),atvAP=v.atv/factor('atvD');
  if(crAP>100)return null;
  const levers=[['Gap incasso',Math.max(0,salesAP-v.sales)],['Ingressi',Math.max(0,visitsAP-visitsAC)*v.cr/100*v.atv],['CR',Math.max(0,crAP-v.cr)/100*visitsAC*v.atv],['UPT',Math.max(0,v.upt/factor('uptD')-v.upt)*ticketsAC*v.asp],['ASP',Math.max(0,v.asp/factor('aspD')-v.asp)*ticketsAC*v.upt],['ATV',Math.max(0,atvAP-v.atv)*ticketsAC],['MS',null]];
- return {ticketsAC,visitsAC,ticketsAP,visitsAP,salesAP,levers,warning:Math.abs(ticketsAP*atvAP-salesAP)/salesAP>.03||Math.abs(v.upt*v.asp-v.atv)/v.atv>.03};
+ const impacts=[
+  ['INCASSATO',v.sales-salesAP,'ricavi'],
+  ['INGRESSI',(visitsAC-visitsAP)*(v.cr/100)*v.atv,'ricavi'],
+  ['CR',(v.cr-crAP)/100*visitsAC*v.atv,'ricavi'],
+  ['UPT',(v.upt-v.upt/factor('uptD'))*ticketsAC*v.asp,'ricavi'],
+  ['ASP',(v.asp-v.asp/factor('aspD'))*ticketsAC*v.upt,'ricavi'],
+  ['ATV',(v.atv-atvAP)*ticketsAC,'ricavi'],
+  ['MS',v.ms-v.ms/factor('msD'),'ms']
+ ];
+ return {ticketsAC,visitsAC,ticketsAP,visitsAP,salesAP,levers,impacts,warning:Math.abs(ticketsAP*atvAP-salesAP)/salesAP>.03||Math.abs(v.upt*v.asp-v.atv)/v.atv>.03};
 }
 function apYtdEuro(x){return Number(x).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0})}
 function apYtdInt(x){return Math.round(x).toLocaleString('it-IT')}
@@ -1448,17 +1457,35 @@ function apYtdRender(prefix='apy-'){
  const v=apYtdRead(prefix),d=apYtdCalculate(v),target=document.getElementById(prefix+'output'),next=document.getElementById(prefix+'next');if(!target||!next)return;next.disabled=!d;
  for(const [key] of AP_YTD_DEF){const field=document.getElementById(prefix+key)?.closest('.apy-field');if(field){field.classList.toggle('positive',key.endsWith('D')&&v[key]>0);field.classList.toggle('negative',key.endsWith('D')&&v[key]<0)}}
  if(!d){target.innerHTML='<p class="apy-help">Completa tutti i dati e verifica che il CR sia tra 0 e 100%, i valori AC siano validi e i delta siano superiori a -100%.</p>';return}
- const max=Math.max(1,...d.levers.filter(x=>x[1]!==null).map(x=>x[1]));
- target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Incasso recuperabile per singolo KPI</h4><div class="apy-chart" role="img" aria-label="Grafico a colonne del potenziale per KPI">'+d.levers.map((x,i)=>'<div class="apy-col'+(i===0?' reference':'')+'"><strong>'+(x[1]===null?'N/D':apYtdEuro(x[1]))+'</strong><div class="apy-rail"><div class="apy-bar" style="height:'+(x[1]===null?0:100*x[1]/max)+'%"></div></div><span>'+x[0]+'</span></div>').join('')+'</div><p class="apy-explain">Stime controfattuali autonome: le colonne non si sommano. UPT, ASP e ATV sono sovrapposti; MS non può essere monetizzato autonomamente senza una definizione economica.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
+ const max=Math.max(1,...d.impacts.map(x=>Math.abs(x[1])));
+ const columns=d.impacts.map(([label,value,unit])=>{
+  const magnitude=Math.min(100,100*Math.abs(value)/max),side=value<0?'negative':'positive',display=(value>0?'+':'')+apYtdEuro(value);
+  return '<div class="apy-impact-row '+side+'"><span class="apy-impact-name">'+label+'</span><span class="apy-impact-track"><span class="apy-impact-left">'+(value<0?'<span class="apy-impact-bar negative" style="width:'+magnitude.toFixed(2)+'%"></span>':'')+'</span><span class="apy-impact-right">'+(value>=0?'<span class="apy-impact-bar positive" style="width:'+magnitude.toFixed(2)+'%"></span>':'')+'</span></span><strong class="apy-impact-value">'+display+'</strong></div>';
+ }).join('');
+ target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4><div class="apy-impact-chart" role="img" aria-label="Impatto positivo o negativo per KPI rispetto ad AP">'+columns+'</div><p class="apy-explain">Verde: incremento · Rosso: decremento. Ogni KPI è uno scenario controfattuale indipendente costruito sui volumi AC e sul relativo valore AP ricostruito: gli impatti non si sommano. MS è la variazione monetaria del proprio indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
+ if(typeof apFitActionPlanStage==='function')requestAnimationFrame(apFitActionPlanStage);
 }
+/* Adatta un solo step per volta all'altezza reale della maschera. Layout leggibile
+   prima di tutto: sotto la soglia minima lo scroll rimane disponibile per accessibilità. */
+function apFitActionPlanStage(){
+ const body=document.querySelector('#modalRoot .modal:has(#actionPlanForm) .modal-body');
+ const step=[document.getElementById('apy-pre'),document.getElementById('app-period-analysis'),document.getElementById('apy-plan-stage')].find(x=>x&&!x.classList.contains('hidden'));
+ if(!body||!step)return;
+ step.style.zoom='1';body.style.overflowY='hidden';
+ const natural=step.scrollHeight,available=Math.max(100,body.clientHeight-5),ratio=natural>0?Math.min(1,available/natural):1;
+ // Ridurre oltre questo limite renderebbe il testo illeggibile, soprattutto su mobile.
+ const zoom=Math.max(.72,ratio);step.style.zoom=String(Math.round(zoom*1000)/1000);
+ body.style.overflowY=step.getBoundingClientRect().height>body.getBoundingClientRect().height+2?'auto':'hidden';
+}
+if(typeof window!=='undefined'&&!window.__apFitActionPlanResize){window.__apFitActionPlanResize=true;window.addEventListener('resize',()=>{if(document.getElementById('actionPlanForm'))requestAnimationFrame(apFitActionPlanStage)});}
 function apYtdSetup(plan){
- if(currentUser?.role!=='STORE')return;
+ if(currentUser?.role!=='STORE'&&!(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'))return;
  const form=document.getElementById('actionPlanForm');if(!form)return;
  // Il terzo step contiene il modulo Action Plan esistente, senza ricreare i suoi controlli.
- const stage=document.createElement('div');stage.id='apy-plan-stage';stage.className='hidden';
+ const stage=document.createElement('div');stage.id='apy-plan-stage';stage.className='apy-step hidden';
  while(form.firstChild)stage.append(form.firstChild);
- const pre=document.createElement('div');pre.id='apy-pre';
- const period=document.createElement('div');period.id='app-period-analysis';period.className='hidden';
+ const pre=document.createElement('div');pre.id='apy-pre';pre.className='apy-step';
+ const period=document.createElement('div');period.id='app-period-analysis';period.className='apy-step hidden';
  const saved=apYtdPrevious(plan?.premise)||{},periodSaved=saved.period&&typeof saved.period==='object'?saved.period:{};
  const groups=[['01','Risultato economico',['sales','salesD']],['02','Traffico e conversione',['visD','cr','crD']],['03','Qualità dello scontrino',['upt','uptD','asp','aspD','atv','atvD','ms','msD']]];
  const fields=(keys,prefix,values)=>keys.map(k=>{
@@ -1470,7 +1497,7 @@ function apYtdSetup(plan){
  pre.innerHTML='<header class="apy-hero"><small>STEP 01 / 03 · PRE-ANALISI YTD</small><h3>Partiamo dai numeri.</h3><p>Inserisci i 13 indicatori YTD riferiti allo stesso periodo. Il grafico si aggiorna in tempo reale.</p></header>'
  +body('apy-',saved)
  +'<footer class="apy-footer"><p>Delta % rispetto ad AP, non differenze in punti percentuali. Le stime sono scenari indipendenti, non sommabili.</p><button type="button" class="btn primary" id="apy-next" disabled>CONTINUA ALL’ANALISI PERIODO →</button></footer>';
- period.innerHTML='<header class="apy-hero apy-period-hero"><small>STEP 02 / 03 · ANALISI PERIODO ACTION PLAN</small><h3>Analizziamo il periodo dell’Action Plan.</h3><p>Inserisci gli stessi 13 KPI, questa volta riferiti esclusivamente al periodo operativo dell’Action Plan, senza riportare automaticamente i valori YTD.</p><p class="apy-period-reference">Periodo selezionato: <strong id="app-period-name"></strong></p></header>'
+ period.innerHTML='<header class="apy-hero apy-period-hero"><small>STEP 02 / 03 · DATI STESSO PERIODO AP DELL’ACTION PLAN</small><h3>Com’è andato lo scorso anno il periodo che andiamo ad affrontare?</h3><p>Inserisci i KPI AC e i rispettivi delta vs AP del periodo Action Plan: il sistema ricostruisce i valori AP usando le formule inverse. Non vengono copiati i valori YTD.</p><p class="apy-period-reference">Periodo selezionato: <strong id="app-period-name"></strong></p></header>'
  +body('app-',periodSaved)
  +'<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="app-back">← TORNA ALL’ANALISI YTD</button><p>Il grafico riguarda solo il periodo Action Plan. Le opportunità di incasso sono indipendenti e non devono essere sommate.</p><button type="button" class="btn primary" id="app-next" disabled>CONTINUA ALL’ANALISI →</button></footer>';
  const intro=document.createElement('header');intro.className='apy-hero';
@@ -1480,7 +1507,7 @@ function apYtdSetup(plan){
  const showStep=step=>{
   pre.classList.toggle('hidden',step!==1);period.classList.toggle('hidden',step!==2);stage.classList.toggle('hidden',step!==3);
   if(step===2)setPeriodName();
-  (step===1?pre:step===2?period:stage).scrollIntoView({block:'start'});
+  requestAnimationFrame(apFitActionPlanStage);
  };
  pre.querySelectorAll('[data-apy-input]').forEach(el=>el.addEventListener('input',()=>apYtdRender()));
  period.querySelectorAll('[data-apy-input]').forEach(el=>el.addEventListener('input',()=>apYtdRender('app-')));
@@ -1489,7 +1516,7 @@ function apYtdSetup(plan){
  document.getElementById('app-next').onclick=()=>{if(!apYtdCalculate(apYtdRead('app-')))return;showStep(3)};
  document.getElementById('apy-back').onclick=()=>showStep(2);
  form.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-apy-input]'))e.preventDefault()});
- setPeriodName();apYtdRender();apYtdRender('app-');
+ setPeriodName();apYtdRender();apYtdRender('app-');requestAnimationFrame(apFitActionPlanStage);
 }
 
 function actionPlanStore(id){return app?.stores?.find(x=>String(x.id)===String(id))||null}
