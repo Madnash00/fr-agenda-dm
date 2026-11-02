@@ -1493,10 +1493,22 @@ if(typeof window!=='undefined'&&!window.__apFitActionPlanResize){window.__apFitA
 function apYtdSetup(plan){
  if(currentUser?.role!=='STORE'&&!(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'))return;
  const form=document.getElementById('actionPlanForm');if(!form)return;
- // Il terzo step contiene il modulo Action Plan esistente, senza ricreare i suoi controlli.
+ // L'ultimo step contiene il modulo Action Plan esistente senza duplicare i suoi campi.
  const stage=document.createElement('div');stage.id='apy-plan-stage';stage.className='apy-step hidden';
  while(form.firstChild)stage.append(form.firstChild);
- const pre=document.createElement('div');pre.id='apy-pre';pre.className='apy-step';
+ const details=document.createElement('div');details.id='ap-details-step';details.className='apy-step';
+ const planFields=stage.querySelector('.action-plan-modal-grid');
+ if(planFields)details.append(planFields);
+ const dm=currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM';
+ if(dm){
+  const stores=(app?.stores||[]).filter(x=>x.active).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'it'));
+  const selector=document.createElement('label');selector.className='ap-details-store';
+  selector.innerHTML='<span>NEGOZIO</span><select id="apDetailsStore" required><option value="">Seleziona negozio</option>'+stores.map(store=>'<option value="'+esc(store.id)+'"'+(String(store.id)===String(actionPlanDraftStoreId)?' selected':'')+'>'+esc((store.code||'—')+' · '+store.name)+'</option>').join('')+'</select>';
+  details.prepend(selector);
+  if(plan?.plan_id)selector.querySelector('select').disabled=true;
+  selector.querySelector('select').onchange=e=>{actionPlanDraftStoreId=String(e.target.value||'');};
+ }
+ const pre=document.createElement('div');pre.id='apy-pre';pre.className='apy-step hidden';
  const period=document.createElement('div');period.id='app-period-analysis';period.className='apy-step hidden';
  const saved=apYtdPrevious(plan?.premise)||{},periodSaved=saved.period&&typeof saved.period==='object'?saved.period:{};
  const groups=[['01','Risultato economico',['sales','salesD']],['02','Traffico e conversione',['visD','cr','crD']],['03','Qualità dello scontrino',['upt','uptD','asp','aspD','atv','atvD','ms','msD']]];
@@ -1514,13 +1526,30 @@ function apYtdSetup(plan){
  +'<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="app-back">← TORNA ALL’ANALISI YTD</button><p>Il grafico riguarda solo il periodo Action Plan. Le opportunità di incasso sono indipendenti e non devono essere sommate.</p><button type="button" class="btn primary" id="app-next" disabled>CONTINUA ALL’ANALISI →</button></footer>';
  const intro=document.createElement('header');intro.className='apy-hero';
  intro.innerHTML='<small>STEP 04 / 04 · ACTION PLAN</small><h3>Dall’analisi all’azione.</h3><p>Rivedi i due grafici di impatto economico, poi riporta le conclusioni nel campo ANALISI e definisci obiettivi, strategia, responsabilità e monitoraggio.</p><button type="button" class="btn" id="apy-back">← TORNA ALL’ANALISI PERIODO</button>';
- stage.prepend(intro);form.classList.add('apy-workflow');form.append(pre,period,stage);
+ stage.prepend(intro);
+ const review=document.createElement('div');review.id='ap-review-charts';review.className='apy-review-charts';intro.after(review);
+ details.insertAdjacentHTML('afterbegin','<header class="apy-hero"><small>STEP 01 / 04 · DATI ACTION PLAN</small><h3>Informazioni iniziali dell’Action Plan</h3><p>Definisci il negozio, la data di inserimento, l’anno e il periodo di riferimento prima di passare all’analisi.</p></header>');
+ details.insertAdjacentHTML('beforeend','<footer class="apy-footer"><button type="button" class="btn primary" id="ap-details-next">CONTINUA · PARTIAMO DAI NUMERI →</button></footer>');
+ form.classList.add('apy-workflow');form.append(details,pre,period,stage);
  const setPeriodName=()=>{const el=document.getElementById('app-period-name');if(el)el.textContent=String(document.getElementById('apYear')?.value||'—')+' · '+String(document.getElementById('apFraction')?.value||'—')};
  const showStep=step=>{
-  pre.classList.toggle('hidden',step!==1);period.classList.toggle('hidden',step!==2);stage.classList.toggle('hidden',step!==3);
+  details.classList.toggle('hidden',step!==0);pre.classList.toggle('hidden',step!==1);
+  period.classList.toggle('hidden',step!==2);stage.classList.toggle('hidden',step!==3);
   if(step===2)setPeriodName();
+  if(step===3)apYtdReviewCharts();
   requestAnimationFrame(apFitActionPlanStage);
  };
+ const detailsNext=document.getElementById('ap-details-next');
+ detailsNext.onclick=()=>{
+  const store=dm?String(document.getElementById('apDetailsStore')?.value||''):String(currentUser?.store_id||'');
+  if(!store){toast('Seleziona il negozio.',true);return}
+  if(dm&&!(app?.stores||[]).some(x=>String(x.id)===store&&x.active)){toast('Negozio non autorizzato.',true);return}
+  const fields=[document.getElementById('apDate'),document.getElementById('apYear'),document.getElementById('apFraction')];
+  if(fields.some(field=>!field||!field.checkValidity())){fields.find(field=>!field?.checkValidity())?.reportValidity();return}
+  actionPlanDraftStoreId=store;
+  showStep(1);
+ };
+ document.getElementById('apy-details-back').onclick=()=>showStep(0);
  pre.querySelectorAll('[data-apy-input]').forEach(el=>el.addEventListener('input',()=>apYtdRender()));
  period.querySelectorAll('[data-apy-input]').forEach(el=>el.addEventListener('input',()=>apYtdRender('app-')));
  document.getElementById('apy-next').onclick=()=>{if(!apYtdCalculate(apYtdRead()))return;showStep(2)};
@@ -1528,7 +1557,7 @@ function apYtdSetup(plan){
  document.getElementById('app-next').onclick=()=>{if(!apYtdCalculate(apYtdRead('app-')))return;showStep(3)};
  document.getElementById('apy-back').onclick=()=>showStep(2);
  form.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-apy-input]'))e.preventDefault()});
- setPeriodName();apYtdRender();apYtdRender('app-');requestAnimationFrame(apFitActionPlanStage);
+ setPeriodName();apYtdRender();apYtdRender('app-');showStep(0);
 }
 
 function actionPlanStore(id){return app?.stores?.find(x=>String(x.id)===String(id))||null}
@@ -1586,9 +1615,9 @@ function actionPlanDmConfirm(action,storeId){
 }
 function actionPlanDefaultFraction(){const m=new Date().getMonth()+1;return m<=3?'Q1':m<=6?'Q2':m<=9?'Q3':'Q4'}
 function openActionPlanEditor(planId=null){if(!planId&&currentUser?.role==='STORE'){const today=isoDate(new Date()),year=new Date().getFullYear(),fraction=actionPlanDefaultFraction(),prev=(actionPlanCache?.plans||[]).filter(p=>p.is_draft&&String(p.store_id)===String(currentUser.store_id)&&Number(p.period_year)===year&&p.period_fraction===fraction&&p.plan_date===today).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')))[0];if(prev)return openActionPlanEditor(prev.plan_id)}const plan=planId?(actionPlanCache?.plans||[]).find(x=>String(x.plan_id)===String(planId)):null;if(planId&&!plan){toast('Action Plan non disponibile',true);return}if(!plan&&currentUser?.role==='ADMIN'&&currentUser?.profile_role!=='DM'){toast('La creazione per conto del negozio è riservata al DM.',true);return}const storeId=plan?.store_id||(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'?$('#actionPlanStoreFilter')?.value:currentUser?.store_id)||'';
-if(!storeId){toast('Seleziona prima il negozio per cui creare l’Action Plan.',true);return;}
-if(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'&&!actionPlanStore(storeId)){toast('Negozio non autorizzato nel tuo distretto.',true);return;}
-actionPlanDraftStoreId=String(storeId);actionPlanDraftObjectives=(plan?.objectives||[]).map(x=>({...x,tasks:Array.isArray(x.tasks)?JSON.parse(JSON.stringify(x.tasks)):[]}));const now=new Date(),date=plan?.plan_date||isoDate(now),year=Number(plan?.period_year)||now.getFullYear(),fraction=plan?.period_fraction||actionPlanDefaultFraction();showModal(`${plan?.is_draft?'Action Plan · BOZZA':plan?'Action Plan':'Nuovo Action Plan'} · ${esc(actionPlanStoreLabel(storeId))}`,`<form id="actionPlanForm"><div class="action-plan-modal-grid"><label>Data inserimento<input id="apDate" type="date" value="${esc(date)}" required></label><label>Anno<input id="apYear" type="number" min="2020" max="2100" value="${year}" required></label><label>Frazione<select id="apFraction">${['Q1','Q2','Q3','Q4','H1','H2'].map(x=>`<option ${x===fraction?'selected':''}>${x}</option>`).join('')}</select></label><label class="full">${currentUser?.role==='STORE'?'ANALISI':'PREMESSA'}<textarea id="apPremise" rows="5" placeholder="Descrivi il contesto e le ragioni analitiche che hanno portato alla definizione degli OBJ" required>${esc(apYtdPremise(plan?.premise))}</textarea></label></div><div class="action-obj-section"><div class="action-obj-section-head"><div><h4>${currentUser?.role==='STORE'?'OBIETTIVI':'OBJ'}</h4>${currentUser?.role==='STORE'?'<p class="ap-section-caption">Definisci per ogni obiettivo la strategia e le azioni da monitorare.</p>':''}</div><button id="addActionObjectiveBtn" type="button" class="btn primary">${currentUser?.role==='STORE'?'AGGIUNGI OBIETTIVO':'AGGIUNGI OBJ'}</button></div><div id="actionPlanObjectivesDraft" class="action-obj-list"></div><div id="actionObjectiveEditor" class="action-obj-editor hidden"></div></div><div class="modal-actions" style="padding:12px 0 0">${plan?`<button type="button" class="btn action-plan-pdf-btn" id="downloadActionPlanPdfBtn" data-action-plan-pdf="${plan.plan_id}">Scarica PDF</button>`:''}${plan&&currentUser?.role==='ADMIN'?`<button type="button" class="btn danger" id="deleteActionPlanBtn">ELIMINA ACTION PLAN</button>`:''}<span class="spacer"></span><button type="button" class="btn" id="cancelActionPlanBtn">Annulla</button>${currentUser?.role==='STORE'?'<button type="button" class="btn" id="saveActionPlanDraftBtn">SALVA BOZZA</button>':''}<button class="btn primary">Salva Action Plan</button></div></form>`,true);apYtdSetup(plan);renderActionPlanObjectivesDraft();$('#addActionObjectiveBtn').onclick=()=>openActionObjectiveDraft();$('#cancelActionPlanBtn').onclick=()=>currentUser?.role==='STORE'?requestCloseActionPlanStore():closeModal();if($('#deleteActionPlanBtn'))$('#deleteActionPlanBtn').onclick=()=>deleteActionPlanFromEditor(plan);const planForm=$('#actionPlanForm');planForm.dataset.planId=String(plan?.plan_id||'');if($('#saveActionPlanDraftBtn'))$('#saveActionPlanDraftBtn').onclick=e=>saveActionPlanForm(e,planForm.dataset.planId||null,true);planForm.onsubmit=e=>saveActionPlanForm(e,planForm.dataset.planId||null);if(currentUser?.role==='STORE'){actionPlanStoreDirty=false;actionPlanStoreRevision=0;planForm.addEventListener('input',()=>{actionPlanStoreDirty=true;++actionPlanStoreRevision});planForm.addEventListener('change',()=>{actionPlanStoreDirty=true;++actionPlanStoreRevision});planForm.addEventListener('click',e=>{if(e.target.closest('#saveActionObjectiveBtn,[data-ap-obj-remove],#apAddTaskBtn,[data-ap-remove-task],[data-ap-add-checkpoint],[data-ap-remove-checkpoint],#addActionObjectiveBtn')){actionPlanStoreDirty=true;++actionPlanStoreRevision}})}}
+if(!storeId&&!(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM')){toast('Negozio non disponibile.',true);return;}
+if(storeId&&currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'&&!actionPlanStore(storeId)){toast('Negozio non autorizzato nel tuo distretto.',true);return;}
+actionPlanDraftStoreId=String(storeId);actionPlanDraftObjectives=(plan?.objectives||[]).map(x=>({...x,tasks:Array.isArray(x.tasks)?JSON.parse(JSON.stringify(x.tasks)):[]}));const now=new Date(),date=plan?.plan_date||isoDate(now),year=Number(plan?.period_year)||now.getFullYear(),fraction=plan?.period_fraction||actionPlanDefaultFraction();showModal(`${plan?.is_draft?'Action Plan · BOZZA':plan?'Action Plan':'Nuovo Action Plan'} · ${esc(actionPlanStoreLabel(storeId))}`,`<form id="actionPlanForm"><div class="action-plan-modal-grid"><label>DATA INSERIMENTO<input id="apDate" type="date" value="${esc(date)}" required></label><label>ANNO RIFERIMENTO<input id="apYear" type="number" min="2020" max="2100" value="${year}" required></label><label>PERIODO ACTION PLAN<input id="apFraction" type="text" maxlength="60" value="${esc(fraction)}" placeholder="Es. W45-W49, NOVEMBRE, Q4" required></label><label class="full">ANALISI<textarea id="apPremise" rows="5" placeholder="Descrivi il contesto e le ragioni analitiche che hanno portato alla definizione degli OBJ" required>${esc(apYtdPremise(plan?.premise))}</textarea></label></div><div class="action-obj-section"><div class="action-obj-section-head"><div><h4>${currentUser?.role==='STORE'?'OBIETTIVI':'OBJ'}</h4>${currentUser?.role==='STORE'?'<p class="ap-section-caption">Definisci per ogni obiettivo la strategia e le azioni da monitorare.</p>':''}</div><button id="addActionObjectiveBtn" type="button" class="btn primary">${currentUser?.role==='STORE'?'AGGIUNGI OBIETTIVO':'AGGIUNGI OBJ'}</button></div><div id="actionPlanObjectivesDraft" class="action-obj-list"></div><div id="actionObjectiveEditor" class="action-obj-editor hidden"></div></div><div class="modal-actions" style="padding:12px 0 0">${plan?`<button type="button" class="btn action-plan-pdf-btn" id="downloadActionPlanPdfBtn" data-action-plan-pdf="${plan.plan_id}">Scarica PDF</button>`:''}${plan&&currentUser?.role==='ADMIN'?`<button type="button" class="btn danger" id="deleteActionPlanBtn">ELIMINA ACTION PLAN</button>`:''}<span class="spacer"></span><button type="button" class="btn" id="cancelActionPlanBtn">Annulla</button>${currentUser?.role==='STORE'?'<button type="button" class="btn" id="saveActionPlanDraftBtn">SALVA BOZZA</button>':''}<button class="btn primary">Salva Action Plan</button></div></form>`,true);apYtdSetup(plan);renderActionPlanObjectivesDraft();$('#addActionObjectiveBtn').onclick=()=>openActionObjectiveDraft();$('#cancelActionPlanBtn').onclick=()=>currentUser?.role==='STORE'?requestCloseActionPlanStore():closeModal();if($('#deleteActionPlanBtn'))$('#deleteActionPlanBtn').onclick=()=>deleteActionPlanFromEditor(plan);const planForm=$('#actionPlanForm');planForm.dataset.planId=String(plan?.plan_id||'');if($('#saveActionPlanDraftBtn'))$('#saveActionPlanDraftBtn').onclick=e=>saveActionPlanForm(e,planForm.dataset.planId||null,true);planForm.onsubmit=e=>saveActionPlanForm(e,planForm.dataset.planId||null);if(currentUser?.role==='STORE'){actionPlanStoreDirty=false;actionPlanStoreRevision=0;planForm.addEventListener('input',()=>{actionPlanStoreDirty=true;++actionPlanStoreRevision});planForm.addEventListener('change',()=>{actionPlanStoreDirty=true;++actionPlanStoreRevision});planForm.addEventListener('click',e=>{if(e.target.closest('#saveActionObjectiveBtn,[data-ap-obj-remove],#apAddTaskBtn,[data-ap-remove-task],[data-ap-add-checkpoint],[data-ap-remove-checkpoint],#addActionObjectiveBtn')){actionPlanStoreDirty=true;++actionPlanStoreRevision}})}}
 async function deleteActionPlanFromEditor(plan){
  if(currentUser?.role!=='ADMIN'||!plan?.plan_id)return;
  const msg='ATTENZIONE: stai per eliminare definitivamente l’Action Plan del negozio '+actionPlanStoreLabel(plan.store_id)+' ('+actionPlanPeriodLabel(plan)+').\n\nVerranno eliminati anche tutti gli OBJ, i task e le note di monitoraggio collegati.\n\nQuesta operazione è IRREVERSIBILE. Confermi l’eliminazione?';
