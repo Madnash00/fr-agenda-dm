@@ -183,7 +183,7 @@ assert.ok(app.includes("details.id='ap-details-step'")&&app.includes("STEP 01 / 
 assert.ok(app.includes("id=\"apDetailsStore\"")&&app.includes("selector.querySelector('select').disabled=true"),'DM may select own store for new plan, but not transfer existing plan');
 assert.ok(app.includes('analysisGrid.append(analysisField)')&&app.includes('stage.insertBefore(analysisGrid'),'ANALISI remains in final step');
 assert.ok(app.includes('PERIODO ACTION PLAN<input id="apFraction" type="text" maxlength="60"'),'Action Plan accepts free period descriptions');
-assert.ok(app.includes("data="")===false || app.includes('apYtdRead('),'KPI inputs remain connected');
+assert.ok(app.includes("function apYtdRead(prefix='apy-')")&&app.includes("apYtdRead('app-')"),'KPI inputs remain connected');
 assert.ok(app.includes("function apYtdReviewCharts()")&&app.includes("id='ap-review-charts'"),'Final stage shows both YTD and AP charts');
 assert.ok(app.includes("g[0]==='02'?' apy-panel-traffic'"),'Traffic panel order preserved, with CR AC immediately before delta CR');
 assert.ok(app.includes("REPORT STORE REVIEW da inizio anno fino alla fine dell’ultimo mese consolidato."),'YTD source note visible');
