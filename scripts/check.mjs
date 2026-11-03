@@ -144,6 +144,7 @@ assert.ok(app.includes('function apYtdCalculate(v)')&&app.includes('function apY
 assert.ok(app.includes("apYtdSetup(plan);renderActionPlanObjectivesDraft()"),'STORE analysis must open first');
 assert.ok(app.includes("btoa(JSON.stringify({...apYtdRead(),period:apYtdRead('app-')}))"),'YTD and Action Plan period must persist in the existing premise');
 assert.ok(!app.includes('actionPlanPdfWrap(plan.premise,premiseW-20,font)'),'PDF must omit structured YTD metadata');
+execFileSync(process.execPath,['scripts/test-action-plan-ytd-autoupdate.mjs'],{stdio:'inherit'});
 const calcCode=app.slice(app.indexOf('const AP_YTD_DEF='),app.indexOf('function actionPlanStore(id){'));
 const calc=new Function(calcCode+';return apYtdCalculate;')();
 const base=calc({sales:100000,salesD:-10,visD:-10,cr:20,crD:-5,upt:2,uptD:-5,asp:50,aspD:-5,atv:100,atvD:-5,ms:40,msD:-5});
