@@ -1537,8 +1537,9 @@ function apYtdSetup(plan){
  stage.prepend(intro);
  const review=document.createElement('div');review.id='ap-review-charts';review.className='apy-review-charts';intro.after(review);
  const objectivePage=document.createElement('div');objectivePage.id='ap-objectives-page';objectivePage.className='apy-step hidden';
- objectivePage.innerHTML='<header class="apy-hero"><small>STEP 04 / 04 · ACTION PLAN · OBIETTIVI</small><h3>Obiettivi e monitoraggio</h3><p>Seleziona KPI, azioni, strumenti e timing.</p></header><div id="ap-objectives-charts" class="apy-review-charts"></div><footer class="apy-footer"><button type="button" class="btn apy-back-button" id="ap-objectives-back">← TORNA ALL’ANALISI</button></footer>';
+ objectivePage.innerHTML='<header class="apy-hero"><small>STEP 04 / 04 · ACTION PLAN · OBIETTIVI</small><h3>Obiettivi e monitoraggio</h3><p>Seleziona KPI, azioni, strumenti e timing.</p></header><div id="ap-objectives-charts" class="apy-review-charts"></div>';
  const section=stage.querySelector('.action-obj-section');if(section)objectivePage.append(section);
+ objectivePage.insertAdjacentHTML('beforeend','<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="ap-objectives-back">← TORNA ALL’ANALISI</button></footer>');
  const actionButtons=stage.querySelector('.modal-actions');if(actionButtons)objectivePage.append(actionButtons);
  const nextAnalysis=document.createElement('footer');nextAnalysis.className='apy-footer';nextAnalysis.innerHTML='<button type="button" class="btn primary" id="ap-open-objectives">OBIETTIVI →</button>';stage.append(nextAnalysis);
  details.insertAdjacentHTML('afterbegin','<header class="apy-hero"><small>STEP 01 / 04 · DATI ACTION PLAN</small><h3>Informazioni iniziali dell’Action Plan</h3><p>Definisci il negozio, la data di inserimento, l’anno e il periodo di riferimento prima di passare all’analisi.</p></header>');
