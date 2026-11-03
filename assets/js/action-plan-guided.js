@@ -83,6 +83,7 @@ function openApGuidedObjective(index=null){
   const notes=data.nextSteps+'\n[APOBJ2:'+btoa(encodeURIComponent(JSON.stringify(metadata)))+']',oldTasks=old?.tasks||[];
   const obj={objective_id:old?.objective_id||'',objective_text:def.label+' '+apGuidedAmount(data.target,def.unit),actions:actions.join(' · '),tools:tools.join(' · '),status:data.status,notes,tasks:actions.map(task=>({task,tools:tools.join(' · '),owner:data.owner,timing_monitoraggio:data.timing,checkpoints:oldTasks.find(t=>t.task===task)?.checkpoints||[]}))};
   if(old)actionPlanDraftObjectives[index]=obj;else actionPlanDraftObjectives.push(obj);
+  if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}
   close();
  };
  draw();
