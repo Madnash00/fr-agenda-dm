@@ -45,5 +45,5 @@ loadingContext.loading.start();fire(220);fire(20000);
 assert.ok(!visible.has('show'),'Watchdog rimuove animazione che si blocca');
 loadingContext.loading.end();assert.ok(!visible.has('show'),'Lettura terminata in ritardo non deve riattivare spinner');
 assert.ok(app.includes('resetAgendaPageLoading();resetGlobalBusy();const badgeStore='),'Entrata app ripulisce le animazioni pendenti');
-assert.ok(app.includes("const ownTooltip=e.target.closest?.('[data-tooltip]'),cell=e.target.closest?.('#calendarWrap .calendar tbody [data-cell]')"),'Tooltip sulla singola cella');
+assert.ok(app.includes("const cell=e.target.closest?.('#calendarWrap .calendar tbody [data-cell]')"),'Tooltip sulla singola cella');
 console.log('PASS: caricamento concorrente, recupero watchdog, logo non invasivo, menu, intestazioni e tooltip calendario');
