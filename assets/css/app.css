@@ -1999,3 +1999,75 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 .ap-dm-confirm p{font-size:13px;line-height:1.5;margin:7px 0}
 .ap-dm-confirm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
 .ap-dm-confirm-actions .btn{min-width:108px}
+
+
+/* ACTION PLAN · informazioni iniziali e grafici YTD/AP, isolati dal resto dell'app */
+#actionPlanForm #ap-details-step{display:flex;flex-direction:column;justify-content:center;gap:16px;max-width:820px;margin:auto;width:100%}
+#actionPlanForm #ap-details-step.hidden{display:none!important}
+#actionPlanForm #ap-details-step .apy-hero{text-align:center}
+#actionPlanForm #ap-details-step .action-plan-modal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:15px!important;background:#fff;border:1px solid #e3e8ed;border-radius:12px}
+#actionPlanForm #ap-details-step .action-plan-modal-grid>label.full{display:none}
+#actionPlanForm #ap-details-step .ap-details-store{display:grid;gap:6px;font-size:11px;font-weight:800;color:#43505c}
+#actionPlanForm #ap-details-step .ap-details-store select{width:100%;padding:10px;border:1px solid #cfd8de;border-radius:8px;font-size:13px;background:#fff}
+#actionPlanForm #ap-details-step .apy-footer{justify-content:flex-end}
+#actionPlanForm #ap-details-step .apy-footer button{font-size:12px;padding:10px 15px}
+#actionPlanForm .apy-hero .apy-source-caption{font-size:10px!important;color:#59636c!important;font-style:italic;max-width:100%;margin-top:5px}
+#actionPlanForm .apy-panel-traffic .apy-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+#actionPlanForm .apy-impact-chart{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:5px!important;align-items:start;padding:4px 0;overflow:visible!important}
+#actionPlanForm .apy-impact-col{min-width:0;display:flex;flex-direction:column;align-items:center;gap:0;font-size:9px}
+#actionPlanForm .apy-impact-up,#actionPlanForm .apy-impact-down{height:38px;width:82%;display:flex;background:#f6f7f8}
+#actionPlanForm .apy-impact-up{align-items:flex-end;justify-content:center}
+#actionPlanForm .apy-impact-down{align-items:flex-start;justify-content:center}
+#actionPlanForm .apy-impact-baseline{height:2px;width:100%;background:#707b84;flex:none}
+#actionPlanForm .apy-impact-bar{width:74%!important;min-height:0!important;border-radius:4px}
+#actionPlanForm .apy-impact-bar.positive{background:#258053}
+#actionPlanForm .apy-impact-bar.negative{background:#b4232b}
+#actionPlanForm .apy-impact-value{font-size:9px;white-space:nowrap;font-weight:800;text-align:center;margin-top:4px}
+#actionPlanForm .apy-impact-name{font-size:9px;font-weight:800;text-align:center;line-height:1.1}
+#actionPlanForm .apy-review-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px 0 12px}
+#actionPlanForm .apy-review-card{padding:8px 10px;border:1px solid #dfe5ea;border-radius:10px;background:#fbfcfc;min-width:0}
+#actionPlanForm .apy-review-card h4{font-size:11px;margin:0 0 3px;color:#354351}
+#actionPlanForm .apy-review-caption{font-size:9px;color:#64707c;margin:0 0 3px}
+#actionPlanForm #apy-plan-stage .action-plan-modal-grid{grid-template-columns:repeat(1,minmax(0,1fr))}
+#actionPlanForm #apy-plan-stage .action-plan-modal-grid:empty{display:none}
+#actionPlanForm #apPremise{font-weight:400!important;font-family:inherit;line-height:1.4;letter-spacing:normal}
+#actionPlanForm #apy-plan-stage .action-plan-modal-grid>label{font-weight:400!important}
+@media(max-width:800px){
+ #actionPlanForm .apy-review-charts{grid-template-columns:1fr}
+ #actionPlanForm #ap-details-step .action-plan-modal-grid{grid-template-columns:1fr}
+ #actionPlanForm .apy-impact-up,#actionPlanForm .apy-impact-down{height:30px}
+}
+
+
+/* Action Plan guidato per DM/NEGOZIO: soltanto ANALISI, OBIETTIVI e mini-wizard. */
+#actionPlanForm #ap-objectives-page{display:flex;flex-direction:column;gap:9px}
+#actionPlanForm #ap-objectives-page.hidden{display:none!important}
+#actionPlanForm #ap-objectives-page>.apy-hero{flex:none}
+#actionPlanForm #ap-objectives-page>.apy-review-charts{flex:none;margin:0}
+#actionPlanForm #ap-objectives-page>.action-obj-section{min-height:0;padding:9px!important;margin:0!important}
+#actionPlanForm #ap-objectives-page>.modal-actions{padding:7px 0 0!important;flex:none}
+#actionPlanForm #ap-objectives-page .ap-guided-objective{background:#fff;border:1px solid #d9e1e7;border-radius:12px;padding:13px;min-width:0}
+#actionPlanForm .ap-guided-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #e7e9eb;padding-bottom:8px;margin-bottom:10px}
+#actionPlanForm .ap-guided-head strong{font-size:14px;color:#293440}
+#actionPlanForm .ap-guided-head span{font-size:11px;font-weight:800;color:#a04470}
+#actionPlanForm .ap-guided-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+#actionPlanForm .ap-guided-fields label,#actionPlanForm .ap-guided-other{display:grid;gap:6px;color:#44505d;font-size:11px;font-weight:750}
+#actionPlanForm .ap-guided-fields input,#actionPlanForm .ap-guided-fields select,#actionPlanForm .ap-guided-fields textarea,#actionPlanForm .ap-guided-other textarea{width:100%;min-width:0;box-sizing:border-box;background:#fff;border:1px solid #cbd5db;border-radius:7px;padding:9px;color:#253440;font:inherit}
+#actionPlanForm .ap-guided-span{grid-column:1/-1}
+#actionPlanForm .ap-guided-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px;margin:10px 0}
+#actionPlanForm .ap-guided-metrics>div{padding:9px;border:1px solid #e1e8ed;border-radius:9px;background:#f8fafb;min-width:0}
+#actionPlanForm .ap-guided-metrics small{display:block;color:#65717b;font-size:9px;font-weight:750}
+#actionPlanForm .ap-guided-metrics strong{display:block;font-size:13px;white-space:normal;overflow-wrap:anywhere;margin-top:3px}
+#actionPlanForm .ap-guided-positive{color:#258053}
+#actionPlanForm .ap-guided-negative{color:#b4232b}
+#actionPlanForm .ap-guided-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+#actionPlanForm .ap-guided-columns section{background:#f9fafb;border:1px solid #e1e6eb;border-radius:10px;padding:11px;min-width:0}
+#actionPlanForm .ap-guided-columns h5{font-size:11px;margin:0 0 8px;color:#384550}
+#actionPlanForm .ap-guided-choice{display:flex;align-items:flex-start;gap:8px;font-size:11px;padding:6px 3px;line-height:1.35;cursor:pointer}
+#actionPlanForm .ap-guided-choice input{width:15px;height:15px;flex:none;accent-color:#a04470}
+#actionPlanForm .ap-guided-other{margin-top:10px}
+#actionPlanForm .ap-guided-footer{margin-top:11px}
+#actionPlanForm #ap-objectives-page.ap-guided-editing>.apy-review-charts{display:none}
+#actionPlanForm #ap-objectives-page.ap-guided-editing .action-obj-list,#actionPlanForm #ap-objectives-page.ap-guided-editing .action-obj-section-head{display:none}
+#actionPlanForm #ap-objectives-page.ap-guided-editing>.modal-actions{display:none}
+@media(max-width:760px){#actionPlanForm .ap-guided-columns,#actionPlanForm .ap-guided-fields{grid-template-columns:1fr}#actionPlanForm .ap-guided-span{grid-column:auto}#actionPlanForm #ap-objectives-page>.apy-review-charts{grid-template-columns:1fr}}

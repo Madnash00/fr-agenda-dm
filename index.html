@@ -14,10 +14,11 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=5cb78e295eccc6ed">
+<link rel="stylesheet" href="./assets/css/app.css?v=8d658ad6d410a5fb">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=e5edb74553114998"></script>
-<script defer src="./assets/js/app.js?v=5e4eaacf6ad21234"></script>
+<script defer src="./assets/js/action-plan-guided.js?v=56e6d2622a18fe1a"></script>
+<script defer src="./assets/js/app.js?v=efa8e97894cfdda3"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/personnel-hours.js?v=eb24fe35c15efbe8"></script>
 </head>
@@ -240,7 +241,7 @@
  <div class="card overtime-section"><div class="section-head"><h3>Dettaglio dipendenti</h3></div><div id="rmOvertimeEmployees" class="table-scroll"></div></div>
 </section>
 <section id="page-rmactionplans" class="page rm-only hidden">
- <div class="card rm-toolbar"><div><h3 style="margin:0">Action Plan · supervisione DM</h3><p class="muted" style="margin:3px 0 0">Stato degli Action Plan in sola consultazione.</p></div><div class="rm-toolbar-group"><label>DM<select id="rmActionDm" class="rm-supervision-dm"></select></label><label>Anno<select id="rmActionYear"><option value="">Tutti</option></select></label><label>Frazione<select id="rmActionFraction"><option value="">Tutte</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option><option>H1</option><option>H2</option></select></label><button id="reloadRMActionBtn" class="btn">Aggiorna</button></div></div>
+ <div class="card rm-toolbar"><div><h3 style="margin:0">Action Plan · supervisione DM</h3><p class="muted" style="margin:3px 0 0">Stato degli Action Plan in sola consultazione.</p></div><div class="rm-toolbar-group"><label>DM<select id="rmActionDm" class="rm-supervision-dm"></select></label><label>Anno<select id="rmActionYear"><option value="">Tutti</option></select></label><label>Periodo<input id="rmActionFraction" list="rmActionPeriodChoices" placeholder="Tutti i periodi" maxlength="60" autocomplete="off"><datalist id="rmActionPeriodChoices"></datalist></label><button id="reloadRMActionBtn" class="btn">Aggiorna</button></div></div>
  <div id="rmActionKpis" class="kpi-grid"></div>
  <div class="card rm-section"><div class="section-head"><h3>Riepilogo negozi</h3></div><div id="rmActionStores" class="table-scroll"></div></div>
  <div class="card rm-section"><div class="section-head"><h3>Action Plan e OBJ</h3></div><div id="rmActionPlans" class="rm-plan-list"></div></div>
@@ -403,7 +404,7 @@
  <div class="action-plan-toolbar card">
   <div class="action-plan-toolbar-group">
    <label>Anno<select id="actionPlanReportYear"><option value="">Tutti</option></select></label>
-   <label>Frazione<select id="actionPlanReportFraction"><option value="">Tutte</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option><option>H1</option><option>H2</option></select></label>
+   <label>Periodo<input id="actionPlanReportFraction" list="actionPlanPeriodChoices" placeholder="Tutti i periodi" maxlength="60" autocomplete="off"><datalist id="actionPlanPeriodChoices"></datalist></label>
    <label>Regione<select id="actionPlanReportRegion"><option value="">Tutte le regioni</option></select></label>
    <label>Negozio<select id="actionPlanReportStore"><option value="">Tutti i negozi</option></select></label>
    <button id="loadActionPlanReportBtn" class="btn primary">Aggiorna</button>
