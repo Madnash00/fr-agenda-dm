@@ -11,6 +11,7 @@ execFileSync(process.execPath,['scripts/test-ui-loading-calendar.mjs'],{stdio:'i
 execFileSync(process.execPath,['scripts/test-action-plan-pdf-a4.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-login-progress.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-dmdashboard-link.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-calendar-actionplan-ux.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
