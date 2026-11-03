@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const html=fs.readFileSync('index.html','utf8'),js=fs.readFileSync('assets/js/app.js','utf8');
+const oldUrl='https://claude.ai/artifact/K9MFsMHmYkw8yFqw8h4qc4?sk=CqVPcQL8kgBrSEtxwyWK4Q';
+const newUrl='https://claude.ai/artifact/SXLxWz4S2AZxMYdoyRijNu?sk=wLpBgQwQok2enP0Jgs-xWA';
+assert.ok(html.includes('data-dm-dashboard="1" data-external-url="'+oldUrl+'"'),'Legacy link must remain default in HTML');
+assert.ok(js.includes("function updateDmDashboardLink()"),'Dedicated account-scoped link helper required');
+assert.ok(js.includes("function showApp(){if(!currentUser)return;updateDmDashboardLink();"),'Link must refresh at every login');
+assert.ok(js.includes("store_name:u.store_name||u.display_name||'',created_at:u.created_at||''"),'Creation timestamp must be preserved');
+const start=js.indexOf('/* DMDASHBOARD: gli account esistenti'),end=js.indexOf('function normalizeCurrentUser(u){',start);
+assert.ok(start>0&&end>start,'Isolated URL-selection functions missing');
+const button={dataset:{dmDashboard:'1',externalUrl:oldUrl}};
+const context={document:{querySelector:()=>button},currentUser:null,Date,Number,String,Set};
+vm.createContext(context);
+vm.runInContext(js.slice(start,end)+';this.api={dmDashboardTargetUrl,updateDmDashboardLink,normalize:dmDashboardNormalizeName};',context);
+const api=context.api;
+const specific=['Brunella Cucciniello','Salvatore Salierno','Fabio Nicosia','Veronica Giuntini'];
+for(const display_name of specific)assert.equal(api.dmDashboardTargetUrl({display_name},oldUrl),newUrl,display_name);
+assert.equal(api.dmDashboardTargetUrl({display_name:'  BRUNELLA  CUCCINIELLO '},oldUrl),newUrl,'Whitespace/case normalization');
+for(const display_name of ['Un altro utente','Mario Rossi','Fabio Nicosia Jr.','Veronica Giuntini Test']){
+ assert.equal(api.dmDashboardTargetUrl({display_name,created_at:'2026-09-15T12:00:00.000Z'},oldUrl),oldUrl,'Other existing account '+display_name);
+}
+assert.equal(api.dmDashboardTargetUrl({display_name:'Nuovo DM',created_at:'2026-11-04T09:00:00.000Z'},oldUrl),newUrl,'New account');
+assert.equal(api.dmDashboardTargetUrl({display_name:'Nuovo RM',created_at:'2026-11-03T13:01:01.000Z'},oldUrl),newUrl,'Account created just after cutoff');
+assert.equal(api.dmDashboardTargetUrl({display_name:'Utente esistente'},oldUrl),oldUrl,'Missing timestamp must preserve legacy link');
+assert.equal(api.dmDashboardTargetUrl({display_name:'Utente esistente',created_at:'invalid'},oldUrl),oldUrl,'Invalid timestamp must preserve legacy link');
+assert.equal(api.dmDashboardTargetUrl({display_name:'Utente esistente',created_at:'2026-10-28T09:00:00.000Z'},oldUrl),oldUrl,'Existing before cutoff');
+context.currentUser={display_name:'Brunella Cucciniello'};
+api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,newUrl,'Targeted account');
+context.currentUser={display_name:'Utente esistente',created_at:'2026-10-01T08:00:00.000Z'};
+api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,oldUrl,'Switch account must restore original link');
+context.currentUser={display_name:'Nuovo DM',created_at:'2026-11-04T09:00:00.000Z'};
+api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,newUrl,'New user on same browser');
+console.log('PASS: DMDASHBOARD four named profiles, unchanged existing users, new-user default, switching accounts');
