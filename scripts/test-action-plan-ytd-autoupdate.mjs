@@ -15,7 +15,7 @@ for(const prefix of ['apy-','app-']){
  nodes[prefix+'next']={disabled:true};
 }
 let paints=0;
-const context={document:{getElementById:id=>nodes[id]||null},requestAnimationFrame:()=>{paints++},esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;'),Number,String,Math,Array,Object,JSON,RegExp,Intl,console};
+const context={document:{getElementById:id=>nodes[id]||null},requestAnimationFrame:fn=>{paints++;fn()},apFitActionPlanStage(){},esc:x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;'),Number,String,Math,Array,Object,JSON,RegExp,Intl,console};
 vm.createContext(context);
 vm.runInContext(source.slice(a,b)+';this.api={apYtdParse,apYtdRead,apYtdCalculate,apYtdValidation,apYtdRender};',context);
 const {apYtdParse,apYtdRead,apYtdCalculate,apYtdRender}=context.api;
