@@ -16,8 +16,9 @@ for(const i of [0,1,2,3]) {
  assert.match(scripts[i][1],/\bdefer\b/,'Application script must use defer');
  assert.equal(scripts[i][2].trim(),'','Inline executable JS is forbidden');
 }
-assert.ok(scripts[0][1].includes('cloud-api.js') && scripts[1][1].includes('app.js'),'Cloud API must execute before app');
-assert.ok(scripts[2][1].includes('action-plan-guided.js'),'Guided Action Plan must load after app.js');
+assert.ok(scripts[0][1].includes('cloud-api.js'),'Cloud API must load first');
+assert.ok(scripts[1][1].includes('action-plan-guided.js'),'Guided Action Plan must initialize before app boot');
+assert.ok(scripts[2][1].includes('app.js'),'App must initialize after the guided Action Plan module');
 assert.ok(scripts[3][1].includes('personnel-hours.js'),'Personnel module must load after app.js');
 assert.match(scripts[4][1],/type="application\/json"/,'Expected inline JSON-only seed script');
 const seed=JSON.parse(scripts[4][2]);
