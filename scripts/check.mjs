@@ -11,22 +11,23 @@ const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
 const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
-assert.equal(scripts.length,4,'Expected three ordered external scripts and one data-only seed script');
-for(const i of [0,1,2]) {
+assert.equal(scripts.length,5,'Expected four ordered external scripts and one data-only seed script');
+for(const i of [0,1,2,3]) {
  assert.match(scripts[i][1],/\bdefer\b/,'Application script must use defer');
  assert.equal(scripts[i][2].trim(),'','Inline executable JS is forbidden');
 }
 assert.ok(scripts[0][1].includes('cloud-api.js') && scripts[1][1].includes('app.js'),'Cloud API must execute before app');
-assert.ok(scripts[2][1].includes('personnel-hours.js'),'Personnel module must execute after app.js');
-assert.match(scripts[3][1],/type="application\/json"/,'Expected inline JSON-only seed script');
-const seed=JSON.parse(scripts[3][2]);
+assert.ok(scripts[2][1].includes('action-plan-guided.js'),'Guided Action Plan must load after app.js');
+assert.ok(scripts[3][1].includes('personnel-hours.js'),'Personnel module must load after app.js');
+assert.match(scripts[4][1],/type="application\/json"/,'Expected inline JSON-only seed script');
+const seed=JSON.parse(scripts[4][2]);
 for(const key of ['stores','users','events','audit','exports']) assert.ok(Array.isArray(seed[key]),'Missing seed field: '+key);
-for(const path of ['assets/css/app.css','assets/css/personnel-hours.css','assets/js/cloud-api.js','assets/js/app.js','assets/js/personnel-hours.js']) {
+for(const path of ['assets/css/app.css','assets/css/personnel-hours.css','assets/js/cloud-api.js','assets/js/app.js','assets/js/action-plan-guided.js','assets/js/personnel-hours.js']) {
  assert.ok(existsSync(path),'Missing resource: '+path);
  assert.ok(statSync(path).size>100,'Empty asset: '+path);
  assert.ok(html.includes('./'+path+'?v='+fp(read(path))),'Stale cache version: '+path+'; run node scripts/bump-asset-versions.mjs');
 }
-for(const path of ['assets/js/cloud-api.js','assets/js/app.js','assets/js/personnel-hours.js'])execFileSync(process.execPath,['--check',path],{stdio:'pipe'});
+for(const path of ['assets/js/cloud-api.js','assets/js/app.js','assets/js/action-plan-guided.js','assets/js/personnel-hours.js'])execFileSync(process.execPath,['--check',path],{stdio:'pipe'});
 const api=read('assets/js/cloud-api.js'),app=read('assets/js/app.js');
 for(const feature of ['function createAgendaApi(', 'window.agendaCloudApi=createAgendaApi('])assert.ok(api.includes(feature),'Cloud API feature missing: '+feature);
 for(const feature of ['async function boot()', 'function renderRMCalendar()', 'function renderHolidayConsolidated()', 'function applyRoleNavigation()', 'function showApp()'])assert.ok(app.includes(feature),'Existing app feature missing: '+feature);
@@ -194,3 +195,18 @@ assert.ok(read('assets/css/app.css').includes('#actionPlanForm .apy-review-chart
 assert.ok(html.includes('id="actionPlanReportFraction" list="actionPlanPeriodChoices"')&&html.includes('id="rmActionFraction" list="rmActionPeriodChoices"'),'I report devono consentire periodi Action Plan personalizzati');
 assert.ok(app.includes('function refreshActionPlanPeriodChoices(')&&app.includes("refreshActionPlanPeriodChoices('actionPlanPeriodChoices'")&&app.includes("refreshActionPlanPeriodChoices('rmActionPeriodChoices'"),'I suggerimenti dei periodi devono derivare dai piani autorizzati');
 assert.ok(app.includes("fraction=String($('#rmActionFraction')?.value||'').trim().toUpperCase()"),'RM deve normalizzare il filtro periodo');
+
+const guided=read('assets/js/action-plan-guided.js');
+assert.ok(app.includes("objectivePage.id='ap-objectives-page'")&&app.includes('id="ap-open-objectives"'),'Pagine ANALISI e OBIETTIVI distinte');
+assert.ok(app.includes("review.id='ap-review-charts'")&&app.includes('id="ap-objectives-charts"'),'Due grafici disponibili in entrambe le pagine');
+assert.ok(guided.includes('function openApGuidedObjective(')&&guided.includes('KPI E TARGET')&&guided.includes('AZIONI E STRUMENTI')&&guided.includes('MONITORAGGIO'),'Tre schermate del wizard guidato');
+assert.ok(guided.includes('function apGuidedProjection(')&&guided.includes('VARIAZIONE POTENZIALE'),'Stima economica KPI');
+assert.ok(guided.includes("['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE']"),'Quattro timing');
+assert.ok(guided.includes('length>3'),'Massimo tre azioni o strumenti selezionabili');
+const ideas=guided.slice(guided.indexOf('const AP_GUIDED_IDEAS='),guided.indexOf('function apGuidedMeta('));
+for(const kpi of ['sales','visits','cr','upt','asp','atv','ms']) {
+ const match=ideas.match(new RegExp('(?:^|\\n) '+kpi+':\\{actions:\\[(.*?)\\],tools:\\[(.*?)\\]\\}', 's'));
+ assert.ok(match,'Proposte KPI mancanti: '+kpi);
+ assert.equal((match[1].match(/','/g)||[]).length+1,6,'Sei azioni per '+kpi);
+ assert.equal((match[2].match(/','/g)||[]).length+1,6,'Sei strumenti per '+kpi);
+}
