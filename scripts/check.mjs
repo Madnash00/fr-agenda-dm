@@ -197,6 +197,7 @@ assert.ok(html.includes('id="actionPlanReportFraction" list="actionPlanPeriodCho
 assert.ok(app.includes('function refreshActionPlanPeriodChoices(')&&app.includes("refreshActionPlanPeriodChoices('actionPlanPeriodChoices'")&&app.includes("refreshActionPlanPeriodChoices('rmActionPeriodChoices'"),'I suggerimenti dei periodi devono derivare dai piani autorizzati');
 assert.ok(app.includes("fraction=String($('#rmActionFraction')?.value||'').trim().toUpperCase()"),'RM deve normalizzare il filtro periodo');
 
+execFileSync(process.execPath,['scripts/test-action-plan-guided.mjs'],{stdio:'inherit'});
 const guided=read('assets/js/action-plan-guided.js');
 assert.ok(app.includes("objectivePage.id='ap-objectives-page'")&&app.includes('id="ap-open-objectives"'),'Pagine ANALISI e OBIETTIVI distinte');
 assert.ok(app.includes("review.id='ap-review-charts'")&&app.includes('id="ap-objectives-charts"'),'Due grafici disponibili in entrambe le pagine');
