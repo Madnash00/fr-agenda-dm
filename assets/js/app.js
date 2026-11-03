@@ -1431,13 +1431,27 @@ const ACTION_PLAN_MIROGLIO_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA
 const AP_YTD_DEF=[['sales','INCASSATO AC','€'],['salesD','INCASSATO AC vs AP','%'],['visD','INGRESSI AC vs AP','%'],['cr','CR AC','%'],['crD','D CR vs AP','%'],['upt','UPT AC',''],['uptD','D UPT vs AP','%'],['asp','ASP AC','€'],['aspD','D ASP vs AP','%'],['atv','ATV AC','€'],['atvD','D ATV vs AP','%'],['ms','MS AC','€'],['msD','D MS vs AP','%']];
 function apYtdPremise(raw){return String(raw||'').replace(/\n?\[APYTD1:([A-Za-z0-9+/=]+)\]\s*$/,'').trimEnd()}
 function apYtdPrevious(raw){const m=String(raw||'').match(/\[APYTD1:([A-Za-z0-9+/=]+)\]\s*$/);try{return m?JSON.parse(atob(m[1])):null}catch(_){return null}}
-function apYtdParse(s){let v=String(s??'').replace(/[€%\s]/g,'');if(!v)return NaN;if(v.includes(',')&&v.includes('.'))v=v.lastIndexOf(',')>v.lastIndexOf('.')?v.replace(/\./g,'').replace(',','.'):v.replace(/,/g,'');else if(v.includes(','))v=v.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(v))v=v.replace(/\./g,'');return /^[+-]?\d+(\.\d+)?$/.test(v)?Number(v):NaN}
-function apYtdRead(prefix='apy-'){return Object.fromEntries(AP_YTD_DEF.map(([k])=>[k,apYtdParse(document.getElementById(prefix+k)?.value)]))}
+function apYtdParse(s,key=''){let v=String(s??'').replace(/[\u2212\u2012\u2013\u2014]/g,'-').replace(/\bEUR\b/gi,'').replace(/[€%\s']/g,'');if(!v)return NaN;if(v.includes(',')&&v.includes('.'))v=v.lastIndexOf(',')>v.lastIndexOf('.')?v.replace(/\./g,'').replace(',','.'):v.replace(/,/g,'');else if(v.includes(','))v=v.replace(/\./g,'').replace(',','.');else if(/^[+-]?\d{1,3}(\.\d{3})+$/.test(v)&&(key==='sales'||key==='ms'||!key||(v.match(/\./g)||[]).length>1))v=v.replace(/\./g,'');return /^[+-]?\d+(\.\d+)?$/.test(v)?Number(v):NaN}
+function apYtdRead(prefix='apy-'){return Object.fromEntries(AP_YTD_DEF.map(([k])=>[k,apYtdParse(document.getElementById(prefix+k)?.value,k)]))}
+function apYtdValidation(v){
+ if(!v)return 'Compila i KPI del periodo.';
+ const invalid=AP_YTD_DEF.filter(([key])=>!Number.isFinite(v[key]));
+ if(invalid.length)return 'Compila o correggi questi campi: '+invalid.map(x=>x[1]).join(', ')+'. Usa numeri e, per i decimali, la virgola o il punto.';
+ if(v.sales<=0)return 'INCASSATO AC deve essere maggiore di zero.';
+ if(v.atv<=0)return 'ATV AC deve essere maggiore di zero.';
+ if(v.asp<=0)return 'ASP AC deve essere maggiore di zero.';
+ if(v.upt<=0)return 'UPT AC deve essere maggiore di zero.';
+ if(v.cr<=0||v.cr>100)return 'CR AC deve essere maggiore di 0% e non superare 100%.';
+ if(v.ms<0)return 'MS AC non può essere negativo.';
+ const deltas=['salesD','visD','crD','uptD','aspD','atvD','msD'];
+ const out=deltas.find(k=>v[k]<=-100||v[k]>100000);
+ if(out)return AP_YTD_DEF.find(x=>x[0]===out)[1]+': il delta percentuale deve essere maggiore di -100%.';
+ if(v.cr/(1+v.crD/100)>100)return 'CR AP ricostruito supera il 100%: verifica CR AC e D CR vs AP.';
+ return '';
+}
 function apYtdCalculate(v){
- if(!v||AP_YTD_DEF.some(([k])=>!Number.isFinite(v[k])))return null;
- if(v.sales<=0||v.atv<=0||v.asp<=0||v.upt<=0||v.cr<=0||v.cr>100||v.ms<0)return null;
- const deltas=['salesD','visD','crD','uptD','aspD','atvD','msD'];if(deltas.some(k=>v[k]<=-100||v[k]>100000))return null;
- const factor=k=>1+v[k]/100,ticketsAC=v.sales/v.atv,visitsAC=ticketsAC/(v.cr/100),visitsAP=visitsAC/factor('visD'),crAP=v.cr/factor('crD'),ticketsAP=visitsAP*crAP/100,salesAP=v.sales/factor('salesD'),atvAP=v.atv/factor('atvD');
+ if(apYtdValidation(v))return null;
+  const factor=k=>1+v[k]/100,ticketsAC=v.sales/v.atv,visitsAC=ticketsAC/(v.cr/100),visitsAP=visitsAC/factor('visD'),crAP=v.cr/factor('crD'),ticketsAP=visitsAP*crAP/100,salesAP=v.sales/factor('salesD'),atvAP=v.atv/factor('atvD');
  if(crAP>100)return null;
  const levers=[['Gap incasso',Math.max(0,salesAP-v.sales)],['Ingressi',Math.max(0,visitsAP-visitsAC)*v.cr/100*v.atv],['CR',Math.max(0,crAP-v.cr)/100*visitsAC*v.atv],['UPT',Math.max(0,v.upt/factor('uptD')-v.upt)*ticketsAC*v.asp],['ASP',Math.max(0,v.asp/factor('aspD')-v.asp)*ticketsAC*v.upt],['ATV',Math.max(0,atvAP-v.atv)*ticketsAC],['MS',null]];
  const impacts=[
@@ -1471,9 +1485,9 @@ function apYtdReviewCharts(){
  const charts=data.map(([title,calc])=>'<section class="apy-review-card"><h4>'+esc(title)+'</h4><p class="apy-review-caption">Impatto economico del delta KPI rispetto ad AP</p>'+apYtdImpactChart(calc)+'</section>').join('');hosts.forEach(host=>host.innerHTML=charts);
 }
 function apYtdRender(prefix='apy-'){
- const v=apYtdRead(prefix),d=apYtdCalculate(v),target=document.getElementById(prefix+'output'),next=document.getElementById(prefix+'next');if(!target||!next)return;next.disabled=!d;
+ const v=apYtdRead(prefix),reason=apYtdValidation(v),d=reason?null:apYtdCalculate(v),target=document.getElementById(prefix+'output'),next=document.getElementById(prefix+'next');if(next)next.disabled=!d;if(!target)return;
  for(const [key] of AP_YTD_DEF){const field=document.getElementById(prefix+key)?.closest('.apy-field');if(field){field.classList.toggle('positive',key.endsWith('D')&&v[key]>0);field.classList.toggle('negative',key.endsWith('D')&&v[key]<0)}}
- if(!d){target.innerHTML='<p class="apy-help">Completa tutti i dati e verifica che il CR sia tra 0 e 100%, i valori AC siano validi e i delta siano superiori a -100%.</p>';return}
+ if(!d){target.innerHTML='<p class="apy-help" role="status">'+esc(reason||'Verifica i valori inseriti: non è possibile ricostruire i KPI AP.')+'</p>';return}
  target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4>'+apYtdImpactChart(d)+'<p class="apy-explain">Verde sopra lo zero: incremento · Rosso sotto lo zero: decremento. Ogni KPI è uno scenario controfattuale indipendente sui volumi AC: gli impatti non si sommano. MS rappresenta la variazione monetaria del relativo indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
  if(typeof apFitActionPlanStage==='function')requestAnimationFrame(apFitActionPlanStage);
 }
@@ -1525,7 +1539,7 @@ function apYtdSetup(plan){
   return '<label class="apy-field"><span>'+f[1]+'</span><div><input type="text" inputmode="decimal" autocomplete="off" data-apy-input id="'+prefix+k+'" value="'+esc(val)+'" placeholder="'+(isDelta?'+/- 0,0':'0,00')+'"><b>'+f[2]+'</b></div></label>';
  }).join('');
  const body=(prefix,values)=>groups.map(g=>'<section class="apy-panel'+(g[0]==='02'?' apy-panel-traffic':'')+'"><h4><span>'+g[0]+'</span>'+g[1]+'</h4><div class="apy-grid">'+fields(g[2],prefix,values)+'</div></section>').join('')+
-  '<section class="apy-panel"><h4><span>04</span>Impatto economico</h4><div id="'+prefix+'output"></div></section>';
+  '<section class="apy-panel"><h4><span>04</span>Impatto economico</h4><div id="'+prefix+'output" aria-live="polite"></div></section>';
  pre.innerHTML='<header class="apy-hero"><small>STEP 02 / 04 · PRE-ANALISI YTD</small><h3>PARTIAMO DAI NUMERI - Come sta andando l’anno?</h3><p>Inserisci i 13 indicatori YTD riferiti allo stesso periodo. Il grafico si aggiorna in tempo reale.</p><p class="apy-source-caption">I dati devono essere estratti da REPORT STORE REVIEW da inizio anno fino alla fine dell’ultimo mese consolidato.</p></header>'
  +body('apy-',saved)
  +'<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="apy-details-back">← DATI ACTION PLAN</button><p>Delta % rispetto ad AP, non differenze in punti percentuali. Le stime sono scenari indipendenti, non sommabili.</p><button type="button" class="btn primary" id="apy-next" disabled>CONTINUA ALL’ANALISI PERIODO →</button></footer>';
@@ -1549,7 +1563,8 @@ function apYtdSetup(plan){
  const showStep=step=>{
   details.classList.toggle('hidden',step!==0);pre.classList.toggle('hidden',step!==1);
   period.classList.toggle('hidden',step!==2);stage.classList.toggle('hidden',step!==3);objectivePage.classList.toggle('hidden',step!==4);
-  if(step===2)setPeriodName();
+  if(step===1)apYtdRender();
+  if(step===2){setPeriodName();apYtdRender('app-')}
   if(step===3||step===4)apYtdReviewCharts();
   requestAnimationFrame(apFitActionPlanStage);
  };
@@ -1564,8 +1579,8 @@ function apYtdSetup(plan){
   showStep(1);
  };
  document.getElementById('apy-details-back').onclick=()=>showStep(0);
- pre.querySelectorAll('[data-apy-input]').forEach(el=>el.addEventListener('input',()=>apYtdRender()));
- period.querySelectorAll('[data-apy-input]').forEach(el=>el.addEventListener('input',()=>apYtdRender('app-')));
+ pre.querySelectorAll('[data-apy-input]').forEach(el=>{el.addEventListener('input',()=>apYtdRender());el.addEventListener('change',()=>apYtdRender())});
+ period.querySelectorAll('[data-apy-input]').forEach(el=>{el.addEventListener('input',()=>apYtdRender('app-'));el.addEventListener('change',()=>apYtdRender('app-'))});
  document.getElementById('apy-next').onclick=()=>{if(!apYtdCalculate(apYtdRead()))return;showStep(2)};
  document.getElementById('app-back').onclick=()=>showStep(1);
  document.getElementById('app-next').onclick=()=>{if(!apYtdCalculate(apYtdRead('app-')))return;showStep(3)};
