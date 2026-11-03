@@ -1784,31 +1784,135 @@ function actionPlanPdfBuildObject(n,body){return actionPlanPdfConcat([actionPlan
 function actionPlanPdfBuildStreamObject(n,dict,data){return actionPlanPdfConcat([actionPlanPdfBytesFromText(`${n} 0 obj\n<< ${dict} /Length ${data.length} >>\nstream\n`),data,actionPlanPdfBytesFromText('\nendstream\nendobj\n')])}
 function actionPlanPdfTasksText(o){const tasks=Array.isArray(o.tasks)?o.tasks:[];const rows=tasks.map((t,i)=>{const cps=(t.checkpoints||[]).map((c,j)=>'  CP '+(j+1)+' - '+(c.date||'senza data')+' - '+({RED:'ROSSO / RIAPRI DIAGNOSI',YELLOW:'GIALLO / INTENSIFICA',GREEN:'VERDE / CONSOLIDA'}[c.contingency]||'NON ASSEGNATA')+' - '+(c.note||'nessuna nota')).join('\n');return 'AZIONE '+(i+1)+': '+(t.task||'—')+'\nSTRUMENTI: '+(t.tools||'—')+'\nOWNER: '+(t.owner||'—')+' | TIMING: '+(t.timing_monitoraggio||'—')+(cps?'\nCHECKPOINT:\n'+cps:'')}).join('\n\n');return rows||o.tools||'—'}
 function buildActionPlanPdfBytes(plan){
- const W=841.89,H=595.28,M=28,st=actionPlanStore(plan.store_id),objs=Array.isArray(plan.objectives)?plan.objectives:[],region=st?.region||'',content=[];
- const INK=[35,40,44],MUTED=[101,110,117],LINE=[218,222,225],SOFT=[247,248,249],BLUE=[0,0,215],GREEN=[76,118,86],RED=[155,75,72],MID=[77,101,125];
- const rgb=c=>`${(c[0]/255).toFixed(3)} ${(c[1]/255).toFixed(3)} ${(c[2]/255).toFixed(3)}`;
- const yPdf=(top,h=0)=>H-top-h;
- function rect(x,top,w,h,fill=null,stroke=null,r=0){if(fill)content.push(`${rgb(fill)} rg`);if(stroke)content.push(`${rgb(stroke)} RG 0.7 w`);const y=yPdf(top,h);if(r>0){const k=.5522848*Math.min(r,h/2,w/2),x0=x,y0=y,x1=x+w,y1=y+h;content.push(`${x0+r} ${y0} m ${x1-r} ${y0} l ${x1-r+k} ${y0} ${x1} ${y0+r-k} ${x1} ${y0+r} c ${x1} ${y1-r} l ${x1} ${y1-r+k} ${x1-r+k} ${y1} ${x1-r} ${y1} c ${x0+r} ${y1} l ${x0+r-k} ${y1} ${x0} ${y1-r+k} ${x0} ${y1-r} c ${x0} ${y0+r} l ${x0} ${y0+r-k} ${x0+r-k} ${y0} ${x0+r} ${y0} c`);content.push(fill&&stroke?'B':fill?'f':'S')}else content.push(`${x} ${y} ${w} ${h} re ${fill&&stroke?'B':fill?'f':'S'}`)}
- function line(x1,top1,x2,top2,color=LINE,width=.7){content.push(`${rgb(color)} RG ${width} w ${x1} ${H-top1} m ${x2} ${H-top2} l S`)}
- function text(x,top,size,str,font='F1',color=INK){content.push(`BT /${font} ${size.toFixed(2)} Tf ${rgb(color)} rg ${x.toFixed(2)} ${(H-top-size).toFixed(2)} Td (${actionPlanPdfEscape(str)}) Tj ET`)}
- function multiline(x,top,size,lines,maxLines=null,font='F1',color=INK,lineH=null){const lh=lineH||size*1.22,arr=maxLines?lines.slice(0,maxLines):lines;arr.forEach((s,i)=>text(x,top+i*lh,size,s,font,color));return arr.length*lh}
- function image(name,x,top,w,h){content.push(`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${yPdf(top,h).toFixed(2)} cm /${name} Do Q`)}
- image('ImFR',M,20,184,14.2);image('ImMI',W-M-35,14,35,25.3);line(M,48,W-M,48,BLUE,1.1);
- text(M,60,21,'ACTION PLAN','F2',INK);text(M,87,10,`${st?.code||'—'} | ${st?.name||'Negozio'}`,'F2',INK);if(region)text(W-M-210,87,9.2,region,'F1',MUTED);
- const metaTop=104,metaH=37,metaW=W-M*2;rect(M,metaTop,metaW,metaH,SOFT,LINE,5);
- const achieved=objs.filter(o=>actionPlanStatusKey(o.status)==='ACHIEVED').length,meta=[['DATA CREAZIONE',fmtDate(plan.plan_date)],['PERIODO',actionPlanPeriodLabel(plan)],['OBJ TOTALI',String(objs.length)],['RAGGIUNTI',String(achieved)],['AVANZAMENTO',actionPlanPctFmt(actionPlanPct(achieved,objs.length))]];
- const colW=metaW/meta.length;meta.forEach((m,i)=>{const x=M+i*colW+10;text(x,metaTop+8,6.7,m[0],'F2',MUTED);text(x,metaTop+19,9.7,m[1],'F2',INK);if(i<meta.length-1)line(M+(i+1)*colW,metaTop+7,M+(i+1)*colW,metaTop+metaH-7,LINE,.6)});
- const bodyTop=153,bottom=558,available=bottom-bodyTop,gap=8,premiseW=metaW;let layout=null;
- const sizes=[9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.6];
- function estimate(font,cols){const lineH=font*1.2,premLines=actionPlanPdfWrap(apYtdPremise(plan.premise),premiseW-20,font),premH=22+premLines.length*lineH,colGap=8,colWidth=(metaW-(cols-1)*colGap)/cols,cards=[];for(const o of objs){const ow=colWidth-20,ol=actionPlanPdfWrap(o.objective_text,ow,font+.4),al=actionPlanPdfWrap(o.actions,ow,font),tl=actionPlanPdfWrap(actionPlanPdfTasksText(o),ow,font),nl=apGuidedNotes(o.notes)?actionPlanPdfWrap(apGuidedNotes(o.notes),ow,font):[];const h=28+ol.length*(font+.4)*1.2+10+al.length*lineH+10+tl.length*lineH+(nl.length?10+nl.length*lineH:0)+8;cards.push({h,ol,al,tl,nl})}let gridH=0;for(let i=0;i<cards.length;i+=cols)gridH+=Math.max(...cards.slice(i,i+cols).map(c=>c.h))+(i+cols<cards.length?gap:0);return {font,cols,premLines,premH,colWidth,cards,gridH,total:premH+13+20+gridH}}
- for(const font of sizes){const maxCols=Math.min(3,Math.max(1,objs.length));let options=[];for(let cols=1;cols<=maxCols;cols++)options.push(estimate(font,cols));options=options.filter(x=>x.total<=available).sort((a,b)=>a.cols-b.cols);if(options.length){layout=options[0];break}}
- if(!layout)layout=estimate(3.2,Math.min(3,Math.max(1,objs.length)));const scale=Math.min(1,available/Math.max(1,layout.total));
- content.push('q');if(scale<.999){const tx=M*(1-scale),ty=(H-bodyTop)*(1-scale);content.push(`${scale.toFixed(4)} 0 0 ${scale.toFixed(4)} ${tx.toFixed(2)} ${ty.toFixed(2)} cm`)}
- let top=bodyTop,fs=layout.font,lh=fs*1.2;rect(M,top,premiseW,layout.premH,[250,250,250],LINE,5);text(M+10,top+8,6.7,'ANALISI','F2',MUTED);multiline(M+10,top+19,fs,layout.premLines,null,'F1',INK,lh);top+=layout.premH+13;
- text(M,top,9.5,'OBIETTIVI','F2',INK);line(M,top+12,M+54,top+12,BLUE,.9);top+=20;
- if(!objs.length){rect(M,top,metaW,36,[252,252,252],LINE,4);text(M+10,top+12,8,'Nessun obiettivo presente.','F1',MUTED)}
- else{const colGap=8,cols=layout.cols,colW=layout.colWidth;for(let row=0,idx=0;idx<objs.length;row++){const rowCards=layout.cards.slice(idx,idx+cols),rowH=Math.max(...rowCards.map(c=>c.h));for(let c=0;c<rowCards.length;c++,idx++){const o=objs[idx],card=rowCards[c],x=M+c*(colW+colGap),status=actionPlanStatusKey(o.status),statusColor=status==='ACHIEVED'?GREEN:status==='NOT_ACHIEVED'?RED:MID;rect(x,top,colW,rowH,[255,255,255],LINE,5);rect(x+8,top+8,78,15,statusColor,null,7);text(x+15,top+11,6.7,actionPlanStatusLabel(o.status).toUpperCase(),'F2',[255,255,255]);text(x+94,top+10,7.2,`OBJ ${idx+1}`,'F2',MUTED);let cy=top+31;cy+=multiline(x+10,cy,fs+.4,card.ol,null,'F2',INK,(fs+.4)*1.2);cy+=5;text(x+10,cy,6.1,'STRATEGIA','F2',MUTED);cy+=8;cy+=multiline(x+10,cy,fs,card.al,null,'F1',INK,lh);cy+=4;text(x+10,cy,6.1,'AZIONI E MONITORAGGIO','F2',MUTED);cy+=8;cy+=multiline(x+10,cy,fs,card.tl,null,'F1',INK,lh);if(card.nl.length){cy+=4;text(x+10,cy,6.1,'NOTE','F2',MUTED);cy+=8;multiline(x+10,cy,fs,card.nl,null,'F3',INK,lh)}}top+=rowH+gap}}
- content.push('Q');line(M,568,W-M,568,LINE,.7);text(M,575,6.8,'MIROGLIO FASHION | FIORELLA RUBINO | ACTION PLAN','F2',MUTED);text(W-M-112,575,6.8,'Documento operativo - layout compatto','F1',MUTED);
+ const W=595.28,H=841.89,M=24,usable=W-2*M,st=actionPlanStore(plan.store_id),objs=Array.isArray(plan.objectives)?plan.objectives:[],content=[];
+ const INK=[39,47,56],MUTED=[99,109,120],LINE=[219,225,230],SOFT=[249,250,251],ROSE=[157,62,106],GREEN=[41,132,81],RED=[181,52,58],BLUE=[54,77,93],WHITE=[255,255,255];
+ const rgb=c=>c.map(n=>(n/255).toFixed(3)).join(' ');
+ const yPdf=(top,height=0)=>H-top-height;
+ function rect(x,top,w,height,fill=null,stroke=null,r=0){
+  if(fill)content.push(rgb(fill)+' rg');if(stroke)content.push(rgb(stroke)+' RG 0.55 w');
+  const y=yPdf(top,height);
+  if(r){const rad=Math.min(r,height/2,w/2),k=.5522848*rad,x1=x+w,y1=y+height;content.push(
+   (x+rad)+' '+y+' m '+(x1-rad)+' '+y+' l '+(x1-rad+k)+' '+y+' '+x1+' '+(y+rad-k)+' '+x1+' '+(y+rad)+' c '+
+   x1+' '+(y1-rad)+' '+(x1-rad+k)+' '+y1+' '+(x1-rad)+' '+y1+' c '+(x+rad)+' '+y1+' '+(x+rad-k)+' '+y1+' '+x+' '+(y1-rad)+' c '+x+' '+(y+rad)+' '+(x+rad-k)+' '+y+' '+(x+rad)+' '+y+' c '+(fill&&stroke?'B':fill?'f':'S'));
+  }else content.push(x+' '+y+' '+w+' '+height+' re '+(fill&&stroke?'B':fill?'f':'S'));
+ }
+ function line(x1,t1,x2,t2,color=LINE,width=.6){content.push(rgb(color)+' RG '+width+' w '+x1+' '+(H-t1)+' m '+x2+' '+(H-t2)+' l S')}
+ function text(x,top,size,str,font='F1',color=INK){content.push('BT /'+font+' '+size.toFixed(2)+' Tf '+rgb(color)+' rg '+x.toFixed(2)+' '+(H-top-size).toFixed(2)+' Td ('+actionPlanPdfEscape(str)+') Tj ET')}
+ function wrap(str,width,sz){return actionPlanPdfWrap(str,width,sz)}
+ function multiline(x,top,size,lines,font='F1',color=INK){const lh=size*1.23;lines.forEach((v,i)=>text(x,top+lh*i,size,v,font,color));return lines.length*lh}
+ function image(name,x,top,w,h){content.push('q '+w+' 0 0 '+h+' '+x+' '+yPdf(top,h)+' cm /'+name+' Do Q')}
+ function heading(top,label){text(M,top,9,label,'F2',BLUE);line(M,top+15,W-M,top+15,LINE,.6)}
+ function money(n){return Number(n).toLocaleString('it-IT',{maximumFractionDigits:0})+' EUR'}
+ function num(n,d=1){return Number(n).toLocaleString('it-IT',{maximumFractionDigits:d})}
+ // Header e identificativi: dimensioni reali A4, indipendenti dalla lunghezza delle note.
+ image('ImFR',M,16,157,12.1);image('ImMI',W-M-32,10,32,23);
+ line(M,40,W-M,40,ROSE,1.2);
+ text(M,49,19,'ACTION PLAN','F2',INK);
+ text(M,77,10,String(st?.name||'Negozio'),'F2',INK);
+ const code=String(st?.code||''),region=String(st?.region||'');
+ text(M,93,8.5,[code,region].filter(Boolean).join('  |  '),'F1',MUTED);
+ rect(M,110,usable,34,SOFT,LINE,4);
+ const achieved=objs.filter(o=>actionPlanStatusKey(o.status)==='ACHIEVED').length;
+ const meta=[['DATA',fmtDate(plan.plan_date)],['PERIODO',actionPlanPeriodLabel(plan)],['OBJ',String(objs.length)],['RAGGIUNTI',String(achieved)],['AVANZAMENTO',actionPlanPctFmt(actionPlanPct(achieved,objs.length))]];
+ const cell=usable/meta.length;
+ meta.forEach(([k,v],i)=>{const x=M+i*cell+7;text(x,115,6.6,k,'F2',MUTED);const short=String(v||'—');const val=short.length>17?short.slice(0,16)+'…':short;text(x,126,8.4,val,'F2',INK);if(i)line(M+i*cell,116,M+i*cell,138,LINE,.6)});
+ const previous=apYtdPrevious(plan.premise)||{},period=previous.period&&typeof previous.period==='object'?previous.period:null;
+ // Ogni pannello riporta valori AC e AP e le sette leve KPI con segno, in scala interna indipendente.
+ function chartPanel(top,title,values){
+  const d=values?apYtdCalculate(values):null;
+  const x=M,w=(usable-10)/2,h=140;
+  return {d,x,w,h,title};
+ }
+ const panels=[chartPanel(0,'YTD · DA INIZIO ANNO',previous),chartPanel(0,'PERIODO ACTION PLAN',period)];
+ const chartH=142,chartGap=8,analysisGap=10,chartTop=154;
+ function drawChart(panel,x,top){
+  const w=(usable-9)/2,valid=panel.d,vals=valid?.impacts||[];
+  rect(x,top,w,chartH,WHITE,LINE,4);
+  rect(x,top,w,20,[245,241,245],null,4);text(x+8,top+5,8,panel.title,'F2',ROSE);
+  if(!valid){text(x+9,top+46,8,'Dati KPI non disponibili','F1',MUTED);return}
+  text(x+8,top+25,7.2,'INCASSATO AC: '+money(panel.title.startsWith('YTD')?previous.sales:period.sales),'F2',INK);
+  text(x+8,top+38,7.1,'INCASSATO AP: '+money(valid.salesAP),'F1',MUTED);
+  text(x+8,top+51,6.7,'CR '+num(panel.title.startsWith('YTD')?previous.cr:period.cr)+'%  |  UPT '+num(panel.title.startsWith('YTD')?previous.upt:period.upt,2)+'  |  ATV '+money(panel.title.startsWith('YTD')?previous.atv:period.atv),'F1',MUTED);
+  const plotTop=top+66,barH=29,bas=plotTop+barH,plotW=w-15,step=plotW/7;
+  const denom=Math.max(1,...vals.slice(0,6).map(z=>Math.abs(z[1])||0));
+  line(x+8,bas,x+w-7,bas,[158,166,171],.65);
+  vals.forEach(([label,val,unit],i)=>{
+   const cx=x+8+step*(i+.5),m=Math.min(barH-2,(Math.abs(val)||0)/denom*(barH-2));
+   if(val!==0)rect(cx-3,val>0?bas-m:bas,6,Math.max(.7,m),val>0?GREEN:RED);
+   text(cx-step*.43,top+103,5.4,label==='INCASSATO'?'INC':label,'F2',MUTED);
+   const v=unit==='ms'?num(val,0):num(val/1000,1)+'k';
+   text(cx-step*.43,top+114,5.25,(val>0?'+':'')+v,'F1',val<0?RED:GREEN);
+  });
+  text(x+8,top+130,5.6,'Impatto vs AP (k EUR); MS: EUR','F1',MUTED);
+ }
+ // Layout elastico in una sola pagina: nessun testo viene eliminato.
+ function buildBlocks(font,columns){
+  const width=(usable-(columns-1)*8)/columns,bodyWidth=width-16,lh=font*1.21;
+  const premise=wrap(apYtdPremise(plan.premise),usable-20,font),analysisH=26+premise.length*lh;
+  const cards=objs.map((o,i)=>{
+   const sections=[
+    ['OBIETTIVO',String(o.objective_text||'—')],
+    ['AZIONI',String(o.actions||'—')],
+    ['STRUMENTI',String(o.tools||'—')]
+   ];
+   const tasks=Array.isArray(o.tasks)?o.tasks:[];
+   if(tasks.length)tasks.forEach((t,j)=>{
+    sections.push(['AZIONE '+(j+1),String(t.task||'—')]);
+    sections.push(['OWNER / TIMING',[t.owner||'—',t.timing_monitoraggio||'—'].join(' · ')]);
+    if(t.tools&&t.tools!==o.tools)sections.push(['STRUMENTI AZIONE',String(t.tools)]);
+    if(t.checkpoints?.length)sections.push(['CHECKPOINT',t.checkpoints.map(c=>[c.date||'',c.contingency||'',c.note||''].filter(Boolean).join(' · ')).join('; ')]);
+   });
+   const notes=apGuidedNotes(o.notes);if(notes)sections.push(['NEXT STEPS / NOTE',notes]);
+   const labels=sections.map(([label,value])=>({label,lines:wrap(value,bodyWidth,font)}));
+   const height=24+labels.reduce((sum,x)=>sum+(font+3)+x.lines.length*lh+4,0)+7;
+   return {i,o,labels,height};
+  });
+  const rows=[];for(let i=0;i<cards.length;i+=columns)rows.push(cards.slice(i,i+columns));
+  const objectivesH=cards.length?rows.reduce((sum,row)=>sum+Math.max(...row.map(c=>c.height))+6,0):28;
+  return {font,columns,width,lh,premise,analysisH,cards,rows,bodyH:analysisH+19+objectivesH,objectiveTop:0};
+ }
+ const startBody=chartTop+chartH+analysisGap;
+ const available=H-31-startBody;
+ let best=null,bestScore=-1;
+ for(const fs of [9,8.5,8,7.5,7,6.5,6,5.5,5]){
+  for(const cols of [1,2,3]){
+   if(cols>Math.max(1,objs.length))continue;
+   const l=buildBlocks(fs,cols),scale=Math.min(1,available/Math.max(1,l.bodyH));
+   const effective=fs*scale;
+   const score=effective+(cols===2?.03:cols===1?.02:0);
+   if(score>bestScore){best=l;best.scale=scale;bestScore=score}
+  }
+ }
+ // Visuals appear at fixed size: scale is only applied to analytical prose and objectives.
+ drawChart(panels[0],M,chartTop);drawChart(panels[1],M+(usable-9)/2+9,chartTop);
+ content.push('q');
+ const scale=best.scale,tx=M*(1-scale),ty=(H-startBody)*(1-scale);
+ if(scale<.999)content.push(scale.toFixed(5)+' 0 0 '+scale.toFixed(5)+' '+tx.toFixed(3)+' '+ty.toFixed(3)+' cm');
+ let top=startBody;
+ rect(M,top,usable,best.analysisH,SOFT,LINE,4);
+ text(M+9,top+6,8.1,'ANALISI','F2',ROSE);
+ multiline(M+9,top+19,best.font,best.premise);
+ top+=best.analysisH+8;
+ heading(top,'OBIETTIVI, AZIONI E MONITORAGGIO');top+=19;
+ if(!best.cards.length){rect(M,top,usable,24,SOFT,LINE,3);text(M+9,top+7,8,'Nessun obiettivo inserito.','F1',MUTED)}
+ for(const row of best.rows){
+  const rowH=Math.max(...row.map(c=>c.height));
+  row.forEach((card,j)=>{
+   const x=M+j*(best.width+8),o=card.o;
+   rect(x,top,best.width,rowH,WHITE,LINE,4);
+   rect(x+7,top+6,best.width-14,13,[247,241,245],null,3);
+   text(x+12,top+9,7.2,'OBJ '+(card.i+1)+' · '+actionPlanStatusLabel(o.status).toUpperCase(),'F2',ROSE);
+   let cy=top+23;
+   card.labels.forEach(({label,lines})=>{
+    text(x+8,cy,best.font*.82,label,'F2',MUTED);cy+=best.font+3;
+    cy+=multiline(x+8,cy,best.font,lines,'F1',INK)+4;
+   });
+  });top+=rowH+6;
+ }
+ content.push('Q');
+ line(M,H-24,W-M,H-24,LINE,.65);
+ text(M,H-19,6.8,'MIROGLIO FASHION  |  FIORELLA RUBINO  |  ACTION PLAN','F2',MUTED);
+ text(W-M-68,H-19,6.8,'1 / 1 · A4','F1',MUTED);
  const stream=actionPlanPdfBytesFromText(content.join('\n')),frBytes=actionPlanPdfBase64Bytes(ACTION_PLAN_FR_JPEG_B64),miBytes=actionPlanPdfBase64Bytes(ACTION_PLAN_MIROGLIO_JPEG_B64),objsPdf=[];
  objsPdf[1]=actionPlanPdfBuildObject(1,actionPlanPdfBytesFromText('<< /Type /Catalog /Pages 2 0 R >>'));objsPdf[2]=actionPlanPdfBuildObject(2,actionPlanPdfBytesFromText('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));objsPdf[3]=actionPlanPdfBuildObject(3,actionPlanPdfBytesFromText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 4 0 R /F2 5 0 R /F3 6 0 R >> /XObject << /ImFR 7 0 R /ImMI 8 0 R >> >> /Contents 9 0 R >>`));objsPdf[4]=actionPlanPdfBuildObject(4,actionPlanPdfBytesFromText('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'));objsPdf[5]=actionPlanPdfBuildObject(5,actionPlanPdfBytesFromText('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'));objsPdf[6]=actionPlanPdfBuildObject(6,actionPlanPdfBytesFromText('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>'));objsPdf[7]=actionPlanPdfBuildStreamObject(7,`/Type /XObject /Subtype /Image /Width ${ACTION_PLAN_FR_JPEG_SIZE[0]} /Height ${ACTION_PLAN_FR_JPEG_SIZE[1]} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`,frBytes);objsPdf[8]=actionPlanPdfBuildStreamObject(8,`/Type /XObject /Subtype /Image /Width ${ACTION_PLAN_MIROGLIO_JPEG_SIZE[0]} /Height ${ACTION_PLAN_MIROGLIO_JPEG_SIZE[1]} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`,miBytes);objsPdf[9]=actionPlanPdfBuildStreamObject(9,'',stream);objsPdf[10]=actionPlanPdfBuildObject(10,actionPlanPdfBytesFromText(`<< /Title (${actionPlanPdfEscape('Action Plan - '+(st?.name||'Negozio'))}) /Author (Miroglio Fashion - Fiorella Rubino) /Creator (AGENDA DM) >>`));
  const header=new Uint8Array([37,80,68,70,45,49,46,52,10,37,226,227,207,211,10]),parts=[header],offsets=[0];let pos=header.length;for(let i=1;i<=10;i++){offsets[i]=pos;parts.push(objsPdf[i]);pos+=objsPdf[i].length}const xrefPos=pos;let xref='xref\n0 11\n0000000000 65535 f \n';for(let i=1;i<=10;i++)xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';xref+=`trailer\n<< /Size 11 /Root 1 0 R /Info 10 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;parts.push(actionPlanPdfBytesFromText(xref));return actionPlanPdfConcat(parts)
