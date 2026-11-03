@@ -2176,3 +2176,70 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 /* Durante l'accesso lo spinner globale resta nascosto; quello interno all'app non cambia. */
 body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 @media(prefers-reduced-motion:reduce){#loginView #loginProgress .login-progress-logo,#loginView #loginProgress .login-progress-dots i{animation:none!important}}
+
+
+/* CALENDARIO: INFO VARIE con la stessa tipografia delle intestazioni verticali dei negozi. */
+#calendarWrap .calendar.transposed thead th.dm-absence-head{
+ font-family:Inter,ui-sans-serif,"Segoe UI",Arial,sans-serif!important;
+ text-align:center!important;vertical-align:middle!important;
+}
+#calendarWrap .calendar.transposed thead th.dm-absence-head .info-varie-vertical{
+ display:inline-flex!important;align-items:center;justify-content:center;
+ height:calc(100% - 4px);margin:2px auto;
+ font-family:Inter,ui-sans-serif,"Segoe UI",Arial,sans-serif!important;
+ font-size:clamp(8px,var(--cal-label-size,9px),11px)!important;
+ font-weight:800!important;line-height:1.14!important;letter-spacing:.012em!important;
+ text-transform:uppercase;writing-mode:vertical-rl;text-orientation:mixed;
+ transform:rotate(180deg);white-space:nowrap;padding:3px 0!important;
+ color:#2f373c;
+}
+/* ACTION PLAN: un solo linguaggio visivo per DM e NEGOZIO, senza cambiare step o contenuti. */
+#modalRoot .modal:has(#actionPlanForm){
+ --ap-ui-accent:#984266;--ap-ui-ink:#293440;--ap-ui-border:#dce3e8;--ap-ui-soft:#f8fafb;
+}
+#modalRoot .modal:has(#actionPlanForm) .modal-head{
+ padding:10px 15px!important;border-bottom:1px solid var(--ap-ui-border);background:#fff;
+}
+#modalRoot .modal:has(#actionPlanForm) .modal-head h3{
+ margin:0;font-size:14px;font-weight:800;color:var(--ap-ui-ink);
+}
+#actionPlanForm{color:var(--ap-ui-ink);font-family:Inter,ui-sans-serif,"Segoe UI",Arial,sans-serif}
+#actionPlanForm :is(.apy-hero,.apy-panel,.apy-review-card,.action-plan-modal-grid,.action-obj-section,.action-obj-editor,.ap-guided-objective,.ap-guided-columns section){
+ border:1px solid var(--ap-ui-border)!important;border-radius:10px!important;box-shadow:none!important;
+}
+#actionPlanForm :is(.apy-hero){background:linear-gradient(120deg,#fff3f7,#fafbfc)!important}
+#actionPlanForm :is(.apy-panel,.apy-review-card,.action-plan-modal-grid,.action-obj-section,.action-obj-editor,.ap-guided-objective){background:#fff!important}
+#actionPlanForm :is(.apy-panel>h4,.apy-review-card h4,.action-obj-section-head h4,.ap-guided-head strong,.ap-guided-columns h5){
+ color:var(--ap-ui-ink)!important;letter-spacing:normal!important;font-weight:800!important;
+}
+#actionPlanForm :is(label,.apy-field>span,.ap-guided-fields label,.ap-guided-other){font-family:inherit}
+#actionPlanForm :is(input:not([type=checkbox]),select,textarea){
+ min-width:0;box-sizing:border-box;border:1px solid #d3dce3!important;border-radius:7px!important;
+ background:#fff;color:var(--ap-ui-ink);font-family:inherit;line-height:1.35;
+}
+#actionPlanForm :is(input:not([type=checkbox]),select,textarea):focus-visible{
+ outline:2px solid #ae6685;outline-offset:1px;border-color:#a34c75!important;
+}
+#actionPlanForm :is(.apy-footer,.ap-guided-footer,.modal-actions){gap:8px}
+#actionPlanForm :is(.apy-footer,.ap-guided-footer,.modal-actions) :is(.btn,button){
+ min-height:32px;padding:7px 12px;font-family:inherit;font-size:11px;font-weight:800;
+ border-radius:8px!important;letter-spacing:normal;text-transform:none;
+}
+#actionPlanForm :is(.apy-footer,.ap-guided-footer,.modal-actions) :is(.btn.primary,button.primary){
+ background:var(--ap-ui-accent)!important;border:1px solid var(--ap-ui-accent)!important;color:#fff!important;
+}
+#actionPlanForm :is(.apy-footer,.ap-guided-footer,.modal-actions) :is(.btn:not(.primary):not(.danger),button.apy-back-button){
+ background:#fff!important;border:1px solid #d4dce2!important;color:#56616d!important;
+}
+#actionPlanForm :is(.apy-footer,.ap-guided-footer,.modal-actions) button:disabled{opacity:.5;cursor:not-allowed}
+#actionPlanForm :is(.apy-field,.apy-summary>div,.ap-guided-metrics>div){
+ border-radius:8px;border-color:#e0e6ea;box-shadow:none;
+}
+#actionPlanForm :is(.apy-review-charts,.apy-grid,.ap-guided-columns){min-width:0}
+#actionPlanForm #ap-objectives-page>.action-obj-section{padding:9px!important;margin:0!important}
+#actionPlanForm .action-obj-section-head{margin-bottom:8px!important;padding-bottom:8px!important;border-bottom:1px solid var(--ap-ui-border)}
+#actionPlanForm .ap-guided-choice{border-radius:6px}
+#actionPlanForm .ap-guided-choice:hover{background:#f2f5f7}
+@media(max-width:760px){
+ #actionPlanForm :is(.apy-footer,.ap-guided-footer,.modal-actions) :is(.btn,button){min-height:36px}
+}
