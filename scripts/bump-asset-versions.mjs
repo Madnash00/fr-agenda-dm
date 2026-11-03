@@ -1,7 +1,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 function fp(v){let h=0xcbf29ce484222325n;for(let i=0;i<v.length;i++){h^=BigInt(v.charCodeAt(i));h=BigInt.asUintN(64,h*0x100000001b3n)}return h.toString(16).padStart(16,'0')}
 let html=readFileSync('index.html','utf8');
-for(const path of ['assets/css/app.css','assets/js/cloud-api.js','assets/js/app.js']){
+for(const path of ['assets/css/app.css','assets/js/cloud-api.js','assets/js/app.js','assets/js/action-plan-guided.js']){
  const anchor='./'+path+'?v=',pos=html.indexOf(anchor);
  if(pos<0||html.indexOf(anchor,pos+anchor.length)>=0)throw new Error('Missing or repeated reference: '+anchor);
  const start=pos+anchor.length,previous=html.slice(start,start+16);
