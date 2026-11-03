@@ -18,6 +18,7 @@ const fields={
 };
 let closeCount=0,renderCount=0;
 const ctx={
+ document:{querySelector:()=>null},
  window:{agendaCloudApi:{request:(action,payload)=>{
   assert.equal(action,'saveActionPlan');
   const next=deferred();requests.push({payload,step:next});return next.promise;
