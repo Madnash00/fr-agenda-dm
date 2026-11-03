@@ -2104,3 +2104,50 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
  background:rgba(36,43,48,.94);color:#fff;border:1px solid rgba(255,255,255,.1);
  box-shadow:0 3px 10px rgba(0,0,0,.12);pointer-events:none
 }
+
+
+/* ACTION PLAN DM/NEGOZIO: maschera più contenuta senza alterare gli altri moduli. */
+#modalRoot .modal.wide:has(#actionPlanForm){
+ width:min(1090px,calc(100vw - 32px))!important;
+ max-width:calc(100vw - 32px)!important;
+ height:min(830px,calc(100dvh - 28px))!important;
+ max-height:calc(100dvh - 28px)!important;
+}
+#modalRoot .modal.wide:has(#actionPlanForm) .modal-body{padding:7px 9px!important;overflow-y:auto!important}
+#actionPlanForm :is(#apy-pre,#app-period-analysis){grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+#actionPlanForm .apy-panel{min-width:0}
+#actionPlanForm .apy-grid{gap:4px}
+#actionPlanForm .apy-field{padding:5px}
+#actionPlanForm .apy-field input{padding:5px 6px}
+#actionPlanForm .apy-review-charts{gap:7px;margin:4px 0 7px}
+#actionPlanForm .apy-review-card{padding:6px 8px}
+#actionPlanForm .apy-impact-chart{gap:3px!important;padding:2px 0}
+#actionPlanForm .apy-impact-up,#actionPlanForm .apy-impact-down{height:28px}
+#actionPlanForm .apy-impact-name,#actionPlanForm .apy-impact-value{font-size:8px}
+#actionPlanForm .apy-summary{margin-bottom:5px}
+#actionPlanForm .apy-summary>div{padding:5px}
+#actionPlanForm .apy-summary>div:first-child strong{font-size:15px}
+#actionPlanForm .apy-hero{padding:8px 10px}
+#actionPlanForm .apy-hero h3{font-size:16px}
+#actionPlanForm .apy-hero p{line-height:1.25}
+#actionPlanForm #ap-details-step{max-width:760px;gap:10px}
+#actionPlanForm #ap-details-step .action-plan-modal-grid{gap:9px;padding:11px!important}
+#actionPlanForm #ap-objectives-page{gap:6px}
+#actionPlanForm #ap-objectives-page>.action-obj-section{padding:7px!important}
+#actionPlanForm .ap-guided-columns{gap:8px}
+#actionPlanForm .ap-guided-columns section{padding:8px}
+#actionPlanForm .ap-guided-fields{gap:9px;margin:8px 0}
+#actionPlanForm .ap-save-working{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:progress}
+#actionPlanForm .ap-save-working::before{
+ content:"";display:inline-block;width:13px;height:13px;flex:none;
+ border:2px solid rgba(255,255,255,.55);border-top-color:currentColor;border-radius:50%;
+ animation:apSaveRotate .75s linear infinite;
+}
+@keyframes apSaveRotate{to{transform:rotate(360deg)}}
+@media(max-width:760px){
+ #modalRoot .modal.wide:has(#actionPlanForm){width:calc(100vw - 12px)!important;max-width:calc(100vw - 12px)!important;height:calc(100dvh - 12px)!important;max-height:calc(100dvh - 12px)!important}
+ #actionPlanForm :is(#apy-pre,#app-period-analysis){grid-template-columns:repeat(2,minmax(0,1fr))}
+ #actionPlanForm .apy-review-charts{grid-template-columns:1fr}
+ #actionPlanForm .apy-impact-up,#actionPlanForm .apy-impact-down{height:25px}
+}
+@media(prefers-reduced-motion:reduce){#actionPlanForm .ap-save-working::before{animation:none}}
