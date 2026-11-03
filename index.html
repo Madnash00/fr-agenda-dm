@@ -32,7 +32,7 @@
       <label>ID / Login<input id="loginUsername" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
       <label>Password<input id="loginPassword" name="password" type="password" autocomplete="current-password" required></label>
       <button id="loginSubmitBtn" class="btn primary" type="submit">Accedi</button>
-      <div id="loginProgress" class="login-progress hidden"><span class="login-spinner"></span><span>Accesso riuscito. Sto aprendo AGENDA DM…</span></div>
+      <div id="loginProgress" class="login-progress hidden" role="status" aria-live="polite" aria-atomic="true"><img class="login-progress-logo" src="./logo-app-r35.png" alt="" aria-hidden="true"><strong id="loginProgressTitle">Verifica delle credenziali…</strong><span id="loginProgressText">Controllo ID e password.</span><span class="login-progress-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
       <p id="loginError" class="error"></p>
     </form>
   </div>
