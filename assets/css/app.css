@@ -2071,3 +2071,36 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 #actionPlanForm #ap-objectives-page.ap-guided-editing .action-obj-list,#actionPlanForm #ap-objectives-page.ap-guided-editing .action-obj-section-head{display:none}
 #actionPlanForm #ap-objectives-page.ap-guided-editing>.modal-actions{display:none}
 @media(max-width:760px){#actionPlanForm .ap-guided-columns,#actionPlanForm .ap-guided-fields{grid-template-columns:1fr}#actionPlanForm .ap-guided-span{grid-column:auto}#actionPlanForm #ap-objectives-page>.apy-review-charts{grid-template-columns:1fr}}
+
+
+/* UX: indicatori senza contenitori o testi, centrati nell'area contenuti. */
+#pageLoading{inset:0;left:0;right:0;width:auto;max-width:none;background:transparent!important;pointer-events:none}
+#pageLoading .page-loading-card,#globalBusy .global-busy-card{display:flex;align-items:center;justify-content:center;min-width:0;max-width:none;padding:0!important;gap:0;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important}
+#pageLoading .page-loading-card :not(img),#globalBusy .global-busy-card :not(img){display:none!important}
+#globalBusy{background:transparent!important;backdrop-filter:none!important}
+#globalBusy .global-busy-logo,#pageLoading .page-loading-logo{width:64px;height:64px;filter:drop-shadow(0 2px 6px rgba(29,34,39,.14))}
+@media screen and (min-width:1024px){
+ #pageLoading,#globalBusy{left:var(--desktop-sidebar-w,182px)!important;right:0!important;width:auto!important}
+}
+@media screen and (max-width:1023px){
+ #pageLoading,#globalBusy{left:0!important;right:0!important;width:100%!important}
+}
+/* CALENDARIO: tipografia coerente e proporzionata senza alterare dimensioni delle celle. */
+#calendarWrap .calendar.transposed thead :is(th,.store-name-vertical,.info-varie-vertical,.axis-head-vertical){
+ font-family:Inter,ui-sans-serif,"Segoe UI",Arial,sans-serif!important;
+ font-size:clamp(8px,var(--cal-label-size,9px),11px)!important;
+ font-weight:800!important;letter-spacing:.012em!important;line-height:1.14!important;
+}
+#calendarWrap .calendar.transposed thead .region-band{
+ font-size:clamp(9px,calc(var(--cal-label-size,9px) * 1.04),11px)!important;
+}
+#calendarWrap .calendar.transposed thead .store-name-vertical{padding:3px 0!important}
+#calendarWrap .calendar.transposed thead :is(.date-month-head,.date-week-head,.date-day-head,.key-point-head,.dm-absence-head){text-align:center;vertical-align:middle}
+/* Hover: sintesi DM / SM / NOTE, data e negozio in due righe, senza coprire la cella. */
+#hoverTooltip.calendar-cell-tip{
+ min-width:0;max-width:min(230px,calc(100vw - 24px));
+ padding:5px 8px;border-radius:7px;font-size:10px;line-height:1.35;
+ font-weight:650;letter-spacing:.008em;white-space:pre-line;
+ background:rgba(36,43,48,.94);color:#fff;border:1px solid rgba(255,255,255,.1);
+ box-shadow:0 3px 10px rgba(0,0,0,.12);pointer-events:none
+}
