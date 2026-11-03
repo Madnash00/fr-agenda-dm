@@ -7,6 +7,7 @@ function fp(v) {
  for(let i=0;i<v.length;i++){h^=BigInt(v.charCodeAt(i));h=BigInt.asUintN(64,h*0x100000001b3n)}
  return h.toString(16).padStart(16,'0');
 }
+execFileSync(process.execPath,['scripts/test-ui-loading-calendar.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
