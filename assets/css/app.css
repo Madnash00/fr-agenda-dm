@@ -2068,6 +2068,6 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 #actionPlanForm .ap-guided-other{margin-top:10px}
 #actionPlanForm .ap-guided-footer{margin-top:11px}
 #actionPlanForm #ap-objectives-page.ap-guided-editing>.apy-review-charts{display:none}
-#actionPlanForm #ap-objectives-page.ap-guided-editing>#actionPlanObjectivesDraft{display:none}
+#actionPlanForm #ap-objectives-page.ap-guided-editing .action-obj-list,#actionPlanForm #ap-objectives-page.ap-guided-editing .action-obj-section-head{display:none}
 #actionPlanForm #ap-objectives-page.ap-guided-editing>.modal-actions{display:none}
 @media(max-width:760px){#actionPlanForm .ap-guided-columns,#actionPlanForm .ap-guided-fields{grid-template-columns:1fr}#actionPlanForm .ap-guided-span{grid-column:auto}#actionPlanForm #ap-objectives-page>.apy-review-charts{grid-template-columns:1fr}}
