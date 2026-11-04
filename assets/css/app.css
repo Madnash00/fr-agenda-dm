@@ -2179,6 +2179,45 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 @media(prefers-reduced-motion:reduce){#loginView #loginProgress .login-progress-logo,#loginView #loginProgress .login-progress-dots i{animation:none!important}}
 
 
+/* CHECK STRAORDINARI: grafico a scostamento dal budget.
+   La barra di avanzamento non distingueva risparmio e sforamento: qui il budget
+   e' una linea fissa al centro e la barra cresce a sinistra o a destra. */
+#overtimeStoreBudgetPanel .store-budget-summary,#page-rmovertime .store-budget-summary{grid-template-columns:repeat(3,minmax(130px,1fr))}
+.store-budget-deviation{padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fcfbfb}
+.store-budget-deviation.is-under{border-color:#bfe3cb;background:#f6fcf8}
+.store-budget-deviation.is-over{border-color:#eec3c6;background:#fdf6f6}
+.store-budget-deviation-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;font-weight:800;color:#5d666d;text-transform:uppercase;letter-spacing:.04em}
+.store-budget-deviation-head strong{font-size:16px;letter-spacing:normal;text-transform:none;font-variant-numeric:tabular-nums}
+.store-budget-deviation.is-under .store-budget-deviation-head strong{color:#1c7a47}
+.store-budget-deviation.is-over .store-budget-deviation-head strong{color:#b4232b}
+.store-budget-deviation-track{display:flex;align-items:stretch;height:26px}
+.store-budget-deviation-side{flex:1;min-width:0;display:flex;background:#eef1f2;border-radius:7px}
+.store-budget-deviation-side.left{justify-content:flex-end}
+.store-budget-deviation-side.right{justify-content:flex-start}
+.store-budget-deviation-bar{height:100%;min-width:0;border-radius:6px;transition:width .25s ease}
+.store-budget-deviation-side.left .store-budget-deviation-bar{background:linear-gradient(90deg,#3f9b68,#258053)}
+.store-budget-deviation-side.right .store-budget-deviation-bar{background:linear-gradient(90deg,#b4232b,#d4555c)}
+.store-budget-deviation-axis{width:3px;flex:none;background:#39434a;border-radius:2px}
+.store-budget-deviation-scale{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:9.5px;font-weight:800;color:#78838c;text-transform:uppercase;letter-spacing:.06em}
+.store-budget-deviation-zero{color:#39434a}
+.store-budget-foot .budget-over{color:#b4232b}
+.store-budget-foot .budget-under{color:#1c7a47}
+@media(max-width:700px){
+ .store-budget-deviation-head strong{font-size:14px}
+ .store-budget-deviation-track{height:22px}
+}
+
+/* FERIE CONSOLIDATE: stessa grammatica visiva delle altre sezioni. */
+#page-holidayconsolidated .consolidated-period-highlight,#page-holidayreport .consolidated-period-highlight{font-variant-numeric:tabular-nums}
+#page-holidayconsolidated .consolidated-table th,#page-holidayreport .consolidated-table th{white-space:nowrap}
+#page-holidayconsolidated .consolidated-table td:not(:nth-child(1)):not(:nth-child(2)),
+#page-holidayreport .consolidated-table td:nth-child(n+4){font-variant-numeric:tabular-nums;text-align:right}
+#page-holidayconsolidated .consolidated-table th:not(:nth-child(1)):not(:nth-child(2)),
+#page-holidayreport .consolidated-table th:nth-child(n+4){text-align:right}
+#page-holidayconsolidated .consolidated-table td:last-child,#page-holidayreport .consolidated-table td:last-child{text-align:right}
+#page-holidayconsolidated .consolidated-source-note{margin:0;font-size:11px;line-height:1.45;color:#68747f}
+#page-holidayconsolidated .consolidated-source-note code{background:#f2f4f6;border-radius:4px;padding:1px 5px;font-size:10.5px}
+
 /* CALENDARIO: INFO VARIE con la stessa tipografia delle intestazioni verticali dei negozi. */
 #calendarWrap .calendar.transposed thead th.dm-absence-head{
  font-family:Inter,ui-sans-serif,"Segoe UI",Arial,sans-serif!important;

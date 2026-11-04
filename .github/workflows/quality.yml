@@ -30,5 +30,9 @@ jobs:
         run: node scripts/test-store-contract.mjs
       - name: Test calendar creation acknowledgments
         run: node scripts/test-calendar-create.mjs
+      - name: Test consolidated holiday disposal math
+        run: node scripts/test-holiday-consolidated-math.mjs
+      - name: Test overtime budget diagnostics and store matching
+        run: node scripts/test-overtime-budget-store-match.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
