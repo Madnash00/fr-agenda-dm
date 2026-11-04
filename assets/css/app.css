@@ -2179,33 +2179,34 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 @media(prefers-reduced-motion:reduce){#loginView #loginProgress .login-progress-logo,#loginView #loginProgress .login-progress-dots i{animation:none!important}}
 
 
-/* CHECK STRAORDINARI: grafico a scostamento dal budget.
-   La barra di avanzamento non distingueva risparmio e sforamento: qui il budget
-   e' una linea fissa al centro e la barra cresce a sinistra o a destra. */
+/* CHECK STRAORDINARI: il grafico rappresenta l'incidenza dello straordinario
+   sulle ore lavorate; la soglia di budget e' il punto di rottura fra verde e rosso. */
 #overtimeStoreBudgetPanel .store-budget-summary,#page-rmovertime .store-budget-summary{grid-template-columns:repeat(3,minmax(130px,1fr))}
-.store-budget-deviation{padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fcfbfb}
-.store-budget-deviation.is-under{border-color:#bfe3cb;background:#f6fcf8}
-.store-budget-deviation.is-over{border-color:#eec3c6;background:#fdf6f6}
-.store-budget-deviation-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;font-weight:800;color:#5d666d;text-transform:uppercase;letter-spacing:.04em}
-.store-budget-deviation-head strong{font-size:16px;letter-spacing:normal;text-transform:none;font-variant-numeric:tabular-nums}
-.store-budget-deviation.is-under .store-budget-deviation-head strong{color:#1c7a47}
-.store-budget-deviation.is-over .store-budget-deviation-head strong{color:#b4232b}
-.store-budget-deviation-track{display:flex;align-items:stretch;height:26px}
-.store-budget-deviation-side{flex:1;min-width:0;display:flex;background:#eef1f2;border-radius:7px}
-.store-budget-deviation-side.left{justify-content:flex-end}
-.store-budget-deviation-side.right{justify-content:flex-start}
-.store-budget-deviation-bar{height:100%;min-width:0;border-radius:6px;transition:width .25s ease}
-.store-budget-deviation-side.left .store-budget-deviation-bar{background:linear-gradient(90deg,#3f9b68,#258053)}
-.store-budget-deviation-side.right .store-budget-deviation-bar{background:linear-gradient(90deg,#b4232b,#d4555c)}
-.store-budget-deviation-axis{width:3px;flex:none;background:#39434a;border-radius:2px}
-.store-budget-deviation-scale{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:9.5px;font-weight:800;color:#78838c;text-transform:uppercase;letter-spacing:.06em}
-.store-budget-deviation-zero{color:#39434a}
-.store-budget-foot .budget-over{color:#b4232b}
-.store-budget-foot .budget-under{color:#1c7a47}
+.store-budget-incidence{padding:13px 14px 10px;border:1px solid var(--line);border-radius:12px;background:#fcfbfb}
+.store-budget-incidence.is-under{border-color:#bfe3cb;background:#f6fcf8}
+.store-budget-incidence.is-over{border-color:#eec3c6;background:#fdf6f6}
+.store-budget-incidence-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;font-weight:800;color:#5d666d;text-transform:uppercase;letter-spacing:.04em}
+.store-budget-incidence-head strong{font-size:16px;letter-spacing:normal;text-transform:none;font-variant-numeric:tabular-nums}
+.store-budget-incidence.is-under .store-budget-incidence-head strong{color:#1c7a47}
+.store-budget-incidence.is-over .store-budget-incidence-head strong{color:#b4232b}
+.store-budget-incidence-track{position:relative;height:26px;border-radius:8px;background:#eef1f2;overflow:visible}
+.store-budget-incidence-fill{height:100%;border-radius:8px;transition:width .25s ease}
+.store-budget-incidence.is-under .store-budget-incidence-fill{background:linear-gradient(90deg,#3f9b68,#258053)}
+.store-budget-incidence.is-over .store-budget-incidence-fill{background:linear-gradient(90deg,#c2404a,#b4232b)}
+.store-budget-incidence-threshold{position:absolute;top:-4px;bottom:-4px;width:0;display:flex;flex-direction:column;align-items:center}
+.store-budget-incidence-threshold i{flex:1;width:3px;background:#2d3238;border-radius:2px}
+.store-budget-incidence-threshold b{position:absolute;top:100%;margin-top:3px;font-size:9.5px;font-weight:900;color:#2d3238;white-space:nowrap;transform:translateX(-50%);left:0}
+.store-budget-incidence-scale{display:flex;justify-content:space-between;margin-top:17px;font-size:9.5px;font-weight:800;color:#78838c}
 @media(max-width:700px){
- .store-budget-deviation-head strong{font-size:14px}
- .store-budget-deviation-track{height:22px}
+ .store-budget-incidence-head strong{font-size:14px}
+ .store-budget-incidence-track{height:22px}
 }
+
+/* FERIE CONSOLIDATE: segnalazione dei nominativi fermi a un mese precedente. */
+.consolidated-stale-flag{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:6px;border-radius:50%;background:#fdeabe;border:1px solid #e0b354;color:#80571a;font-size:10px;font-weight:900;cursor:help;vertical-align:middle}
+.consolidated-disposal-kpi .consolidated-stale-flag,.consolidated-regular-kpi .consolidated-stale-flag{margin-left:5px}
+.consolidated-stale-row td{background:#fffdf6}
+.consolidated-stale-row td:first-child{box-shadow:inset 3px 0 0 #e0b354}
 
 /* FERIE CONSOLIDATE: stessa grammatica visiva delle altre sezioni. */
 #page-holidayconsolidated .consolidated-period-highlight,#page-holidayreport .consolidated-period-highlight{font-variant-numeric:tabular-nums}
