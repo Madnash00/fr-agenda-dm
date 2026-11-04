@@ -1371,6 +1371,36 @@ function holidayConsolidatedFmtPct(v){return v===null||v===undefined?'—':`${ho
 /* Nelle tabelle del consolidato le ore hanno sempre un decimale: con decimali
    variabili (118 / 402,6 / 2259,99) le colonne non sono confrontabili a colpo d'occhio. */
 function holidayConsolidatedHoursFmt(v){return holidayHours(v).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})}
+/* Una riga puo' restare indietro rispetto all'ultimo file: accade quando una
+   persona del team non compare nel nuovo consolidato. Il periodo della riga
+   permette di isolarla e di escluderla dai totali. */
+function holidayConsolidatedPeriodValue(x){
+ const y=Number(x?.year),m=Number(x?.month);
+ return Number.isInteger(y)&&y>=2000&&y<=2100&&Number.isInteger(m)&&m>=1&&m<=12?y*12+m:null;
+}
+function holidayConsolidatedPeriodText(v){
+ return Number.isInteger(v)?MONTHS[(v-1)%12].toUpperCase()+' '+Math.floor((v-1)/12):'';
+}
+function holidayConsolidatedAggregate(rows){
+ let used=0,ac=0,ap=0,ent=0;
+ (rows||[]).forEach(x=>{used+=holidayHours(x.total_used);ac+=holidayHours(x.residual_ac_year_end);ap+=holidayHours(x.residual_ap);ent+=holidayHours(x.entitlement_year_end)});
+ return {employees:(rows||[]).length,used_hours:used,residual_ac_hours:ac,residual_ap_hours:ap,remaining_total_hours:ac+ap,entitlement_year_end:ent};
+}
+function holidayConsolidatedStaleTip(rows,latest,scope){
+ const names=(rows||[]).map(x=>`${String(x.employee_name||'').trim()} (${holidayConsolidatedPeriodText(holidayConsolidatedPeriodValue(x))})`).filter(Boolean);
+ if(!names.length)return '';
+ const head=scope==='store'
+  ?'Dato non aggiornato per '+(names.length===1?'una persona':names.length+' persone')+' di questo negozio.'
+  :scope==='district'
+   ?'Dato non aggiornato per '+(names.length===1?'una persona':names.length+' persone')+' del distretto.'
+   :'Dato non aggiornato per questa persona.';
+ return head+' Non compare nell\'ultimo file importato ('+holidayConsolidatedPeriodText(latest)+'), quindi resta ferma al suo ultimo mese disponibile: '
+  +names.slice(0,12).join(', ')+(names.length>12?' e altre '+(names.length-12):'')+'.';
+}
+function holidayConsolidatedStaleFlag(rows,latest,scope){
+ const tip=holidayConsolidatedStaleTip(rows,latest,scope);
+ return tip?`<span class="consolidated-stale-flag" data-tooltip="${esc(tip)}" role="img" aria-label="${esc(tip)}">!</span>`:'';
+}
 function holidayConsolidatedDisposal(entitlement,residualAc){
  const ent=holidayConsolidatedNum(entitlement);
  if(!(ent>0))return null;
@@ -1403,11 +1433,28 @@ function overtimePeriodBadge(months){
  const available=(months||[]).filter(x=>Number.isInteger(Number(x.year))&&Number(x.year)>=2000&&Number(x.year)<=2100&&Number.isInteger(Number(x.month))&&Number(x.month)>=1&&Number(x.month)<=12).slice().sort((a,b)=>Number(a.year)-Number(b.year)||Number(a.month)-Number(b.month));
  return periodBadge('PERIODO DISPONIBILE',available.length?overtimeMonthLabel(available[0].year,available[0].month)+' → '+overtimeMonthLabel(available.at(-1).year,available.at(-1).month):null);
 }
-function renderHolidayConsolidated(){const d=holidayConsolidatedCache,period=$('#holidayConsolidatedPeriod');if(period)period.innerHTML=holidayConsolidatedPeriodBadge(d?.meta);if(!d)return;const meta=$('#holidayConsolidatedMeta');if(meta)meta.innerHTML=d.meta?`<span><strong>Aggiornamento:</strong> ${esc(d.meta.source_filename||'file consolidato')}</span><span><strong>Import:</strong> ${new Date(d.meta.imported_at).toLocaleString('it-IT')}</span>`:'<span>Nessun consolidato caricato.</span>';const k=d.kpis||{},year=Number(d.meta?.year)||new Date().getFullYear(),today=new Date(),elapsed=year<today.getFullYear()?100:year>today.getFullYear()?0:100*(Date.UTC(year,today.getMonth(),today.getDate())-Date.UTC(year,0,1)+86400000)/(Date.UTC(year+1,0,1)-Date.UTC(year,0,1)),pace=Math.max(0,Math.min(100,elapsed)),paceClass=v=>{const delta=holidayConsolidatedNum(v)-pace;return delta>=-3?'pace-green':delta>=-12?'pace-amber':'pace-red'};const kDisposal=holidayConsolidatedDisposal(k.entitlement_year_end,k.residual_ac_hours);$('#holidayConsolidatedKpis').innerHTML=[['Dipendenti',k.employees||0],['Goduto',holidayConsolidatedHoursFmt(k.used_hours)],['Da smaltire AC',holidayConsolidatedHoursFmt(k.residual_ac_hours)],['Residuo AP',holidayConsolidatedHoursFmt(k.residual_ap_hours)],['Da smaltire AC+AP',holidayConsolidatedHoursFmt(k.remaining_total_hours)],['Smaltimento 31/12',holidayConsolidatedFmtPct(kDisposal)]].map(([l,v])=>`<div class="card kpi-card ${l==='Smaltimento 31/12'?'consolidated-disposal-kpi '+paceClass(kDisposal):'consolidated-regular-kpi'}"><span>${l}</span><strong>${v}</strong></div>`).join('');const stores=d.stores||[];$('#holidayConsolidatedStores').innerHTML=stores.length?`<table class="data-table consolidated-table"><thead><tr><th>CODICE</th><th>NEGOZIO</th><th>DIP</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th></tr></thead><tbody>${stores.map(x=>`<tr><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${x.employees}</td><td class="${x.residual_ap_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ap_hours)}</td><td>${holidayConsolidatedHoursFmt(x.used_hours)}</td><td class="${x.residual_ac_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ac_hours)}</td><td class="${x.remaining_total_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.remaining_total_hours)}</td><td><span class="store-disposal-badge ${paceClass(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}" title="Avanzamento dell'anno: ${pace.toFixed(1)}%">${holidayConsolidatedFmtPct(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun dato consolidato disponibile.</div>';const emps=d.employees||[],storeView=currentUser?.role==='STORE',host=$('#holidayConsolidatedEmployees');
+function renderHolidayConsolidated(){const d=holidayConsolidatedCache,period=$('#holidayConsolidatedPeriod');if(period)period.innerHTML=holidayConsolidatedPeriodBadge(d?.meta);if(!d)return;const meta=$('#holidayConsolidatedMeta');if(meta)meta.innerHTML=d.meta?`<span><strong>Aggiornamento:</strong> ${esc(d.meta.source_filename||'file consolidato')}</span><span><strong>Import:</strong> ${new Date(d.meta.imported_at).toLocaleString('it-IT')}</span>`:'<span>Nessun consolidato caricato.</span>';const k=d.kpis||{},year=Number(d.meta?.year)||new Date().getFullYear(),today=new Date(),elapsed=year<today.getFullYear()?100:year>today.getFullYear()?0:100*(Date.UTC(year,today.getMonth(),today.getDate())-Date.UTC(year,0,1)+86400000)/(Date.UTC(year+1,0,1)-Date.UTC(year,0,1)),pace=Math.max(0,Math.min(100,elapsed)),paceClass=v=>{const delta=holidayConsolidatedNum(v)-pace;return delta>=-3?'pace-green':delta>=-12?'pace-amber':'pace-red'};const allEmps=d.employees||[];
+ const periodValues=allEmps.map(holidayConsolidatedPeriodValue).filter(v=>Number.isInteger(v));
+ const latestPeriod=periodValues.length?Math.max(...periodValues):null;
+ const isStaleRow=x=>{const v=holidayConsolidatedPeriodValue(x);return latestPeriod!==null&&Number.isInteger(v)&&v<latestPeriod};
+ const staleEmps=allEmps.filter(isStaleRow),freshEmps=allEmps.filter(x=>!isStaleRow(x));
+ // Senza righe aggiornate i totali restano quelli del file precedente, ma segnalati.
+ const kpiRows=freshEmps.length?freshEmps:allEmps;
+ const k2=allEmps.length?holidayConsolidatedAggregate(kpiRows):k;
+ const districtFlag=holidayConsolidatedStaleFlag(staleEmps,latestPeriod,'district');
+ const kDisposal=holidayConsolidatedDisposal(k2.entitlement_year_end,k2.residual_ac_hours);$('#holidayConsolidatedKpis').innerHTML=[['Dipendenti',k2.employees||0],['Goduto',holidayConsolidatedHoursFmt(k2.used_hours)],['Da smaltire AC',holidayConsolidatedHoursFmt(k2.residual_ac_hours)],['Residuo AP',holidayConsolidatedHoursFmt(k2.residual_ap_hours)],['Da smaltire AC+AP',holidayConsolidatedHoursFmt(k2.remaining_total_hours)],['Smaltimento 31/12',holidayConsolidatedFmtPct(kDisposal)]].map(([l,v])=>`<div class="card kpi-card ${l==='Smaltimento 31/12'?'consolidated-disposal-kpi '+paceClass(kDisposal):'consolidated-regular-kpi'}"><span>${l}${l==='Smaltimento 31/12'?districtFlag:''}</span><strong>${v}</strong></div>`).join('');const byStore=new Map();
+ allEmps.forEach(x=>{const id=String(x.store_id||'');if(!byStore.has(id))byStore.set(id,[]);byStore.get(id).push(x)});
+ const stores=(d.stores||[]).map(st=>{
+  const rows=byStore.get(String(st.store_id))||[];
+  if(!rows.length)return Object.assign({},st,{stale_rows:[]});
+  const stale=rows.filter(isStaleRow),fresh=rows.filter(x=>!isStaleRow(x));
+  // Se nessuna riga del negozio e' aggiornata si mostrano comunque i dati precedenti, segnalati.
+  return Object.assign({},st,holidayConsolidatedAggregate(fresh.length?fresh:rows),{stale_rows:stale});
+ });$('#holidayConsolidatedStores').innerHTML=stores.length?`<table class="data-table consolidated-table"><thead><tr><th>CODICE</th><th>NEGOZIO</th><th>DIP</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th></tr></thead><tbody>${stores.map(x=>`<tr><td>${esc(x.code||'—')}</td><td>${esc(x.name)}${holidayConsolidatedStaleFlag(x.stale_rows,latestPeriod,'store')}</td><td>${x.employees}</td><td class="${x.residual_ap_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ap_hours)}</td><td>${holidayConsolidatedHoursFmt(x.used_hours)}</td><td class="${x.residual_ac_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ac_hours)}</td><td class="${x.remaining_total_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.remaining_total_hours)}</td><td><span class="store-disposal-badge ${paceClass(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}" title="Avanzamento dell'anno: ${pace.toFixed(1)}%">${holidayConsolidatedFmtPct(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun dato consolidato disponibile.</div>';const emps=d.employees||[],storeView=currentUser?.role==='STORE',host=$('#holidayConsolidatedEmployees');
  const legend=$('#holidayStoreDisposalLegend');if(legend&&storeView)legend.textContent='Avanzamento anno '+pace.toFixed(1)+'% · Verde: in linea (entro 3 pp) · Giallo: ritardo fino a 12 pp · Rosso: ritardo maggiore.';
  if(legend)legend.classList.remove('hidden');
  host.classList.toggle('store-consolidated-table',storeView);
- host.innerHTML=emps.length?`<table class="data-table consolidated-table"><thead><tr><th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th></tr></thead><tbody>${emps.map(x=>`<tr><td><strong>${esc(x.employee_name)}</strong></td><td>${esc(x.employee_role||'—')}</td><td class="${holidayHours(x.residual_ap)<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ap)}</td><td>${holidayConsolidatedHoursFmt(x.total_used)}</td><td class="${holidayHours(x.residual_ac_year_end)<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ac_year_end)}</td><td class="${holidayHours(x.remaining_total_hours)<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.remaining_total_hours)}</td><td><span class="store-disposal-badge ${paceClass(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_year_end))}" title="Avanzamento dell'anno: ${pace.toFixed(1)}%">${holidayConsolidatedFmtPct(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_year_end))}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun dipendente consolidato disponibile.</div>'}
+ host.innerHTML=emps.length?`<table class="data-table consolidated-table"><thead><tr><th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th></tr></thead><tbody>${emps.map(x=>`<tr class="${isStaleRow(x)?'consolidated-stale-row':''}"><td><strong>${esc(x.employee_name)}</strong>${isStaleRow(x)?holidayConsolidatedStaleFlag([x],latestPeriod,'employee'):''}</td><td>${esc(x.employee_role||'—')}</td><td class="${holidayHours(x.residual_ap)<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ap)}</td><td>${holidayConsolidatedHoursFmt(x.total_used)}</td><td class="${holidayHours(x.residual_ac_year_end)<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ac_year_end)}</td><td class="${holidayHours(x.remaining_total_hours)<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.remaining_total_hours)}</td><td><span class="store-disposal-badge ${paceClass(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_year_end))}" title="Avanzamento dell'anno: ${pace.toFixed(1)}%">${holidayConsolidatedFmtPct(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_year_end))}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun dipendente consolidato disponibile.</div>'}
 async function loadHolidayConsolidatedReport(force=false){if(currentUser?.role!=='ADMIN')return;try{holidayConsolidatedReportCache=await window.agendaCloudApi.request('getHolidayConsolidatedReport',{__force:force});renderHolidayConsolidatedReport()}catch(err){holidayConsolidatedReportCache=null;renderHolidayConsolidatedReport();console.warn(err)}}
 function renderHolidayConsolidatedReport(){const d=holidayConsolidatedReportCache,region=$('#holidayReportRegion')?.value||'',meta=$('#holidayConsolidatedReportMeta'),period=$('#holidayConsolidatedReportPeriod');if(period)period.innerHTML=holidayConsolidatedPeriodBadge(d?.meta);if(!d){if(meta)meta.innerHTML='<span class="muted">Consolidato non disponibile.</span>';return}if(meta)meta.innerHTML=d.meta?`<div class="consolidated-meta"><span><strong>File:</strong> ${esc(d.meta.source_filename||'—')}</span><span><strong>Caricato:</strong> ${new Date(d.meta.imported_at).toLocaleString('it-IT')}</span></div>`:'<span class="muted">Nessun file consolidato caricato.</span>';const stores=(d.stores||[]).filter(x=>!region||x.region===region),regions=(d.regions||[]).filter(x=>!region||x.region===region);let used=stores.reduce((n,x)=>n+holidayHours(x.used_hours),0),resAc=stores.reduce((n,x)=>n+holidayHours(x.residual_ac_hours),0),resAp=stores.reduce((n,x)=>n+holidayHours(x.residual_ap_hours),0),remaining=resAc+resAp,ent=stores.reduce((n,x)=>n+holidayHours(x.entitlement_year_end),0),pct=holidayConsolidatedDisposal(ent,resAc),employees=stores.reduce((n,x)=>n+Number(x.employees||0),0);$('#holidayConsolidatedReportKpis').innerHTML=[['Dipendenti',employees],['Goduto',holidayConsolidatedHoursFmt(used)],['Da smaltire AC',holidayConsolidatedHoursFmt(resAc)],['Residuo AP',holidayConsolidatedHoursFmt(resAp)],['Da smaltire AC+AP',holidayConsolidatedHoursFmt(remaining)],['Smaltimento 31/12',holidayConsolidatedFmtPct(pct)]].map(([l,v])=>`<div class="card kpi-card"><span>${l}</span><strong>${v}</strong></div>`).join('');const withPct=x=>Object.assign({},x,{disposal_pct:holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours)});
  const ranked=stores.map(withPct).sort((a,b)=>(b.disposal_pct??-1)-(a.disposal_pct??-1));
@@ -1439,25 +1486,25 @@ function overtimeBudgetPanelMarkup(p){
  const unavailable=!p?.available||!p.coverage_complete||!Number.isFinite(Number(p.work_hours))||Number(p.work_hours)<=0||!Number.isFinite(Number(p.budget_pct))||Number(p.budget_pct)<=0||!Number.isFinite(Number(p.overtime_hours));
  if(unavailable)return '<p class="store-budget-note">'+esc(overtimeBudgetUnavailable(p))+'</p>';
  const worked=Number(p.work_hours),pct=Number(p.budget_pct),budget=worked*pct/100,used=Number(p.overtime_hours),remaining=budget-used;
- const usage=budget>0?used/budget*100:0,over=remaining<0;
+ const incidence=worked>0?used/worked*100:0,over=incidence>pct;
  const fmt=n=>Number(n).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1});
- const deviation=Math.abs(usage-100),incidence=worked>0?used/worked*100:0;
- /* Grafico a scostamento: la linea del budget e' il riferimento fisso al centro,
-    la barra cresce a sinistra (risparmio) o a destra (sforamento). */
- const span=Math.max(20,Math.min(100,Math.ceil(deviation/10)*10)),ratio=Math.min(100,deviation/span*100);
+ const pf=n=>Number(n).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+ /* La scala rappresenta l'incidenza dello straordinario sulle ore lavorate.
+    La soglia di budget e' il punto di rottura: sotto e' risparmio, sopra e' sforamento. */
+ const scaleMax=Math.max(pct*2,Math.ceil(incidence*1.25*10)/10,pct+0.5);
+ const pos=v=>Math.max(0,Math.min(100,v/scaleMax*100));
  const cards=[['Budget fino ad oggi',fmt(budget)+' h',''],['Ore utilizzate',fmt(used)+' h',''],
   [over?'Sforamento':'Risparmio',fmt(Math.abs(remaining))+' h',over?'saved-red':'saved-green']];
  return `<div class="store-budget-summary">${cards.map(([label,v,cls])=>`<div class="store-budget-stat ${cls}"><span>${esc(label)}</span><strong>${esc(v)}</strong></div>`).join('')}</div>
- <div class="store-budget-deviation ${over?'is-over':'is-under'}">
-  <div class="store-budget-deviation-head"><span>Scostamento dal budget</span><strong>${over?'+':'−'}${fmt(deviation)}% ${over?'OLTRE il budget':'sotto il budget'}</strong></div>
-  <div class="store-budget-deviation-track">
-   <div class="store-budget-deviation-side left"><div class="store-budget-deviation-bar" style="width:${over?0:ratio}%"></div></div>
-   <div class="store-budget-deviation-axis" aria-hidden="true"></div>
-   <div class="store-budget-deviation-side right"><div class="store-budget-deviation-bar" style="width:${over?ratio:0}%"></div></div>
+ <div class="store-budget-incidence ${over?'is-over':'is-under'}">
+  <div class="store-budget-incidence-head"><span>Incidenza straordinari sulle ore lavorate</span><strong>${pf(incidence)} ${over?'oltre il budget del '+pf(pct):'del budget del '+pf(pct)}</strong></div>
+  <div class="store-budget-incidence-track">
+   <div class="store-budget-incidence-fill" style="width:${pos(incidence)}%"></div>
+   <div class="store-budget-incidence-threshold" style="left:${pos(pct)}%" aria-hidden="true"><i></i><b>${pf(pct)}</b></div>
   </div>
-  <div class="store-budget-deviation-scale"><span>risparmio −${span}%</span><span class="store-budget-deviation-zero">BUDGET</span><span>sforamento +${span}%</span></div>
+  <div class="store-budget-incidence-scale"><span>0%</span><span>${pf(scaleMax)}</span></div>
  </div>
- <div class="store-budget-foot"><span>Ore lavorate: <strong>${fmt(worked)} h</strong></span><span>Budget: <strong>${fmt(pct)}%</strong> delle ore lavorate</span><span>Incidenza effettiva: <strong class="${incidence>pct?'budget-over':'budget-under'}">${fmt(incidence)}%</strong></span><span>Utilizzo del budget: <strong>${fmt(usage)}%</strong></span></div>`;
+ <div class="store-budget-foot"><span>Ore lavorate: <strong>${fmt(worked)} h</strong></span><span>Straordinari: <strong>${fmt(used)} h</strong></span><span>Soglia di budget: <strong>${pf(pct)}</strong> delle ore lavorate</span></div>`;
 }
 function placeDmOvertimeBudget(){
  const panel=$('#overtimeStoreBudgetPanel'),toolbar=$('#page-overtimecheck .overtime-toolbar'),incidence=$('#personnelIncidencePanel');

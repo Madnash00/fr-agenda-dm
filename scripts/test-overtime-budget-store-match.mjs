@@ -41,4 +41,5 @@ assert.match(msg({available:true,work_hours:100,coverage_complete:false,months_m
 assert.match(msg({available:true,work_hours:100,coverage_complete:true,budget_pct:0,overtime_hours:1}),/PARAMETRI/,
  'Budget non configurato: deve rimandare ai parametri');
 assert.ok(!/mancano ore lavorate YTD o mesi di straordinari confrontabili/.test(app),'Il messaggio generico non deve sopravvivere');
+assert.ok(app.includes('store-budget-incidence'),'Overtime budget must render the incidence chart');
 console.log('PASS: aggancio negozio nelle ore lavorate e diagnosi del budget straordinari');

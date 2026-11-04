@@ -107,8 +107,13 @@ assert.ok(app.includes('function holidayConsolidatedDisposal('),'Consolidated di
 assert.ok(!/disposal_pct:\s*ent>0\?used\/ent/.test(app)&&!app.includes('pct=ent>0?used/ent*100:0'),'Consolidated disposal must not divide used hours by the entitlement');
 assert.ok(app.includes("periodBadge('DATI AGGIORNATI A'"),'Consolidated period badge must state the month the data refers to');
 assert.ok(app.includes('function overtimeBudgetUnavailable('),'Overtime budget must explain which prerequisite is missing');
-assert.ok(app.includes('store-budget-deviation'),'Overtime budget must render the saving/over-budget deviation chart');
-assert.ok(read('assets/css/app.css').includes('.store-budget-deviation-axis'),'Deviation chart styles must exist');
+assert.ok(app.includes('store-budget-incidence'),'Overtime budget must render the incidence chart');
+assert.ok(read('assets/css/app.css').includes('.store-budget-incidence-threshold'),'Incidence chart styles must exist');
+assert.ok(!html.includes('Budget previsto: 3% delle ore lavorate'),'The budget note must not hardcode a percentage that contradicts PARAMETRI');
+// Righe ferme a un mese precedente: escluse dai totali e segnalate con popup.
+assert.ok(app.includes('function holidayConsolidatedStaleFlag(')&&app.includes('consolidated-stale-flag'),'Stale consolidated rows must be flagged');
+assert.ok(app.includes('const kpiRows=freshEmps.length?freshEmps:allEmps')&&app.includes('holidayConsolidatedAggregate(fresh.length?fresh:rows)'),'Totals must use up-to-date rows, falling back when none are');
+assert.ok(read('assets/css/app.css').includes('.consolidated-stale-row'),'Stale row styling must exist');
 assert.ok(read('assets/js/personnel-hours.js').includes('function canonicalStoreName('),'Worked hours import must reconcile store names with the registry');
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
 assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
@@ -138,7 +143,10 @@ const budgetView=app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),
 // Le tre schede restano, ma la terza dichiara se si tratta di risparmio o di sforamento.
 assert.ok(budgetView.includes("['Budget fino ad oggi',fmt(budget)+' h','']")&&budgetView.includes("[over?'Sforamento':'Risparmio'"),'NEGOZIO budget cards should state saving or overrun');
 assert.ok(budgetView.includes("over?'saved-red':'saved-green'"),'Overrun red, saving green');
-assert.ok(budgetView.includes('store-budget-deviation-axis'),'Budget line must stay visible as the chart reference');
+// Il grafico rappresenta l'incidenza, non lo scostamento percentuale dal budget.
+assert.ok(budgetView.includes('store-budget-incidence-threshold')&&budgetView.includes('incidence=worked>0?used/worked*100:0'),'Chart must plot overtime incidence against the budget threshold');
+assert.ok(!budgetView.includes('store-budget-deviation')&&!/Math\.abs\(usage-100\)/.test(budgetView),'The deviation-from-budget chart must not come back');
+assert.ok(budgetView.includes('over=incidence>pct')&&budgetView.includes('pos(pct)'),'Break-even must be the configured budget percentage');
 assert.ok(html.includes('id="rmOvertimeBudgetPanel"')&&html.includes('id="rmHolidayConsolidatedLegend"'),'RM layout panels must exist');
 assert.ok(app.includes('function renderRMOvertimeBudget()')&&app.includes('function overtimeBudgetPanelMarkup(p)'),'Shared overtime UI must exist');
 assert.ok(!app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.indexOf('function renderStoreOvertimeBudget()')).includes('<strong>${usage'),'Do not show oversized budget usage percentage');
