@@ -12,6 +12,8 @@ execFileSync(process.execPath,['scripts/test-action-plan-pdf-a4.mjs'],{stdio:'in
 execFileSync(process.execPath,['scripts/test-login-progress.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-dmdashboard-link.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-calendar-actionplan-ux.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-holiday-consolidated-math.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-overtime-budget-store-match.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
@@ -98,7 +100,16 @@ assert.ok(read('assets/css/app.css').includes('.holiday-audit-chart-row')&&read(
 
 assert.ok(app.includes("void loadHolidayPlanningAudit(true);"),'Planning audit must follow holiday plan selection');
 assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
-assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO AC</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');
+assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');
+// Lo smaltimento segue la formula del file aziendale (residuo), non TOT.GODUTO/SPETT:
+// la colonna GODUTO comprende anche le ferie AP consumate.
+assert.ok(app.includes('function holidayConsolidatedDisposal('),'Consolidated disposal must use the shared residual-based helper');
+assert.ok(!/disposal_pct:\s*ent>0\?used\/ent/.test(app)&&!app.includes('pct=ent>0?used/ent*100:0'),'Consolidated disposal must not divide used hours by the entitlement');
+assert.ok(app.includes("periodBadge('DATI AGGIORNATI A'"),'Consolidated period badge must state the month the data refers to');
+assert.ok(app.includes('function overtimeBudgetUnavailable('),'Overtime budget must explain which prerequisite is missing');
+assert.ok(app.includes('store-budget-deviation'),'Overtime budget must render the saving/over-budget deviation chart');
+assert.ok(read('assets/css/app.css').includes('.store-budget-deviation-axis'),'Deviation chart styles must exist');
+assert.ok(read('assets/js/personnel-hours.js').includes('function canonicalStoreName('),'Worked hours import must reconcile store names with the registry');
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
 assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
 assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
@@ -108,8 +119,8 @@ const hoursUI=read('assets/js/personnel-hours.js');
 assert.ok(hoursUI.includes("employee?sourceRows.filter(x=>Number(x.work_hours)!==0):sourceRows"),'DM selected-store employee report must exclude zero worked hours only');
 const consolidated=app.slice(app.indexOf('function renderHolidayConsolidated()'),app.indexOf('async function loadHolidayConsolidatedReport(',app.indexOf('function renderHolidayConsolidated()')));
 assert.ok(consolidated.includes('consolidated-disposal-kpi')&&consolidated.includes('consolidated-regular-kpi'),'Holiday KPI colors must share disposal logic');
-const expectedHolidayStoreHeaders=['CODICE','NEGOZIO','DIP','RESIDUO AP','GODUTO AC','DA SMALTIRE AC','DA SMALTIRE AC+AP','SMALTIMENTO 31/12'];
-const expectedHolidayEmployeeHeaders=['DIPENDENTE','RUOLO','RESIDUO AP','GODUTO AC','DA SMALTIRE AC','DA SMALTIRE AC+AP','SMALTIMENTO 31/12'];
+const expectedHolidayStoreHeaders=['CODICE','NEGOZIO','DIP','RESIDUO AP','GODUTO','DA SMALTIRE AC','DA SMALTIRE AC+AP','SMALTIMENTO 31/12'];
+const expectedHolidayEmployeeHeaders=['DIPENDENTE','RUOLO','RESIDUO AP','GODUTO','DA SMALTIRE AC','DA SMALTIRE AC+AP','SMALTIMENTO 31/12'];
 const storeHolidayView=consolidated.slice(consolidated.indexOf("$('#holidayConsolidatedStores').innerHTML"),consolidated.indexOf('const emps=d.employees||[]'));
 const employeeHolidayView=consolidated.slice(consolidated.indexOf('host.innerHTML=emps.length?'));
 const holidayHeaders=view=>[...view.slice(view.indexOf('<thead>'),view.indexOf('</thead>')).matchAll(/<th>([^<]+)<\/th>/g)].map(m=>m[1]);
@@ -121,11 +132,13 @@ assert.equal(holidayRowCellCount(employeeHolidayView),expectedHolidayEmployeeHea
 assert.ok(!storeHolidayView.includes('<th>RESIDUO AP+AC</th>')&&!storeHolidayView.includes('holidayHoursFmt(holidayHours(x.remaining_total_hours)-holidayHours(x.used_hours))'),'Store residual AP+AC column must be removed');
 assert.ok(!employeeHolidayView.includes('<th>RESIDUO AP+AC</th>')&&!employeeHolidayView.includes('holidayHoursFmt(holidayHours(x.remaining_total_hours)-holidayHours(x.total_used))'),'Employee residual AP+AC column must be removed');
 
-assert.ok(consolidated.includes('<th>SMALTIMENTO 31/12</th>')&&consolidated.includes("store-disposal-badge ${paceClass(x.disposal_pct)}"),'Store summary percent must retain disposal badge with requested heading');
+assert.ok(consolidated.includes('<th>SMALTIMENTO 31/12</th>')&&consolidated.includes("store-disposal-badge ${paceClass(holidayConsolidatedDisposal("),'Store summary percent must retain disposal badge with requested heading');
 assert.ok(consolidated.includes("if(legend)legend.classList.remove('hidden')"),'DM must see year-progress disposal legend');
 const budgetView=app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.indexOf('function renderStoreOvertimeBudget()',app.indexOf('function overtimeBudgetPanelMarkup(p)')));
-assert.ok(budgetView.includes("['Budget disponibile fino ad oggi',budget]")&&budgetView.includes("['Risparmiato',remaining]")&&!budgetView.includes("['Scostamento',delta]"),'NEGOZIO budget cards should have requested labels and no scostamento');
-assert.ok(budgetView.includes("n<0?'saved-red':'saved-green'"),'RISPARMIATO negative red, nonnegative green');
+// Le tre schede restano, ma la terza dichiara se si tratta di risparmio o di sforamento.
+assert.ok(budgetView.includes("['Budget fino ad oggi',fmt(budget)+' h','']")&&budgetView.includes("[over?'Sforamento':'Risparmio'"),'NEGOZIO budget cards should state saving or overrun');
+assert.ok(budgetView.includes("over?'saved-red':'saved-green'"),'Overrun red, saving green');
+assert.ok(budgetView.includes('store-budget-deviation-axis'),'Budget line must stay visible as the chart reference');
 assert.ok(html.includes('id="rmOvertimeBudgetPanel"')&&html.includes('id="rmHolidayConsolidatedLegend"'),'RM layout panels must exist');
 assert.ok(app.includes('function renderRMOvertimeBudget()')&&app.includes('function overtimeBudgetPanelMarkup(p)'),'Shared overtime UI must exist');
 assert.ok(!app.slice(app.indexOf('function overtimeBudgetPanelMarkup(p)'),app.indexOf('function renderStoreOvertimeBudget()')).includes('<strong>${usage'),'Do not show oversized budget usage percentage');
@@ -134,13 +147,13 @@ assert.ok(app.includes('function placeDmOvertimeBudget()')&&app.includes('toolba
 assert.ok(!read('assets/js/personnel-hours.js').includes('class="personnel-summary"')&&!read('assets/js/personnel-hours.js').includes("const stats=[["),'Incidence KPI cards should be removed, table retained');
 // Targeted UI regressions: holiday period source and DM eye button geometry.
 assert.ok(app.includes('function holidayConsolidatedPeriodName(meta)')&&app.includes('function holidayConsolidatedPeriodBadge(meta)'),'Clear consolidated month/year required');
-assert.ok(app.includes('rmHolidayConsolidatedPeriodBadge(d?.sources)')&&app.includes('PERIODI DIVERSI PER DM'),'RM needs explicit uniform/mixed-period indication');
+assert.ok(app.includes('rmHolidayConsolidatedPeriodBadge(d?.sources)')&&app.includes('MESI DIVERSI PER DM'),'RM needs explicit uniform/mixed-period indication');
 assert.ok(!app.includes("icon.textContent=storeVisitsVisibleToStores?'👁':'◉̸'"),'Do not replace the eye with an unrelated glyph');
 assert.ok(html.includes('class="sv-eye-cross"')&&html.includes('class="sv-eye-svg"'),'DM button uses shared SVG eye with centered X');
 assert.ok(read('assets/css/app.css').includes('#page-calendar #todayBtn,#page-calendar #storeVisitVisibilityBtn'),'Calendar Today and SV visibility buttons must share height');
 // Neutral period badges share one renderer, sourced from actual imported months.
 for(const id of ['holidayConsolidatedPeriod','holidayConsolidatedReportPeriod','rmHolidayConsolidatedPeriod','overtimePeriod','rmOvertimePeriod'])assert.ok(html.includes('id="'+id+'" class="period-toolbar-slot'),'Missing filter-toolbar period slot: '+id);
-assert.ok(app.includes('function periodBadge(label,value,mixed=false)')&&app.includes('function overtimePeriodBadge(months)')&&app.includes('PERIODI DIVERSI PER DM'),'Period badges and mixed RM sources must be supported');
+assert.ok(app.includes('function periodBadge(label,value,mixed=false)')&&app.includes('function overtimePeriodBadge(months)')&&app.includes('MESI DIVERSI PER DM'),'Period badges and mixed RM sources must be supported');
 assert.ok(app.includes('period.innerHTML=overtimePeriodBadge(d?.months)')&&app.includes('period.innerHTML=holidayConsolidatedPeriodBadge(d?.meta)'),'Period from actual dataset required');
 assert.ok(read('assets/css/app.css').includes('.consolidated-period-highlight{display:inline-flex;flex-direction:row')&&read('assets/css/app.css').includes('background:#f5f6f7'),'Shared horizontal gray styling required');
 
