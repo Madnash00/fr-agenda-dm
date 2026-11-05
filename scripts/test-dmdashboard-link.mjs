@@ -33,3 +33,30 @@ api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,oldUrl,'Swit
 context.currentUser={display_name:'Nuovo DM',created_at:'2026-11-04T09:00:00.000Z'};
 api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,newUrl,'New user on same browser');
 console.log('PASS: DMDASHBOARD four named profiles, unchanged existing users, new-user default, switching accounts');
+
+/* RM: collegamento dedicato, SFS DASHBOARD nascosto, SFS TOOL presente. */
+const rmUrl='https://madnash00.github.io/fr-agenda-dm/';
+const sfsTool='https://claude.ai/artifact/LHSvFHCrgbt53ss3r81tLp';
+assert.equal(api.dmDashboardTargetUrl({profile_role:'RM',display_name:'Retail Manager'},oldUrl),rmUrl,'RM deve aprire l\'agenda di distretto');
+assert.equal(api.dmDashboardTargetUrl({role:'RM',display_name:'Retail Manager'},oldUrl),rmUrl,'Anche il ruolo legacy RM');
+// Il ruolo prevale sulle regole per nome e per data di creazione.
+assert.equal(api.dmDashboardTargetUrl({profile_role:'RM',display_name:'Veronica Giuntini'},oldUrl),rmUrl,'RM prevale sui quattro nomi');
+assert.equal(api.dmDashboardTargetUrl({profile_role:'RM',display_name:'Nuovo RM',created_at:'2026-11-04T09:00:00.000Z'},oldUrl),rmUrl,'RM prevale sul cutoff');
+// I profili non RM restano invariati.
+assert.equal(api.dmDashboardTargetUrl({profile_role:'DM',display_name:'Utente esistente'},oldUrl),oldUrl,'Il DM non deve cambiare collegamento');
+assert.equal(api.dmDashboardTargetUrl({profile_role:'NEGOZIO',display_name:'Negozio'},oldUrl),oldUrl,'Il NEGOZIO non deve cambiare collegamento');
+context.currentUser={profile_role:'RM',display_name:'Retail Manager'};
+api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,rmUrl,'Il pulsante segue il profilo RM');
+context.currentUser={display_name:'Utente esistente',created_at:'2026-10-01T08:00:00.000Z'};
+api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,oldUrl,'Tornando a un DM il collegamento torna quello originale');
+
+assert.ok(html.includes('class="nav-launch-btn sfs-dashboard rm-hidden"'),'SFS DASHBOARD deve essere nascosto al profilo RM');
+assert.ok(js.includes("$$('.rm-hidden').forEach(x=>x.classList.toggle('hidden',rm))"),'La visibilita RM deve essere applicata al cambio ruolo');
+assert.ok(js.includes('function applyRoleNavigation(){const rm=isRetailManager();updateDmDashboardLink();'),'Il collegamento deve seguire anche il passaggio RM/ADMIN');
+const tool=html.slice(html.indexOf('sfs-tool')-200,html.indexOf('sfs-tool')+300);
+assert.ok(tool.includes('data-external-url="'+sfsTool+'"'),'SFS TOOL deve puntare al collegamento richiesto');
+assert.ok(tool.includes('admin-only')&&tool.includes('rm-launch-access'),'SFS TOOL deve essere visibile a DM e RM');
+assert.ok(!tool.includes('store-only'),'SFS TOOL non e richiesto per il profilo NEGOZIO');
+assert.ok(html.indexOf('sfs-tool')>html.indexOf('sfs-dashboard'),'SFS TOOL va in fondo ai tasti di lancio');
+assert.ok(js.includes("window.open(b.dataset.externalUrl,'_blank')"),'I collegamenti esterni devono aprirsi in una nuova scheda');
+console.log('PASS: RM dashboard link, SFS DASHBOARD nascosto per RM, SFS TOOL per DM e RM');
