@@ -36,5 +36,7 @@ jobs:
         run: node scripts/test-overtime-budget-store-match.mjs
       - name: Test store name resolution across imports
         run: node scripts/test-store-name-resolution.mjs
+      - name: Test import independence
+        run: node scripts/test-import-independence.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
