@@ -10,6 +10,13 @@
     app.js), cosi' le tre importazioni agganciano i negozi con la stessa regola. */
  const canonicalStoreName=(name,code)=>
   typeof window.agendaResolveStoreName==='function'?window.agendaResolveStoreName(name,code):name;
+ const round=x=>Math.round(x*100)/100;
+ function encodeFile(bytes){
+  if(bytes.length>18500000)throw Error('Dimensione massima XLSX: 18 MB.');
+  const chunks=[];for(let i=0;i<bytes.length;i+=24576)chunks.push(String.fromCharCode(...bytes.subarray(i,i+24576)));
+  return btoa(chunks.join(''));
+ }
+ window.agendaPersonnelBase64=encodeFile;
  async function parseWorkbook(file,periodYear,allowedMonths){
   await ensureXlsx();
   // DB YTD is the monthly, employee-level source (including months excluded from the report).
