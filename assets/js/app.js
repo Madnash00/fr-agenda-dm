@@ -1422,7 +1422,41 @@ function holidayConsolidatedDisposal(entitlement,residualAc){
 }
 function holidayConsolidatedCurrentStoreId(){return currentUser?.role==='STORE'?String(currentUser.store_id||''):String($('#holidayConsolidatedStore')?.value||'')}
 function normalizeHolidayImportHeader(v){return String(v??'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').replace(/\s*\.\s*/g,'.')}
-async function parseHolidayConsolidatedWorkbook(file){await ensureXlsx();const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array',cellDates:false}),sh=wb.Sheets[wb.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(sh,{header:1,raw:true,defval:''});if(!matrix.length)throw new Error('File ferie vuoto.');const headers=matrix[0].map(normalizeHolidayImportHeader),idx=n=>headers.indexOf(normalizeHolidayImportHeader(n)),need=['PUNTO VENDITA','DIPENDENTE','TOT.GODUTO','RESIDUO A.C.F/ANNO','SPETT.31/12','RESIDUO A.P.','% SMALT.31/12'];for(const n of need)if(idx(n)<0)throw new Error(`Colonna obbligatoria mancante: ${n}`);const val=(row,n)=>row[idx(n)]??'';return matrix.slice(1).filter(r=>String(val(r,'PUNTO VENDITA')).trim()&&String(val(r,'DIPENDENTE')).trim()).map(r=>({year:val(r,'ANNO'),month:val(r,'MESE'),brand:val(r,'BRAND'),store_name:val(r,'PUNTO VENDITA'),dm_name:val(r,'Descr.ne DM'),employee_name:val(r,'DIPENDENTE'),employee_role:val(r,'RUOLO'),level:val(r,'LIVELLO'),total_used:val(r,'TOT.GODUTO'),residual_ac_month:val(r,'RESIDUO A.C.MESE'),residual_ac_year_end:val(r,'RESIDUO A.C.F/ANNO'),entitlement_year_end:val(r,'SPETT.31/12'),residual_ap:val(r,'RESIDUO A.P.'),disposal_pct:val(r,'% SMALT.31/12'),matricola:val(r,'MATRIC'),hire_date:val(r,'DATA ASS.NE'),termination_date:val(r,'DATA CESS.NE')}))}
+/* I file aziendali non chiamano i negozi allo stesso modo: lo stesso punto vendita
+   e' "RAVENNA" negli straordinari e nelle ferie, "RAVENNA C.C.ESP" nelle ore lavorate.
+   Ferie e straordinari non portano il codice negozio, quindi l'aggancio avviene solo
+   per nome esatto normalizzato: se l'anagrafica usa una terza variante il negozio
+   viene scartato e i suoi dati restano fermi all'ultimo import riuscito.
+   Qui il nome viene ricondotto a quello dell'anagrafica quando la corrispondenza e'
+   univoca; in caso di ambiguita' il nome resta invariato e l'import lo segnala. */
+function agendaStoreMatchKey(v){
+ return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()
+  .replace(/FIORELLA RUBINO/g,' ').replace(/FIORELLA/g,' ').replace(/RUBINO/g,' ')
+  .replace(/\bC\s*\.?\s*C\.?\b/g,' ').replace(/\bCC\b/g,' ')
+  .replace(/\bIL\b|\bLO\b|\bLA\b|\bLE\b|\bL'\b/g,' ')
+  .replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function agendaResolveStoreName(sourceName,sourceCode){
+ const name=String(sourceName||'').trim();
+ const stores=(app?.stores||[]).filter(x=>x&&x.active&&x.name);
+ if(!name||!stores.length)return name;
+ // Il codice negozio, quando combacia, resta il criterio prioritario del backend.
+ const code=String(sourceCode||'').trim().replace(/^0+/,'');
+ if(code&&stores.some(st=>String(st.code||'').trim().replace(/^0+/,'')===code))return name;
+ const key=agendaStoreMatchKey(name);
+ if(!key)return name;
+ if(stores.some(st=>agendaStoreMatchKey(st.name)===key))return name;
+ const tokens=key.split(' ').filter(Boolean);
+ const isPrefix=(a,b)=>a.length<=b.length&&a.every((w,i)=>w===b[i]);
+ const candidates=stores.filter(st=>{
+  const t=agendaStoreMatchKey(st.name).split(' ').filter(Boolean);
+  if(!t.length||!tokens.length||t[0]!==tokens[0]||t[0].length<4)return false;
+  return isPrefix(t,tokens)||isPrefix(tokens,t);
+ });
+ return candidates.length===1?candidates[0].name:name;
+}
+if(typeof window!=='undefined')window.agendaResolveStoreName=agendaResolveStoreName;
+async function parseHolidayConsolidatedWorkbook(file){await ensureXlsx();const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array',cellDates:false}),sh=wb.Sheets[wb.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(sh,{header:1,raw:true,defval:''});if(!matrix.length)throw new Error('File ferie vuoto.');const headers=matrix[0].map(normalizeHolidayImportHeader),idx=n=>headers.indexOf(normalizeHolidayImportHeader(n)),need=['PUNTO VENDITA','DIPENDENTE','TOT.GODUTO','RESIDUO A.C.F/ANNO','SPETT.31/12','RESIDUO A.P.','% SMALT.31/12'];for(const n of need)if(idx(n)<0)throw new Error(`Colonna obbligatoria mancante: ${n}`);const val=(row,n)=>row[idx(n)]??'';return matrix.slice(1).filter(r=>String(val(r,'PUNTO VENDITA')).trim()&&String(val(r,'DIPENDENTE')).trim()).map(r=>({year:val(r,'ANNO'),month:val(r,'MESE'),brand:val(r,'BRAND'),store_name:agendaResolveStoreName(val(r,'PUNTO VENDITA')),dm_name:val(r,'Descr.ne DM'),employee_name:val(r,'DIPENDENTE'),employee_role:val(r,'RUOLO'),level:val(r,'LIVELLO'),total_used:val(r,'TOT.GODUTO'),residual_ac_month:val(r,'RESIDUO A.C.MESE'),residual_ac_year_end:val(r,'RESIDUO A.C.F/ANNO'),entitlement_year_end:val(r,'SPETT.31/12'),residual_ap:val(r,'RESIDUO A.P.'),disposal_pct:val(r,'% SMALT.31/12'),matricola:val(r,'MATRIC'),hire_date:val(r,'DATA ASS.NE'),termination_date:val(r,'DATA CESS.NE')}))}
 async function importHolidayConsolidatedFile(file){if(!file)return;try{const rows=await parseHolidayConsolidatedWorkbook(file);if(!rows.length)throw new Error('Nessuna riga ferie trovata nel file.');if(!confirm(`Importare il nuovo consolidato ferie da “${file.name}”?\n\nIl file aggiornerà i negozi riconosciuti di tutti i DM, senza modificare quelli assenti.`))return;const res=await window.agendaCloudApi.request('importHolidayConsolidated',{source_filename:file.name,rows});await loadHolidayConsolidated(true);if($('#page-holidayreport')?.classList.contains('active'))await loadHolidayReport(true);const miss=(res.unmatched_stores||[]);toast(`Consolidato aggiornato · ${res.imported_rows||0} dipendenti · ${res.matched_stores||0} negozi${miss.length?` · ${miss.length} negozi non associati`:''}`,!!miss.length);if(miss.length)showModal('Import ferie consolidate',`<p><strong>Import completato.</strong></p><p class="muted">Questi punti vendita del file non sono stati associati in modo univoco ai negozi della catena:</p><div class="code">${miss.map(esc).join('\n')}</div>`)}catch(err){toast(err.message||'Import consolidato non riuscito',true)}}
 let holidayConsolidatedRequestSequence=0;
 async function loadHolidayConsolidated(force=false){const requestSequence=++holidayConsolidatedRequestSequence,storeId=holidayConsolidatedCurrentStoreId();try{const data=await window.agendaCloudApi.request('getHolidayConsolidated',{store_id:storeId,__force:force});if(requestSequence!==holidayConsolidatedRequestSequence)return;holidayConsolidatedCache=data;renderHolidayConsolidated()}catch(err){if(requestSequence===holidayConsolidatedRequestSequence)toast(err.message||'Impossibile caricare le ferie consolidate',true)}}
@@ -1599,7 +1633,7 @@ async function parseOvertimeWorkbook(file){
   const store=String(val(r,'PUNTO VENDITA')||'').trim(),emp=String(val(r,'COGNOME E NOME')||'').trim();if(!store||!emp)continue;
   const period=overtimeMonthParts(val(r,'MONTANTE AL MESE'));if(!period)continue;
   const sick=overtimeWorkbookMetric(headers,r,'MALATT'),inj=overtimeWorkbookMetric(headers,r,'INFORTUN'),weekday=otWeek>=0?overtimeNum(r[otWeek]):0,holiday=otHoliday>=0?overtimeNum(r[otHoliday]):0,total=otTotal>=0?overtimeNum(r[otTotal]):weekday+holiday;
-  rows.push({brand:val(r,'BRAND'),store_name:store,employee_name:emp,employee_role:val(r,'RUOLO'),level:val(r,'LIVELLO'),year:period.year,month:period.month,month_date:period.month_date,overtime_weekday_hours:weekday,overtime_holiday_hours:holiday,overtime_total_hours:total,sickness_hours:sick.value,injury_hours:inj.value,overtime_total_amount:val(r,'TOTALE IMPORTO STRAORDINARIO'),forfait_amount:val(r,'FORFAIT PERCEPITO'),difference_amount:val(r,'DIFFERENZA PAGATO/SVOLTO'),difference_pct:val(r,'%DIFF STR'),has_sickness_source:hasS,has_injury_source:hasI});
+  rows.push({brand:val(r,'BRAND'),store_name:agendaResolveStoreName(store),employee_name:emp,employee_role:val(r,'RUOLO'),level:val(r,'LIVELLO'),year:period.year,month:period.month,month_date:period.month_date,overtime_weekday_hours:weekday,overtime_holiday_hours:holiday,overtime_total_hours:total,sickness_hours:sick.value,injury_hours:inj.value,overtime_total_amount:val(r,'TOTALE IMPORTO STRAORDINARIO'),forfait_amount:val(r,'FORFAIT PERCEPITO'),difference_amount:val(r,'DIFFERENZA PAGATO/SVOLTO'),difference_pct:val(r,'%DIFF STR'),has_sickness_source:hasS,has_injury_source:hasI});
  }
  return rows;
 }

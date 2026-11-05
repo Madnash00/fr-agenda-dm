@@ -14,6 +14,7 @@ execFileSync(process.execPath,['scripts/test-dmdashboard-link.mjs'],{stdio:'inhe
 execFileSync(process.execPath,['scripts/test-calendar-actionplan-ux.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-holiday-consolidated-math.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-overtime-budget-store-match.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-store-name-resolution.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
@@ -121,7 +122,7 @@ assert.ok(app.includes('const emps=(d.employees||[]).slice().sort(holidayConsoli
 assert.ok(/<strong>\$\{v\}\$\{l==='Smaltimento 31\/12'\?districtFlag:''\}<\/strong>/.test(app),'KPI alert must sit to the right of the value');
 assert.ok(app.includes('<svg viewBox="0 0 16 16"')&&app.includes('consolidated-stale-flag'),'Stale alert must use the drawn warning mark');
 assert.ok(read('assets/css/app.css').includes('.consolidated-stale-row'),'Stale row styling must exist');
-assert.ok(read('assets/js/personnel-hours.js').includes('function canonicalStoreName('),'Worked hours import must reconcile store names with the registry');
+assert.ok(read('assets/js/personnel-hours.js').includes('window.agendaResolveStoreName(name,code)')&&app.includes('function agendaResolveStoreName('),'Worked hours import must reconcile store names through the shared resolver');
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
 assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
 assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
