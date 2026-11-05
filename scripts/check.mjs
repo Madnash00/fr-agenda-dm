@@ -112,7 +112,14 @@ assert.ok(read('assets/css/app.css').includes('.store-budget-incidence-threshold
 assert.ok(!html.includes('Budget previsto: 3% delle ore lavorate'),'The budget note must not hardcode a percentage that contradicts PARAMETRI');
 // Righe ferme a un mese precedente: escluse dai totali e segnalate con popup.
 assert.ok(app.includes('function holidayConsolidatedStaleFlag(')&&app.includes('consolidated-stale-flag'),'Stale consolidated rows must be flagged');
-assert.ok(app.includes('const kpiRows=freshEmps.length?freshEmps:allEmps')&&app.includes('holidayConsolidatedAggregate(fresh.length?fresh:rows)'),'Totals must use up-to-date rows, falling back when none are');
+// Il totale comprende tutte le risorse: chi non e' stato aggiornato entra con il
+// proprio ultimo dato, e l'avviso dichiara chi e a quale mese e' fermo.
+assert.ok(app.includes('holidayConsolidatedAggregate(allEmps)')&&app.includes('holidayConsolidatedAggregate(rows),{stale_rows:stale}'),'Totals must include every resource, stale ones comprised');
+assert.ok(!app.includes('freshEmps.length?freshEmps:allEmps')&&!app.includes('fresh.length?fresh:rows'),'Stale rows must no longer be excluded from totals');
+assert.ok(app.includes('function holidayConsolidatedByDisposalDesc(get)')&&app.includes("$('#holidayConsolidatedStores').innerHTML=stores.length?"),'Consolidated tables must sort by disposal');
+assert.ok(app.includes('const emps=(d.employees||[]).slice().sort(holidayConsolidatedByDisposalDesc('),'Employee table must sort by disposal too');
+assert.ok(/<strong>\$\{v\}\$\{l==='Smaltimento 31\/12'\?districtFlag:''\}<\/strong>/.test(app),'KPI alert must sit to the right of the value');
+assert.ok(app.includes('<svg viewBox="0 0 16 16"')&&app.includes('consolidated-stale-flag'),'Stale alert must use the drawn warning mark');
 assert.ok(read('assets/css/app.css').includes('.consolidated-stale-row'),'Stale row styling must exist');
 assert.ok(read('assets/js/personnel-hours.js').includes('function canonicalStoreName('),'Worked hours import must reconcile store names with the registry');
 const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));

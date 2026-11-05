@@ -1381,25 +1381,39 @@ function holidayConsolidatedPeriodValue(x){
 function holidayConsolidatedPeriodText(v){
  return Number.isInteger(v)?MONTHS[(v-1)%12].toUpperCase()+' '+Math.floor((v-1)/12):'';
 }
+/* Ordinamento decrescente per smaltimento; chi non ha spettanza, e quindi nessuna
+   percentuale calcolabile, resta in fondo invece di passare per uno zero. */
+function holidayConsolidatedByDisposalDesc(get){
+ return (a,b)=>{
+  const x=get(a),y=get(b);
+  if(x===null&&y===null)return String(a.name||a.employee_name||'').localeCompare(String(b.name||b.employee_name||''),'it');
+  if(x===null)return 1;
+  if(y===null)return -1;
+  return y-x||String(a.name||a.employee_name||'').localeCompare(String(b.name||b.employee_name||''),'it');
+ };
+}
 function holidayConsolidatedAggregate(rows){
  let used=0,ac=0,ap=0,ent=0;
  (rows||[]).forEach(x=>{used+=holidayHours(x.total_used);ac+=holidayHours(x.residual_ac_year_end);ap+=holidayHours(x.residual_ap);ent+=holidayHours(x.entitlement_year_end)});
  return {employees:(rows||[]).length,used_hours:used,residual_ac_hours:ac,residual_ap_hours:ap,remaining_total_hours:ac+ap,entitlement_year_end:ent};
 }
 function holidayConsolidatedStaleTip(rows,latest,scope){
- const names=(rows||[]).map(x=>`${String(x.employee_name||'').trim()} (${holidayConsolidatedPeriodText(holidayConsolidatedPeriodValue(x))})`).filter(Boolean);
- if(!names.length)return '';
- const head=scope==='store'
-  ?'Dato non aggiornato per '+(names.length===1?'una persona':names.length+' persone')+' di questo negozio.'
-  :scope==='district'
-   ?'Dato non aggiornato per '+(names.length===1?'una persona':names.length+' persone')+' del distretto.'
-   :'Dato non aggiornato per questa persona.';
- return head+' Non compare nell\'ultimo file importato ('+holidayConsolidatedPeriodText(latest)+'), quindi resta ferma al suo ultimo mese disponibile: '
-  +names.slice(0,12).join(', ')+(names.length>12?' e altre '+(names.length-12):'')+'.';
+ const list=(rows||[]).map(x=>`${String(x.employee_name||'').trim()} (ferma a ${holidayConsolidatedPeriodText(holidayConsolidatedPeriodValue(x))})`).filter(Boolean);
+ if(!list.length)return '';
+ const who=list.length===1?'1 persona':list.length+' persone';
+ const names=list.slice(0,12).join(', ')+(list.length>12?' e altre '+(list.length-12):'');
+ if(scope==='employee'){
+  const only=holidayConsolidatedPeriodText(holidayConsolidatedPeriodValue(rows[0]));
+  return 'Aggiornamento fermo a '+only+': questa persona non compare nell\'ultimo file importato ('+holidayConsolidatedPeriodText(latest)+'), quindi i suoi dati restano quelli di '+only+'.';
+ }
+ const where=scope==='district'?'del distretto':'di questo negozio';
+ // Il totale comprende tutte le risorse: quelle non aggiornate entrano con il loro ultimo dato.
+ return 'Il totale comprende tutte le risorse, ma '+who+' '+where+' non compare nell\'ultimo file importato ('
+  +holidayConsolidatedPeriodText(latest)+'): i suoi dati restano fermi al mese indicato. '+names+'.';
 }
 function holidayConsolidatedStaleFlag(rows,latest,scope){
  const tip=holidayConsolidatedStaleTip(rows,latest,scope);
- return tip?`<span class="consolidated-stale-flag" data-tooltip="${esc(tip)}" role="img" aria-label="${esc(tip)}">!</span>`:'';
+ return tip?`<span class="consolidated-stale-flag" data-tooltip="${esc(tip)}" role="img" aria-label="${esc(tip)}"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.6 15.1 14H0.9L8 1.6Z"/><rect x="7.2" y="6" width="1.6" height="4.2" rx=".8"/><circle cx="8" cy="11.9" r=".95"/></svg></span>`:'';
 }
 function holidayConsolidatedDisposal(entitlement,residualAc){
  const ent=holidayConsolidatedNum(entitlement);
@@ -1438,19 +1452,19 @@ function renderHolidayConsolidated(){const d=holidayConsolidatedCache,period=$('
  const latestPeriod=periodValues.length?Math.max(...periodValues):null;
  const isStaleRow=x=>{const v=holidayConsolidatedPeriodValue(x);return latestPeriod!==null&&Number.isInteger(v)&&v<latestPeriod};
  const staleEmps=allEmps.filter(isStaleRow),freshEmps=allEmps.filter(x=>!isStaleRow(x));
- // Senza righe aggiornate i totali restano quelli del file precedente, ma segnalati.
- const kpiRows=freshEmps.length?freshEmps:allEmps;
- const k2=allEmps.length?holidayConsolidatedAggregate(kpiRows):k;
+ // Il totale considera tutte le risorse disponibili: chi non e' stato aggiornato
+ // entra con il proprio ultimo dato e viene dichiarato nel popup di avviso.
+ const k2=allEmps.length?holidayConsolidatedAggregate(allEmps):k;
  const districtFlag=holidayConsolidatedStaleFlag(staleEmps,latestPeriod,'district');
- const kDisposal=holidayConsolidatedDisposal(k2.entitlement_year_end,k2.residual_ac_hours);$('#holidayConsolidatedKpis').innerHTML=[['Dipendenti',k2.employees||0],['Goduto',holidayConsolidatedHoursFmt(k2.used_hours)],['Da smaltire AC',holidayConsolidatedHoursFmt(k2.residual_ac_hours)],['Residuo AP',holidayConsolidatedHoursFmt(k2.residual_ap_hours)],['Da smaltire AC+AP',holidayConsolidatedHoursFmt(k2.remaining_total_hours)],['Smaltimento 31/12',holidayConsolidatedFmtPct(kDisposal)]].map(([l,v])=>`<div class="card kpi-card ${l==='Smaltimento 31/12'?'consolidated-disposal-kpi '+paceClass(kDisposal):'consolidated-regular-kpi'}"><span>${l}${l==='Smaltimento 31/12'?districtFlag:''}</span><strong>${v}</strong></div>`).join('');const byStore=new Map();
+ const kDisposal=holidayConsolidatedDisposal(k2.entitlement_year_end,k2.residual_ac_hours);$('#holidayConsolidatedKpis').innerHTML=[['Dipendenti',k2.employees||0],['Goduto',holidayConsolidatedHoursFmt(k2.used_hours)],['Da smaltire AC',holidayConsolidatedHoursFmt(k2.residual_ac_hours)],['Residuo AP',holidayConsolidatedHoursFmt(k2.residual_ap_hours)],['Da smaltire AC+AP',holidayConsolidatedHoursFmt(k2.remaining_total_hours)],['Smaltimento 31/12',holidayConsolidatedFmtPct(kDisposal)]].map(([l,v])=>`<div class="card kpi-card ${l==='Smaltimento 31/12'?'consolidated-disposal-kpi '+paceClass(kDisposal):'consolidated-regular-kpi'}"><span>${l}</span><strong>${v}${l==='Smaltimento 31/12'?districtFlag:''}</strong></div>`).join('');const byStore=new Map();
  allEmps.forEach(x=>{const id=String(x.store_id||'');if(!byStore.has(id))byStore.set(id,[]);byStore.get(id).push(x)});
  const stores=(d.stores||[]).map(st=>{
   const rows=byStore.get(String(st.store_id))||[];
   if(!rows.length)return Object.assign({},st,{stale_rows:[]});
-  const stale=rows.filter(isStaleRow),fresh=rows.filter(x=>!isStaleRow(x));
-  // Se nessuna riga del negozio e' aggiornata si mostrano comunque i dati precedenti, segnalati.
-  return Object.assign({},st,holidayConsolidatedAggregate(fresh.length?fresh:rows),{stale_rows:stale});
- });$('#holidayConsolidatedStores').innerHTML=stores.length?`<table class="data-table consolidated-table"><thead><tr><th>CODICE</th><th>NEGOZIO</th><th>DIP</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th></tr></thead><tbody>${stores.map(x=>`<tr><td>${esc(x.code||'—')}</td><td>${esc(x.name)}${holidayConsolidatedStaleFlag(x.stale_rows,latestPeriod,'store')}</td><td>${x.employees}</td><td class="${x.residual_ap_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ap_hours)}</td><td>${holidayConsolidatedHoursFmt(x.used_hours)}</td><td class="${x.residual_ac_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ac_hours)}</td><td class="${x.remaining_total_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.remaining_total_hours)}</td><td><span class="store-disposal-badge ${paceClass(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}" title="Avanzamento dell'anno: ${pace.toFixed(1)}%">${holidayConsolidatedFmtPct(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun dato consolidato disponibile.</div>';const emps=d.employees||[],storeView=currentUser?.role==='STORE',host=$('#holidayConsolidatedEmployees');
+  const stale=rows.filter(isStaleRow);
+  return Object.assign({},st,holidayConsolidatedAggregate(rows),{stale_rows:stale});
+ }).sort(holidayConsolidatedByDisposalDesc(x=>holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours)));
+ $('#holidayConsolidatedStores').innerHTML=stores.length?`<table class="data-table consolidated-table"><thead><tr><th>CODICE</th><th>NEGOZIO</th><th>DIP</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th></tr></thead><tbody>${stores.map(x=>`<tr><td>${esc(x.code||'—')}</td><td>${esc(x.name)}${holidayConsolidatedStaleFlag(x.stale_rows,latestPeriod,'store')}</td><td>${x.employees}</td><td class="${x.residual_ap_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ap_hours)}</td><td>${holidayConsolidatedHoursFmt(x.used_hours)}</td><td class="${x.residual_ac_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.residual_ac_hours)}</td><td class="${x.remaining_total_hours<0?'metric-negative':''}">${holidayConsolidatedHoursFmt(x.remaining_total_hours)}</td><td><span class="store-disposal-badge ${paceClass(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}" title="Avanzamento dell'anno: ${pace.toFixed(1)}%">${holidayConsolidatedFmtPct(holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours))}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nessun dato consolidato disponibile.</div>';const emps=(d.employees||[]).slice().sort(holidayConsolidatedByDisposalDesc(x=>holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_year_end))),storeView=currentUser?.role==='STORE',host=$('#holidayConsolidatedEmployees');
  const legend=$('#holidayStoreDisposalLegend');if(legend&&storeView)legend.textContent='Avanzamento anno '+pace.toFixed(1)+'% · Verde: in linea (entro 3 pp) · Giallo: ritardo fino a 12 pp · Rosso: ritardo maggiore.';
  if(legend)legend.classList.remove('hidden');
  host.classList.toggle('store-consolidated-table',storeView);
