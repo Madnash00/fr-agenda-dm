@@ -35,9 +35,12 @@ api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,newUrl,'New 
 console.log('PASS: DMDASHBOARD four named profiles, unchanged existing users, new-user default, switching accounts');
 
 /* RM: collegamento dedicato, SFS DASHBOARD nascosto, SFS TOOL presente. */
-const rmUrl='https://madnash00.github.io/fr-agenda-dm/';
+/* L'RM apre il collegamento di base, lo stesso dichiarato in index.html:
+   una sola fonte per l'indirizzo, cosi' non puo' divergere in due punti. */
+const rmUrl=oldUrl;
+assert.equal(oldUrl,'https://claude.ai/artifact/K9MFsMHmYkw8yFqw8h4qc4?sk=CqVPcQL8kgBrSEtxwyWK4Q','Il collegamento di base deve restare quello richiesto per l\'RM');
 const sfsTool='https://claude.ai/artifact/LHSvFHCrgbt53ss3r81tLp';
-assert.equal(api.dmDashboardTargetUrl({profile_role:'RM',display_name:'Retail Manager'},oldUrl),rmUrl,'RM deve aprire l\'agenda di distretto');
+assert.equal(api.dmDashboardTargetUrl({profile_role:'RM',display_name:'Retail Manager'},oldUrl),rmUrl,'RM deve aprire il collegamento di base');
 assert.equal(api.dmDashboardTargetUrl({role:'RM',display_name:'Retail Manager'},oldUrl),rmUrl,'Anche il ruolo legacy RM');
 // Il ruolo prevale sulle regole per nome e per data di creazione.
 assert.equal(api.dmDashboardTargetUrl({profile_role:'RM',display_name:'Veronica Giuntini'},oldUrl),rmUrl,'RM prevale sui quattro nomi');

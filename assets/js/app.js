@@ -115,8 +115,6 @@ function emptyCloudCache(){return {version:1,stores:[],users:[],events:[],audit:
 /* DMDASHBOARD: gli account esistenti mantengono l'indirizzo originale, eccetto quattro profili.
    Il timestamp dei nuovi account proviene dal backend, non da cache locali o ID presunti. */
 const DM_DASHBOARD_URL_NEW='https://claude.ai/artifact/SXLxWz4S2AZxMYdoyRijNu?sk=wLpBgQwQok2enP0Jgs-xWA';
-/* Il profilo RM apre l'agenda di distretto, non la dashboard dei DM. */
-const DM_DASHBOARD_URL_RM='https://madnash00.github.io/fr-agenda-dm/';
 const DM_DASHBOARD_NEW_ACCOUNTS_FROM='2026-11-03T13:01:00.000Z';
 const DM_DASHBOARD_SPECIAL_NAMES=new Set([
  'brunella cucciniello','salvatore salierno','fabio nicosia','veronica giuntini'
@@ -124,10 +122,10 @@ const DM_DASHBOARD_SPECIAL_NAMES=new Set([
 function dmDashboardNormalizeName(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('it-IT')}
 function dmDashboardTargetUrl(user,original){
  if(!user)return original;
- // Il ruolo prevale sulle regole per nome e data: un RM creato dopo il cutoff
- // riceve comunque il proprio collegamento.
+ // Il profilo RM apre sempre il collegamento di base indicato in index.html:
+ // il ruolo prevale sulle regole per nome e per data di creazione.
  const role=String(user.profile_role||'').toUpperCase(),legacy=String(user.role||'').toUpperCase();
- if(role==='RM'||legacy==='RM')return DM_DASHBOARD_URL_RM;
+ if(role==='RM'||legacy==='RM')return original;
  const name=dmDashboardNormalizeName(user.display_name||user.username);
  if(DM_DASHBOARD_SPECIAL_NAMES.has(name))return DM_DASHBOARD_URL_NEW;
  // Un timestamp assente o non valido NON cambia i link degli account già esistenti.
