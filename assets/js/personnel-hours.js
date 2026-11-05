@@ -5,33 +5,11 @@
  const find=s=>document.querySelector(s);
  const norm=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleUpperCase('it-IT').replace(/\s+/g,' ').trim();
  const storeKey=v=>norm(v).replace(/FIORELLA RUBINO|FIORELLA|RUBINO/g,' ').replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
- /* Stessa normalizzazione del backend (chainImportStore_): toglie anche "C.C." e gli articoli. */
- const backendStoreKey=v=>norm(v).replace(/FIORELLA RUBINO|FIORELLA|RUBINO/g,' ').replace(/\bC\s*\.?\s*C\.?\b/g,' ').replace(/\bCC\b/g,' ').replace(/\bIL\b|\bLO\b|\bLA\b|\bLE\b|\bL'\b/g,' ').replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
- /* Il nome del punto vendita non e' uniforme fra i tre file aziendali: ad esempio lo
-    stesso negozio e' "RAVENNA" negli straordinari e "RAVENNA C.C.ESP" nelle ore lavorate.
-    Il backend accetta solo la corrispondenza esatta, quindi il negozio resterebbe senza
-    ore e il budget non sarebbe calcolabile. Qui il nome viene ricondotto a quello
-    dell'anagrafica SOLO quando la corrispondenza e' univoca: nessuna assegnazione a indovinare. */
- function canonicalStoreName(sourceName,sourceCode){
-  const stores=(window.app?.stores||[]).filter(x=>x&&x.active&&x.name);
-  if(!stores.length)return sourceName;
-  const code=String(sourceCode||'').trim().replace(/^0+/,'');
-  if(code&&stores.some(st=>String(st.code||'').trim().replace(/^0+/,'')===code))return sourceName;
-  const key=backendStoreKey(sourceName);if(!key)return sourceName;
-  if(stores.some(st=>backendStoreKey(st.name)===key))return sourceName;
-  const tokens=key.split(' ').filter(Boolean);
-  const prefix=stores.filter(st=>{const k=backendStoreKey(st.name);
-   if(!k)return false;const t=k.split(' ').filter(Boolean);
-   return t.length&&t.length<=tokens.length&&t.every((w,i)=>w===tokens[i]);});
-  return prefix.length===1?prefix[0].name:sourceName;
- }
- const round=x=>Math.round(x*100)/100;
- function encodeFile(bytes){
-  if(bytes.length>18500000)throw Error('Dimensione massima XLSX: 18 MB.');
-  const chunks=[];for(let i=0;i<bytes.length;i+=24576)chunks.push(String.fromCharCode(...bytes.subarray(i,i+24576)));
-  return btoa(chunks.join(''));
- }
- window.agendaPersonnelBase64=encodeFile;
+ /* Il nome del punto vendita non e' uniforme fra i file aziendali: la riconduzione
+    all'anagrafica e' condivisa con gli altri due import (agendaResolveStoreName in
+    app.js), cosi' le tre importazioni agganciano i negozi con la stessa regola. */
+ const canonicalStoreName=(name,code)=>
+  typeof window.agendaResolveStoreName==='function'?window.agendaResolveStoreName(name,code):name;
  async function parseWorkbook(file,periodYear,allowedMonths){
   await ensureXlsx();
   // DB YTD is the monthly, employee-level source (including months excluded from the report).
