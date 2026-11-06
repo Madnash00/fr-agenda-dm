@@ -1633,8 +1633,12 @@ async function parseOvertimeWorkbook(file){
   if(maxMonth<1||maxMonth>12)throw new Error('La colonna MESE non contiene un mese valido (1-12).');
   for(let m=1;m<=maxMonth;m++)for(const prefix of ['STR','MAL','INF'])if(idx(`${prefix} ${monthCodes[m-1]}`)<0)throw new Error(`Colonna obbligatoria mancante: ${prefix}.${monthCodes[m-1]}`);
   const grouped=new Map();
+  // Il nome va ricondotto all'anagrafica come negli altri due import: qui si
+  // risolve una volta per punto vendita, non per ogni riga del file.
+  const resolvedStore=new Map();
+  const storeName=raw=>{if(!resolvedStore.has(raw))resolvedStore.set(raw,agendaResolveStoreName(raw));return resolvedStore.get(raw)};
   for(const r of sourceRows){
-   const store=String(val(r,'PUNTO VENDITA')||'').trim(),emp=String(val(r,'DIPENDENTE')||'').trim(),brand=String(val(r,'BRAND')||'').trim(),role=String(val(r,'RUOLO')||'').trim();
+   const store=storeName(String(val(r,'PUNTO VENDITA')||'').trim()),emp=String(val(r,'DIPENDENTE')||'').trim(),brand=String(val(r,'BRAND')||'').trim(),role=String(val(r,'RUOLO')||'').trim();
    const year=Number(val(r,'ANNO'))||0,cutoff=Math.min(12,Math.max(0,Number(val(r,'MESE'))||0));
    if(!store||!emp||year<2020||year>2100||!cutoff)continue;
    for(let month=1;month<=cutoff;month++){
