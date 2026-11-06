@@ -42,5 +42,7 @@ jobs:
         run: node scripts/test-personnel-hours-runtime.mjs
       - name: Test unmatched store report
         run: node scripts/test-unmatched-store-report.mjs
+      - name: Test import parsers runtime
+        run: node scripts/test-import-parsers-runtime.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
