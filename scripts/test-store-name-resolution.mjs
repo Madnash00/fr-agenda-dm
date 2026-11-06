@@ -44,3 +44,24 @@ assert.ok(app.includes("store_name:agendaResolveStoreName(store)"),'Import strao
 assert.ok(app.includes('window.agendaResolveStoreName=agendaResolveStoreName'),'Il risolutore deve essere condiviso');
 assert.ok(readFileSync('assets/js/personnel-hours.js','utf8').includes('window.agendaResolveStoreName(name,code)'),'Import ore lavorate deve usare il risolutore condiviso');
 console.log('PASS: aggancio del negozio coerente fra ferie, straordinari e ore lavorate');
+
+/* Varianti reali osservate nei file aziendali: parole in piu' o in meno sulla
+   stessa radice. L'aggancio deve reggere senza rinominare i negozi a mano. */
+const varianti=build([{name:'RAVENNA ESP',code:'',active:1},{name:'FORLI LA PUNTA C.C.',code:'',active:1},
+ {name:'ANCONA CC CONERO',code:'',active:1},{name:'MODENA G. EMILIA',code:'',active:1}]);
+agganciaA(varianti,'RAVENNA','RAVENNA ESP','Nome del file piu' + ' corto della variante in anagrafica');
+agganciaA(varianti,'RAVENNA C.C.ESP','RAVENNA ESP','Nome del file con sigle in piu');
+agganciaA(varianti,'FORLI','FORLI LA PUNTA C.C.','Radice sola verso nome esteso');
+agganciaA(varianti,'ANCONA CC IL CONERO.','ANCONA CC CONERO','Articoli e punteggiatura ignorati');
+agganciaA(varianti,'MODENA G. EMILIA','MODENA G. EMILIA','Corrispondenza gia esatta');
+/* Token fuori ordine: stessa radice, parole contenute. */
+const fuoriOrdine=build([{name:'RAVENNA C.C. ESP',code:'',active:1}]);
+agganciaA(fuoriOrdine,'RAVENNA ESP C.C.','RAVENNA C.C. ESP','Ordine diverso delle parole');
+/* L'ambiguita' resta protetta anche con la regola piu' larga. */
+const ambiguo=build([{name:'PARMA EUROSIA C.C.',code:'',active:1},{name:'PARMA EUROTORRI C.C.',code:'',active:1}]);
+assert.strictEqual(ambiguo('PARMA',''),'PARMA','Due negozi con la stessa radice restano ambigui');
+assert.strictEqual(ambiguo('PARMA C.C.',''),'PARMA C.C.','Nessuna scelta arbitraria fra i due');
+/* Radice diversa: nessun aggancio, anche se una parola coincide. */
+const radice=build([{name:'MODENA PORTALI C.C.',code:'',active:1}]);
+assert.strictEqual(radice('REGGIO PORTALI C.C.',''),'REGGIO PORTALI C.C.','La radice deve coincidere');
+console.log('PASS: varianti di nome agganciate, ambiguita preservate');
