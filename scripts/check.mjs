@@ -17,6 +17,7 @@ execFileSync(process.execPath,['scripts/test-overtime-budget-store-match.mjs'],{
 execFileSync(process.execPath,['scripts/test-store-name-resolution.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-import-independence.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-personnel-hours-runtime.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-unmatched-store-report.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
