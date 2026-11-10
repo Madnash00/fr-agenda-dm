@@ -48,5 +48,7 @@ jobs:
         run: node scripts/test-dm-overview-page.mjs
       - name: Alternanza settimane e festivita nel calendario DM
         run: node scripts/test-calendar-week-holidays.mjs
+      - name: Parita di resa fra profili DM e RM
+        run: node scripts/test-rm-dm-view-parity.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
