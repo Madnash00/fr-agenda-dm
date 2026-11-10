@@ -50,5 +50,7 @@ jobs:
         run: node scripts/test-calendar-week-holidays.mjs
       - name: Parita di resa fra profili DM e RM
         run: node scripts/test-rm-dm-view-parity.mjs
+      - name: Action Plan RM con righe del profilo DM
+        run: node scripts/test-rm-action-plan-parity.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
