@@ -22,6 +22,7 @@ execFileSync(process.execPath,['scripts/test-import-parsers-runtime.mjs'],{stdio
 execFileSync(process.execPath,['scripts/test-dm-overview-page.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-calendar-week-holidays.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-rm-dm-view-parity.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-rm-action-plan-parity.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
