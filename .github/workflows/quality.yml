@@ -46,5 +46,7 @@ jobs:
         run: node scripts/test-import-parsers-runtime.mjs
       - name: Test DM overview page
         run: node scripts/test-dm-overview-page.mjs
+      - name: Alternanza settimane e festivita nel calendario DM
+        run: node scripts/test-calendar-week-holidays.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
