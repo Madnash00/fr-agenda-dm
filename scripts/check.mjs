@@ -21,6 +21,7 @@ execFileSync(process.execPath,['scripts/test-unmatched-store-report.mjs'],{stdio
 execFileSync(process.execPath,['scripts/test-import-parsers-runtime.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-dm-overview-page.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-calendar-week-holidays.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-rm-dm-view-parity.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
@@ -129,8 +130,12 @@ assert.ok(/<strong>\$\{v\}\$\{l==='Smaltimento 31\/12'\?districtFlag:''\}<\/stro
 assert.ok(app.includes('<svg viewBox="0 0 16 16"')&&app.includes('consolidated-stale-flag'),'Stale alert must use the drawn warning mark');
 assert.ok(read('assets/css/app.css').includes('.consolidated-stale-row'),'Stale row styling must exist');
 assert.ok(read('assets/js/personnel-hours.js').includes('window.agendaResolveStoreName(name,code)')&&app.includes('function agendaResolveStoreName('),'Worked hours import must reconcile store names through the shared resolver');
-const overtimeDetail=app.slice(app.indexOf('function renderOvertimeDetailTable()'),app.indexOf('function normalizeOvertimeImportHeader('));
-assert.ok(overtimeDetail.includes("currentUser?.role==='STORE'?'':'<th>Livello</th>'")&&overtimeDetail.includes("currentUser?.role==='STORE'?'':`<td>"),'Only DM retains LIVELLO; NEGOZIO cannot render it');
+/* La tabella di dettaglio e' ora condivisa fra i profili DM e RM: la colonna LIVELLO
+   resta esclusa al profilo NEGOZIO tramite showLevel. Il comportamento e' verificato
+   eseguendo il costruttore in scripts/test-rm-dm-view-parity.mjs. */
+const overtimeDetail=app.slice(app.indexOf('function overtimeEmployeesTableMarkup('),app.indexOf('function normalizeOvertimeImportHeader('));
+assert.ok(overtimeDetail.includes("level?'<th>Livello</th>':''")&&overtimeDetail.includes('opts.showLevel!==false'),'Only DM retains LIVELLO; NEGOZIO cannot render it');
+assert.ok(overtimeDetail.includes("overtimeEmployeesTableMarkup(d.employees||[],d.coverage,{showLevel:currentUser?.role!=='STORE'})"),'The DM detail table must keep deciding LIVELLO by role');
 assert.ok(app.includes('function wireHolidayEmployeeDrag()')&&app.includes("request('saveHolidayEmployeeOrder'"),'Persistent employee ordering required');
 assert.ok(app.includes('function renderStoreOvertimeBudget()')&&app.includes("String(d?.store_id||'')!==String(currentUser.store_id||'')")||app.includes("String(d.store_id||'')!==String(currentUser.store_id||'')"),'Store budget must be restricted to authenticated store');
 // Strict regression locks: requested overtime filter and consolidated formatting.
