@@ -44,5 +44,7 @@ jobs:
         run: node scripts/test-unmatched-store-report.mjs
       - name: Test import parsers runtime
         run: node scripts/test-import-parsers-runtime.mjs
+      - name: Test DM overview page
+        run: node scripts/test-dm-overview-page.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs

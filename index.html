@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=e5edb74553114998"></script>
 <script defer src="./assets/js/action-plan-guided.js?v=56e6d2622a18fe1a"></script>
-<script defer src="./assets/js/app.js?v=55b100338c6dab36"></script>
+<script defer src="./assets/js/app.js?v=3bc3fc8f73557444"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/personnel-hours.js?v=c73f5b2a4a224e50"></script>
 </head>
@@ -46,6 +46,7 @@
    <div class="nav-submenu">
     <button class="nav-btn nav-sub-btn active" data-page="calendar" data-store-menu-key="calendar">Calendario</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="agenda">Agenda</button>
+    <button class="nav-btn nav-sub-btn admin-only" data-page="dmoverview">Overview DM</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="report">Report Agenda</button>
    </div>
   </div>
@@ -188,6 +189,15 @@
  <div id="rmCalendarKpis" class="kpi-grid"></div>
  <div class="card rm-calendar-card"><div class="section-head"><div><h3>Calendario Retail Manager</h3><p id="rmCalendarRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="rmCalendarGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
 </section>
+<section id="page-dmoverview" class="page admin-only hidden">
+ <div class="card rm-toolbar">
+  <div class="rm-toolbar-group"><button id="dmOvPrev" class="btn" type="button">‹</button><button id="dmOvToday" class="btn primary" type="button">Oggi</button><button id="dmOvNext" class="btn" type="button">›</button></div>
+  <div class="rm-toolbar-group"><label>Vista<select id="dmOvView"><option value="day">Giorno</option><option value="week">Settimana</option><option value="month" selected>Mese</option></select></label><label>Data<input id="dmOvDate" type="date"></label><label>DM<select id="dmOvDm"><option value="">Tutti i DM</option></select></label><button id="dmOvFitBtn" class="btn rm-calendar-fit-btn" type="button" aria-pressed="false" title="Adatta tutte le righe del calendario all’altezza dello schermo">ADATTA</button><button id="reloadDmOverviewBtn" class="btn">Aggiorna</button></div>
+ </div>
+ <div id="dmOvKpis" class="kpi-grid"></div>
+ <div class="card rm-calendar-card"><div class="section-head"><div><h3>Overview DM</h3><p id="dmOvRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="dmOvGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
+</section>
+
 <section id="page-rmholidays" class="page rm-only hidden">
  <div class="card rm-toolbar">
   <div class="rm-toolbar-group">
