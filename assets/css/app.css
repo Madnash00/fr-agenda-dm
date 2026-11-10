@@ -1034,36 +1034,36 @@ body.agenda-store-profile .nav-launch-btn.sfs-dashboard{display:none!important}
 @media(max-width:600px){.holiday-period-months{grid-template-columns:1fr}.holiday-period-toolbar{gap:8px}}
 
 /* RM calendar presentation: week groups, clearly defined ISO weeks and weekends */
-#page-rmcalendar .rm-toolbar{border-color:#dce2e7;border-radius:11px;background:linear-gradient(180deg,#fff,#f8fafb);box-shadow:0 2px 9px rgba(31,42,51,.035)}
-#page-rmcalendar .rm-calendar-card{border:1px solid #d9e0e5;border-radius:12px;box-shadow:0 4px 18px rgba(30,45,55,.05)}
-#page-rmcalendar .rm-calendar-card>.section-head{padding:13px 16px 10px;background:#fbfcfd;border-bottom:1px solid #e1e6ea}
-#page-rmcalendar .rm-calendar-card>.section-head h3{font-size:13px;letter-spacing:.015em;color:#29343e}
-#page-rmcalendar .rm-calendar-card .rm-calendar-scroll{scrollbar-color:#b9c5cc #f2f5f7;scrollbar-width:thin}
-#page-rmcalendar .rm-calendar-table{font-size:10px;border-collapse:separate;border-spacing:0}
-#page-rmcalendar .rm-calendar-table th,#page-rmcalendar .rm-calendar-table td{padding:8px 7px;border-bottom:1px solid #e5ebef;border-right:1px solid #e4e9ed}
-#page-rmcalendar .rm-calendar-table tbody tr:nth-child(even) td:not(.rm-weekend):not(.rm-dm-col){background:#fafbfd}
-#page-rmcalendar .rm-calendar-table .rm-dm-col{min-width:165px;max-width:165px;padding:10px 12px;box-shadow:2px 0 5px rgba(28,46,57,.035)}
-#page-rmcalendar .rm-calendar-table tbody .rm-dm-col{background:#f3f6f8;color:#32424e;font-weight:900;font-size:10px}
-#page-rmcalendar .rm-calendar-table thead .rm-week-row th{position:sticky;top:0;height:32px;background:#e8edf1;color:#394a56;text-align:center;font-size:9px;font-weight:900;letter-spacing:.075em;border-bottom:1px solid #c4cfd6}
-#page-rmcalendar .rm-calendar-table thead .rm-week-row th.rm-week-band{border-left:3px solid #8798a5;border-right:2px solid #9aaab5;white-space:nowrap}
-#page-rmcalendar .rm-calendar-table thead .rm-week-corner{position:sticky;top:0;z-index:11!important;background:#e3e9ed!important;vertical-align:middle;text-align:left;font-size:10px;color:#344650}
-#page-rmcalendar .rm-calendar-table thead .rm-day-row th{position:sticky;top:32px;height:36px;background:#f4f6f8;text-align:center;font-size:9px;color:#45545e;font-weight:800}
-#page-rmcalendar .rm-calendar-table :is(th,td).rm-week-start{border-left:3px solid #8798a5!important}
-#page-rmcalendar .rm-calendar-table :is(th,td).rm-week-end{border-right:2px solid #9aaab5!important}
-#page-rmcalendar .rm-calendar-table thead .rm-day-row th.rm-weekend{background:#f8dede!important;color:#a82424!important;box-shadow:inset 0 -3px #cb4d4d}
-#page-rmcalendar .rm-calendar-table tbody td.rm-weekend{background:#fff0f0!important}
-#page-rmcalendar .rm-calendar-table tbody td.rm-sunday{background:#ffe6e6!important}
-#page-rmcalendar .rm-cal-day{min-height:43px;gap:5px}
-#page-rmcalendar .rm-cal-item{border:1px solid #dee5e9;border-radius:6px;padding:6px 7px;font-size:9px;font-weight:750;line-height:1.3;overflow-wrap:anywhere;box-shadow:0 1px 2px rgba(22,35,45,.025)}
-#page-rmcalendar .rm-cal-item.sv{background:#e7f2eb;border-color:#c6dece;color:#28533b}
-#page-rmcalendar .rm-cal-item.holiday{background:#fff5d8;border-color:#ebdaa4;color:#715b1b}
-#page-rmcalendar .rm-cal-item.call{background:#e8f0fa;border-color:#cbd9ed;color:#354f77}
-#page-rmcalendar .rm-cal-item.note{background:#f8ebef;border-color:#e9d0d9;color:#75455a}
-#page-rmcalendar .rm-cal-empty{color:#aeb9c1}
-@media(max-width:760px){#page-rmcalendar .rm-calendar-table .rm-dm-col{min-width:120px;max-width:120px}#page-rmcalendar .rm-calendar-table th,#page-rmcalendar .rm-calendar-table td{padding:6px 5px}#page-rmcalendar .rm-cal-item{padding:5px;font-size:8px}}
+:is(#page-rmcalendar,#page-dmoverview) .rm-toolbar{border-color:#dce2e7;border-radius:11px;background:linear-gradient(180deg,#fff,#f8fafb);box-shadow:0 2px 9px rgba(31,42,51,.035)}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-card{border:1px solid #d9e0e5;border-radius:12px;box-shadow:0 4px 18px rgba(30,45,55,.05)}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-card>.section-head{padding:13px 16px 10px;background:#fbfcfd;border-bottom:1px solid #e1e6ea}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-card>.section-head h3{font-size:13px;letter-spacing:.015em;color:#29343e}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-card .rm-calendar-scroll{scrollbar-color:#b9c5cc #f2f5f7;scrollbar-width:thin}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table{font-size:10px;border-collapse:separate;border-spacing:0}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table th,:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table td{padding:8px 7px;border-bottom:1px solid #e5ebef;border-right:1px solid #e4e9ed}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody tr:nth-child(even) td:not(.rm-weekend):not(.rm-dm-col){background:#fafbfd}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table .rm-dm-col{min-width:165px;max-width:165px;padding:10px 12px;box-shadow:2px 0 5px rgba(28,46,57,.035)}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody .rm-dm-col{background:#f3f6f8;color:#32424e;font-weight:900;font-size:10px}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-row th{position:sticky;top:0;height:32px;background:#e8edf1;color:#394a56;text-align:center;font-size:9px;font-weight:900;letter-spacing:.075em;border-bottom:1px solid #c4cfd6}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-row th.rm-week-band{border-left:3px solid #8798a5;border-right:2px solid #9aaab5;white-space:nowrap}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-corner{position:sticky;top:0;z-index:11!important;background:#e3e9ed!important;vertical-align:middle;text-align:left;font-size:10px;color:#344650}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th{position:sticky;top:32px;height:36px;background:#f4f6f8;text-align:center;font-size:9px;color:#45545e;font-weight:800}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table :is(th,td).rm-week-start{border-left:3px solid #8798a5!important}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table :is(th,td).rm-week-end{border-right:2px solid #9aaab5!important}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th.rm-weekend{background:#f8dede!important;color:#a82424!important;box-shadow:inset 0 -3px #cb4d4d}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-weekend{background:#fff0f0!important}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-sunday{background:#ffe6e6!important}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-row th.rm-week-band{background:#edf2f6;color:#2f4150}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-row th.rm-week-band.rm-week-alt{background:#dbe5ec;color:#22323e;border-bottom-color:#aebcc6}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th.rm-week-alt:not(.rm-weekend):not(.rm-holiday){background:#edf3f7}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-week-alt:not(.rm-weekend):not(.rm-holiday):not(.rm-dm-col){background:#f3f8fb}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table :is(th,td).rm-week-start{border-left:3px solid #70828f!important}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-weekend{background:#fdf1f1!important}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-sunday{background:#fbe8e8!important}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th.rm-holiday{background:#ffeab4!important;color:#6b5210!important;box-shadow:inset 0 -3px #d2a01f}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-holiday{background:#fff5d9!important}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th .rm-day-label{display:block}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th .rm-day-holiday{display:block;margin-top:2px;font-size:7.5px;font-weight:900;line-height:1.1;color:#7a5c12;text-transform:none;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-day{min-height:43px;gap:5px}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item{border:1px solid #dee5e9;border-radius:6px;padding:6px 7px;font-size:9px;font-weight:750;line-height:1.3;overflow-wrap:anywhere;box-shadow:0 1px 2px rgba(22,35,45,.025)}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item.sv{background:#e7f2eb;border-color:#c6dece;color:#28533b}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item.holiday{background:#fff5d8;border-color:#ebdaa4;color:#715b1b}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item.call{background:#e8f0fa;border-color:#cbd9ed;color:#354f77}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item.note{background:#f8ebef;border-color:#e9d0d9;color:#75455a}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-empty{color:#aeb9c1}
+@media(max-width:760px){:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table .rm-dm-col{min-width:120px;max-width:120px}:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table th,:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table td{padding:6px 5px}:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item{padding:5px;font-size:8px}}
 
 /* RM calendar: centered, larger names without changing table data or behavior. */
-#page-rmcalendar .rm-calendar-table tbody td.rm-dm-col{text-align:center;vertical-align:middle;font-size:12.5px;font-weight:900;line-height:1.3;white-space:normal;overflow-wrap:break-word;letter-spacing:.015em}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-dm-col{text-align:center;vertical-align:middle;font-size:12.5px;font-weight:900;line-height:1.3;white-space:normal;overflow-wrap:break-word;letter-spacing:.015em}
 
 /* ACTION PLAN / NEGOZIO: task, checkpoint e bozze. */
 .ap-task-section{display:block;min-width:0;border-top:1px solid #e7e4e0;margin-top:12px;padding-top:12px}
@@ -1292,10 +1292,10 @@ body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:
  #calendarWrap.calendar-scroll{max-height:calc(100dvh - 145px)}
  #calendarCard.calendar-card{max-width:100%}
  .rm-calendar-scroll{max-height:calc(100dvh - 205px)}
- #page-rmcalendar .rm-calendar-table{font-size:9.5px}
- #page-rmcalendar .rm-calendar-table tbody td.rm-dm-col{font-size:11.5px}
- #page-rmcalendar .rm-cal-item{font-size:9px;line-height:1.3}
- #page-rmcalendar .rm-calendar-card>.section-head{padding:10px 12px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table{font-size:9.5px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody td.rm-dm-col{font-size:11.5px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-cal-item{font-size:9px;line-height:1.3}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-card>.section-head{padding:10px 12px}
 
  /* Agenda, utenze, ferie, impostazioni */
  .agenda-dm-toolbar{padding:10px 12px;gap:10px;margin-bottom:7px}
@@ -1636,41 +1636,41 @@ body.agenda-store-profile #actionPlanForm .modal-actions{position:sticky;bottom:
 
 /* UX condivisa · stile ADMIN per i moduli RM / NEGOZIO.
    Intervento puramente visivo: ruoli, dati, campi e interazioni rimangono invariati. */
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) :is(.rm-toolbar,.rm-calendar-card,.rm-section),
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) :is(.rm-toolbar,.rm-calendar-card,.rm-section),
 body.agenda-store-profile :is(.holiday-planning-card,.holiday-summary-card,.action-plan-list-card,.consolidated-section,.overtime-section){
  border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:none
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar{
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar{
  padding:7px 9px;margin-bottom:7px;gap:7px;align-items:flex-end;flex-wrap:wrap
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar-group{
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar-group{
  gap:7px;min-width:0;max-width:100%;flex-wrap:wrap
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar label{
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar label{
  display:grid;gap:3px;min-width:110px;font-size:9px;font-weight:800;color:#5b6369
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar :is(select,input){min-height:29px;padding:5px 7px;font-size:10px}
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .section-head{
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar :is(select,input){min-height:29px;padding:5px 7px;font-size:10px}
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .section-head{
  padding:8px 9px 5px;background:#fff;border-bottom-color:var(--line)
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .section-head h3{font-size:12px;letter-spacing:normal;color:var(--ink)}
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-section-title{
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .section-head h3{font-size:12px;letter-spacing:normal;color:var(--ink)}
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-section-title{
  margin:8px 0 5px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;
  background:#f3f5f6;color:#505960;font-size:9px
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-list{padding:0 9px 9px;gap:6px}
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-card{
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-list{padding:0 9px 9px;gap:6px}
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-card{
  border-color:var(--line);border-radius:7px;padding:8px;background:#fff;box-shadow:none
 }
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-card h4{font-size:11px;color:var(--ink)}
-:is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-obj{padding:5px 6px;font-size:9px}
-#page-rmcalendar .rm-calendar-table th,#page-rmcalendar .rm-calendar-table td{padding:5px 6px;border-color:#e6e9eb}
-#page-rmcalendar .rm-calendar-table thead .rm-week-row th{height:26px;background:#e9edef;color:#4d5960;border-color:#cfd6da}
-#page-rmcalendar .rm-calendar-table thead .rm-day-row th{top:26px;height:29px;background:#f2f4f5;color:#505960}
-#page-rmcalendar .rm-calendar-table thead .rm-week-corner{background:#e9edef!important}
-#page-rmcalendar .rm-calendar-table tbody .rm-dm-col{background:#f6f8f8;color:#30383d}
-#page-rmcalendar .rm-cal-day{min-height:34px;gap:3px}
-#page-rmcalendar .rm-cal-item{padding:4px 5px;font-size:9px;border-radius:5px;box-shadow:none}
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-card h4{font-size:11px;color:var(--ink)}
+:is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-plan-obj{padding:5px 6px;font-size:9px}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table th,:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table td{padding:5px 6px;border-color:#e6e9eb}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-row th{height:26px;background:#e9edef;color:#4d5960;border-color:#cfd6da}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-day-row th{top:26px;height:29px;background:#f2f4f5;color:#505960}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead .rm-week-corner{background:#e9edef!important}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table tbody .rm-dm-col{background:#f6f8f8;color:#30383d}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-day{min-height:34px;gap:3px}
+:is(#page-rmcalendar,#page-dmoverview) .rm-cal-item{padding:4px 5px;font-size:9px;border-radius:5px;box-shadow:none}
 
 /* Action Plan NEGOZIO: compatta la forma visiva come le maschere ADMIN,
    lasciando distinti i colori dei checkpoint e tutti i controlli operativi. */
@@ -1717,16 +1717,16 @@ body.agenda-store-profile .agenda-events{gap:5px}
  :is(button,select,input,textarea){transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
 }
 @media screen and (min-width:1024px){
- :is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar{padding:5px 7px;margin-bottom:5px;gap:5px}
- :is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar label{font-size:9px}
- :is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar :is(select,input){min-height:27px;padding:4px 6px}
- #page-rmcalendar .rm-calendar-table th,#page-rmcalendar .rm-calendar-table td{padding:4px 5px}
- #page-rmcalendar .rm-cal-day{min-height:30px}
+ :is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar{padding:5px 7px;margin-bottom:5px;gap:5px}
+ :is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar label{font-size:9px}
+ :is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar :is(select,input){min-height:27px;padding:4px 6px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table th,:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table td{padding:4px 5px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-cal-day{min-height:30px}
 }
 @media screen and (max-width:1023px){
- :is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar-group{width:100%}
- :is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar label{flex:1 1 115px;min-width:0}
- :is(#page-rmcalendar,#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar :is(input,select){max-width:100%}
+ :is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar-group{width:100%}
+ :is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar label{flex:1 1 115px;min-width:0}
+ :is(:is(#page-rmcalendar,#page-dmoverview),#page-rmholidays,#page-rmovertime,#page-rmactionplans) .rm-toolbar :is(input,select){max-width:100%}
  body.agenda-store-profile #actionPlanForm .action-obj-section{padding:8px}
  body.agenda-store-profile #actionPlanForm .action-obj-editor{padding:8px}
  body.agenda-store-profile #actionPlanForm .ap-checkpoint-row{grid-template-columns:minmax(0,1fr)}
@@ -1761,8 +1761,8 @@ body.agenda-store-profile .agenda-events{gap:5px}
 .sv-visibility-btn:not(:disabled):hover{filter:brightness(.965)}
 
 /* CALENDARIO RM · ADATTA: tutta l'altezza delle righe in un'unica vista, senza scroll verticale. */
-#page-rmcalendar .rm-calendar-scroll.rm-fit-active{overflow-x:auto;overflow-y:hidden;scrollbar-gutter:auto}
-#page-rmcalendar #rmCalFitBtn[aria-pressed="true"]{background:#e8f0f4;border-color:#7e929e;color:#2c4856;font-weight:850}
+:is(#page-rmcalendar,#page-dmoverview) .rm-calendar-scroll.rm-fit-active{overflow-x:auto;overflow-y:hidden;scrollbar-gutter:auto}
+:is(#page-rmcalendar,#page-dmoverview) #rmCalFitBtn[aria-pressed="true"]{background:#e8f0f4;border-color:#7e929e;color:#2c4856;font-weight:850}
 
 /* Performance + micro-interactions: no layout changes, touch-friendly feedback. */
 .nav-btn,.nav-launch-btn,.btn,.event-chip,.cell-click{touch-action:manipulation}
