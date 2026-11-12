@@ -34,6 +34,8 @@ context.currentUser={display_name:'Nuovo DM',created_at:'2026-11-04T09:00:00.000
 api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,newUrl,'New user on same browser');
 console.log('PASS: DMDASHBOARD four named profiles, unchanged existing users, new-user default, switching accounts');
 
+/* Si isola il singolo tasto: una finestra approssimata ricadrebbe su quello precedente. */
+const tastoCon=cls=>{const i=html.indexOf(cls);assert.notEqual(i,-1,`Manca il tasto ${cls}`);const a=html.lastIndexOf('<button',i);return html.slice(a,html.indexOf('</button>',a)+9)};
 /* RM: collegamento dedicato, SFS DASHBOARD nascosto, SFS TOOL presente. */
 /* L'RM apre il collegamento di base, lo stesso dichiarato in index.html:
    una sola fonte per l'indirizzo, cosi' non puo' divergere in due punti. */
@@ -56,10 +58,18 @@ api.updateDmDashboardLink();assert.equal(button.dataset.externalUrl,oldUrl,'Torn
 assert.ok(html.includes('class="nav-launch-btn sfs-dashboard rm-hidden"'),'SFS DASHBOARD deve essere nascosto al profilo RM');
 assert.ok(js.includes("$$('.rm-hidden').forEach(x=>x.classList.toggle('hidden',rm))"),'La visibilita RM deve essere applicata al cambio ruolo');
 assert.ok(js.includes('function applyRoleNavigation(){const rm=isRetailManager();updateDmDashboardLink();'),'Il collegamento deve seguire anche il passaggio RM/ADMIN');
-const tool=html.slice(html.indexOf('sfs-tool')-200,html.indexOf('sfs-tool')+300);
+const tool=tastoCon('sfs-tool');
 assert.ok(tool.includes('data-external-url="'+sfsTool+'"'),'SFS TOOL deve puntare al collegamento richiesto');
 assert.ok(tool.includes('admin-only')&&tool.includes('rm-launch-access'),'SFS TOOL deve essere visibile a DM e RM');
 assert.ok(!tool.includes('store-only'),'SFS TOOL non e richiesto per il profilo NEGOZIO');
-assert.ok(html.indexOf('sfs-tool')>html.indexOf('sfs-dashboard'),'SFS TOOL va in fondo ai tasti di lancio');
+/* Posizione richiesta: STOCK MONITOR subito sotto WOP, SFS TOOL subito sotto di esso. */
+const monitor=tastoCon('stock-monitor');
+assert.ok(monitor.includes('data-external-url="https://claude.ai/artifact/DjCHc1DTvwXCfXRMiEAt6B?sk=M-3Rwt9hbFJ-EFZxsfXdsQ"'),'STOCK MONITOR deve puntare al collegamento richiesto');
+assert.ok(monitor.includes('<span>STOCK MONITOR</span>'),'Il tasto deve chiamarsi STOCK MONITOR');
+assert.ok(monitor.includes('admin-only')&&monitor.includes('rm-launch-access'),'STOCK MONITOR deve essere visibile a DM e RM');
+assert.ok(html.indexOf('stock-monitor')>html.indexOf('wop-app/?mode=store-calendar'),'STOCK MONITOR va sotto WOP');
+assert.ok(html.indexOf('sfs-tool')>html.indexOf('stock-monitor'),'SFS TOOL va subito sotto STOCK MONITOR');
+assert.ok(html.indexOf('sfs-tool')<html.indexOf('data-dm-dashboard'),'Fra STOCK MONITOR e SFS TOOL non deve esserci altro');
+assert.equal((html.match(/DjCHc1DTvwXCfXRMiEAt6B/g)||[]).length,1,'Un solo tasto per quel collegamento');
 assert.ok(js.includes("window.open(b.dataset.externalUrl,'_blank')"),'I collegamenti esterni devono aprirsi in una nuova scheda');
 console.log('PASS: RM dashboard link, SFS DASHBOARD nascosto per RM, SFS TOOL per DM e RM');
