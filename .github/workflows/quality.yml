@@ -52,5 +52,7 @@ jobs:
         run: node scripts/test-rm-dm-view-parity.mjs
       - name: Action Plan RM con righe del profilo DM
         run: node scripts/test-rm-action-plan-parity.mjs
+      - name: Calendario posizionato sulla settimana corrente
+        run: node scripts/test-calendar-today-focus.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
