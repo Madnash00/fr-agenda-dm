@@ -32,6 +32,7 @@ execFileSync(process.execPath,['scripts/test-account-edit.mjs'],{stdio:'inherit'
 execFileSync(process.execPath,['scripts/test-multi-dm-stores.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-store-menu-reserved.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-action-plan-owner-ms.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-action-plan-check.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');
@@ -259,7 +260,7 @@ assert.ok(app.includes("objectivePage.id='ap-objectives-page'")&&app.includes('i
 assert.ok(app.includes("review.id='ap-review-charts'")&&app.includes('id="ap-objectives-charts"'),'Due grafici disponibili in entrambe le pagine');
 assert.ok(guided.includes('function openApGuidedObjective(')&&guided.includes('KPI E TARGET')&&guided.includes('AZIONI E STRUMENTI')&&guided.includes('MONITORAGGIO'),'Tre schermate del wizard guidato');
 assert.ok(guided.includes('function apGuidedProjection(')&&guided.includes('VARIAZIONE POTENZIALE'),'Stima economica KPI');
-assert.ok(guided.includes("['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE']"),'Quattro timing');
+assert.ok(guided.includes('AP_CHECK_LIGHTS')&&guided.includes('SALVA CHECK'),'Sessioni di CHECK con semaforo');
 assert.ok(guided.includes('length>3'),'Massimo tre azioni o strumenti selezionabili');
 const ideas=guided.slice(guided.indexOf('const AP_GUIDED_IDEAS='),guided.indexOf('function apGuidedMeta('));
 for(const kpi of ['sales','visits','cr','upt','asp','atv','ms']) {

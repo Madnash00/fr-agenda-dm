@@ -68,7 +68,9 @@ jobs:
         run: node scripts/test-multi-dm-stores.mjs
       - name: Voci riservate fuori dal menu NEGOZIO
         run: node scripts/test-store-menu-reserved.mjs
-      - name: Action Plan · MS percentuale e OWNER sul piano
+      - name: Action Plan · unita MS e OWNER sul piano
         run: node scripts/test-action-plan-owner-ms.mjs
+      - name: Action Plan · sessioni di CHECK
+        run: node scripts/test-action-plan-check.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
