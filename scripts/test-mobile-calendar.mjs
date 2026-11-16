@@ -15,7 +15,7 @@ const estrai=inizio=>{const k=righe.findIndex(x=>x.startsWith(inizio));assert.no
 const ctx={Number,String,Math,Array,JSON,Object,Date,console,
  DAYS:['DOM','LUN','MAR','MER','GIO','VEN','SAB'],
  typeMeta:{STORE_VISIT:{abbr:'SV',cls:'sv',label:'Store Visit'},SM_HOLIDAY:{abbr:'F',cls:'f',label:'Ferie SM'},NOTE:{abbr:'N',cls:'note',label:'Nota'}},
- calendarPendingLabel:()=>'',
+ calendarPendingLabel:()=>'', calendarLocked:false,
  calendarFilteredStores:()=>[{id:'S1',name:'PISTOIA'},{id:'S2',name:'RAVENNA'}],
  isoDate:d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
  fmtDate:d=>d.toLocaleDateString('it-IT')};
@@ -45,6 +45,26 @@ assert.ok(/data-mobile-entry data-store="S1" data-date="2026-11-16"/.test(out),
 assert.ok(/data-mobile-entry data-store="" /.test(out),'La voce di distretto non ha negozio');
 assert.equal((out.match(/class="muted">—/g)||[]).length,6,'I giorni senza eventi restano visibili con un trattino');
 assert.ok(ctx.mobileAgendaDmMarkup([],new Map()).includes('empty'),'Senza date si mostra un messaggio, non il vuoto');
+
+/* Inserire dal telefono: ogni giorno ha il proprio comando, che non deve
+   comparire quando il calendario e' in sola consultazione. */
+assert.equal((out.match(/data-mobile-add/g)||[]).length,7,'Ogni giorno deve avere il comando di inserimento');
+assert.ok(/data-mobile-add data-date="2026-11-16"/.test(out),'Il comando deve portare la data del giorno');
+ctx.calendarLocked=true;
+assert.equal((ctx.mobileAgendaDmMarkup(giorni,idx).match(/data-mobile-add/g)||[]).length,0,
+ 'Col calendario bloccato il comando di inserimento non deve comparire');
+ctx.calendarLocked=false;
+
+const picker=estrai('function mobileAgendaOpenPicker(');
+assert.ok(picker.includes("openCell(id,ds)")&&picker.includes("openCell(null,ds,null,'NOTE')"),
+ 'Scelto il destinatario si apre lo stesso editor del desktop');
+/* Senza traccia, openCell per il distretto non offre il modulo di inserimento:
+   la traccia NOTE e' cio che apre il modulo INFO VARIE con i suoi tre tipi. */
+assert.ok(picker.includes('INFO VARIE'),'Deve essere possibile inserire anche sul distretto');
+assert.ok(picker.includes('calendarFilteredStores()'),'La scelta segue i negozi filtrati, come la griglia');
+const delegaAdd=estrai('function ensureMobileAgendaClickDelegation()');
+assert.ok(delegaAdd.includes("closest?.('[data-mobile-add]')")&&delegaAdd.includes('mobileAgendaOpenPicker(piu.dataset.date)'),
+ 'Il comando deve aprire la scelta del destinatario');
 
 // --- il tocco apre la cella ---
 const delega=estrai('function ensureMobileAgendaClickDelegation()');

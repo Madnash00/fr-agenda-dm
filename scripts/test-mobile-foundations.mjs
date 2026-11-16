@@ -7,6 +7,7 @@ import vm from 'node:vm';
 
 const css=readFileSync('assets/css/app.css','utf8');
 const righe=readFileSync('assets/js/app.js','utf8').split('\n');
+const html=readFileSync('index.html','utf8');
 
 // --- il blocco telefono esiste e contiene cio' che serve ---
 const i=css.indexOf('@media screen and (max-width:720px){');
@@ -90,5 +91,19 @@ const senzaFiltri=elemento('div','toolbar');
 ctx.document.querySelectorAll=()=>[senzaFiltri];
 ctx.setupMobileFilters();
 assert.ok(!senzaFiltri.classList.contains('mobile-filters'),'Una toolbar di soli pulsanti non diventa un pannello filtri');
+
+/* Menu laterale. Il pannello scorre per intero: se l'area del menu puo'
+   comprimersi, le sezioni in fondo finiscono sotto ai tasti dei collegamenti,
+   che vengono disegnati dopo. E' il difetto segnalato, e la regola che lo
+   causava (.sidebar .nav{min-height:0}) e' ancora nel foglio. */
+const comprime=css.indexOf('.sidebar .nav{min-height:0');
+const ripara=css.indexOf('.sidebar .nav{flex:0 0 auto;min-height:auto}');
+assert.notEqual(ripara,-1,'L area del menu non deve potersi comprimere');
+assert.ok(comprime===-1||ripara>comprime,'La correzione deve venire dopo la regola che comprime il menu');
+assert.ok(css.includes('.sidebar .nav-foot-label{display:block'),'I collegamenti vanno annunciati da una etichetta');
+assert.ok(css.includes('.nav-foot-label{display:none}'),'Fuori dal telefono l etichetta non deve comparire');
+assert.ok(/\.sidebar \.sidebar-foot>\.nav-section\{[^}]*border-top/.test(css),
+ 'Impostazioni va separata dai collegamenti da una linea');
+assert.ok(html.includes('<div class="nav-foot-label">Collegamenti</div>'),'Manca l etichetta nel markup');
 
 console.log('PASS: livello telefono confinato sotto i 720px e pannello filtri funzionante');
