@@ -2591,3 +2591,8 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  .agenda-pick-list{display:grid;gap:8px}
  .agenda-pick-list .btn{min-height:46px;justify-content:flex-start;text-align:left;font-weight:800}
 }
+
+/* Con il calendario bloccato il comando resta visibile ma si vede che non agisce. */
+@media screen and (max-width:720px){
+ .mobile-agenda.calendar-locked .agenda-add{opacity:.4;border-style:solid}
+}
