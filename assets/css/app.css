@@ -2462,7 +2462,7 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  .mobile-filters>.mobile-filters-toggle .mff-chevron{flex:0 0 auto;transition:transform .18s ease;font-size:16px;color:var(--muted)}
  .mobile-filters.open>.mobile-filters-toggle{background:#f3f4f5}
  .mobile-filters.open>.mobile-filters-toggle .mff-chevron{transform:rotate(180deg)}
- .mobile-filters:not(.open) label{display:none!important}
+ .mobile-filters:not(.open) :is(label,.multi-filter-wrap,.zoom-control){display:none!important}
  .mobile-filters:not(.open) :is(.toolbar-group,.holiday-toolbar-group,.action-plan-toolbar-group,.overtime-toolbar-group,.rm-toolbar-group):not(:has(:not(label))){display:none!important}
 }
 @media(prefers-reduced-motion:reduce){.mobile-filters>.mobile-filters-toggle .mff-chevron{transition:none}}
@@ -2493,4 +2493,35 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  table.mobile-cards td.objectives-cell{grid-template-columns:1fr;gap:4px}
  table.mobile-cards .action-plan-progress{display:flex;align-items:center;gap:8px}
  table.mobile-cards .action-plan-progress-track{flex:1 1 auto}
+}
+
+/* --------- calendario sul telefono ---------
+   La griglia giorni per negozi non entra in 390px: il DM vede un elenco per
+   giorno, con un pulsante per tornare alla griglia quando serve davvero. */
+.phone-view-toggle{display:none}
+@media screen and (max-width:720px){
+ .phone-view-toggle.available{display:block;width:100%;margin-bottom:8px}
+ body:not(.phone-grid) #page-calendar:has(.calendar-card.phone-agenda) .zoom-control{display:none}
+ .calendar-card.phone-agenda{display:none}
+ .mobile-agenda.phone-agenda{display:block}
+ body.phone-grid .calendar-card.phone-agenda{display:block}
+ body.phone-grid .mobile-agenda.phone-agenda{display:none}
+ .mobile-agenda .agenda-week{margin-bottom:10px;overflow:hidden}
+ .mobile-agenda .agenda-week h4{margin:0;padding:11px 12px;background:#eef1f3;font-size:12px;letter-spacing:.03em}
+ .mobile-agenda .agenda-day{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:start;padding:9px 12px;border-top:1px solid var(--line)}
+ .mobile-agenda .agenda-day>strong{font-size:12px;text-transform:uppercase;color:var(--muted);padding-top:3px}
+ .mobile-agenda .agenda-day.today{border-left:3px solid var(--accent)}
+ .mobile-agenda .agenda-day.today>strong{color:var(--accent)}
+ .mobile-agenda .agenda-events{display:grid;gap:6px;min-width:0}
+ .mobile-agenda .agenda-entry{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;width:100%;min-height:44px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:#fbfbfa;font:inherit;text-align:left}
+ .mobile-agenda .agenda-entry .event-chip{grid-row:span 2;align-self:start}
+ .mobile-agenda .agenda-entry-where{font-size:12px;font-weight:900;overflow-wrap:anywhere}
+ .mobile-agenda .agenda-entry-note{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+ .mobile-agenda .agenda-day .muted{font-size:12px}
+
+ /* Calendario DM e Overview DM restano griglie, ma leggibili: scorrono gia' di lato */
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table{font-size:11px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table thead th{font-size:10px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-cal-item{font-size:11px;padding:6px}
+ :is(#page-rmcalendar,#page-dmoverview) .rm-calendar-table .rm-day-row th .rm-day-holiday{font-size:9.5px}
 }
