@@ -2404,3 +2404,65 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  #actionPlanForm .apy-field>span{padding-right:15px}
  #actionPlanForm .apy-field input{font-size:11px;padding:0 7px}
 }
+
+/* ===================== LIVELLO TELEFONO =====================
+   Vale solo sotto i 720px di larghezza: su desktop e tablet non cambia nulla.
+   Obiettivi: testo leggibile, aree di tocco raggiungibili con il pollice,
+   nessuno zoom automatico di iOS sui campi, filtri che non occupano la prima
+   schermata. Le tabelle del calendario restano fuori: hanno una densita'
+   propria e si affrontano a parte. */
+@media screen and (max-width:720px){
+ /* iOS ingrandisce la pagina quando si tocca un campo con testo sotto i 16px */
+ input,select,textarea{font-size:16px}
+ input,select,textarea,.btn,button.btn{min-height:44px}
+ .btn.small{min-height:40px;padding:8px 12px;font-size:13px}
+ .nav-btn,.nav-sub-btn,.nav-launch-btn{min-height:44px;display:flex;align-items:center}
+ #page-calendar #todayBtn,#page-calendar #storeVisitVisibilityBtn{height:44px;min-height:44px}
+
+ /* soglia di leggibilita': niente testo sotto gli 11px */
+ .kpi-card span{font-size:11px;letter-spacing:.02em}
+ .kpi-card strong{font-size:22px}
+ .bar-row{font-size:12px}
+ .data-table,.holiday-summary-table,.action-plan-table{font-size:13px}
+ /* Le pagine RM hanno regole con specificita' di ID (:is(#page-...) .rm-toolbar label):
+    senza priorita' esplicita il livello telefono verrebbe ignorato proprio li'. */
+ .toolbar label,.holiday-toolbar label,.action-plan-toolbar label,.overtime-toolbar label,.rm-toolbar label,.holiday-period-toolbar label{font-size:11px!important}
+ .rm-section-title{font-size:12px}
+ .rm-plan-meta{font-size:11px}
+ .rm-plan-card h4{font-size:14px}
+ .rm-plan-obj{font-size:12px}
+ .rm-readonly-badge{font-size:10px}
+ .section-head h3{font-size:15px}
+ .muted,.hint,.sub,.section-head small,.card small{font-size:12px}
+
+ /* i campi devono poter leggere la propria etichetta: uno per riga */
+ .toolbar label,.holiday-toolbar label,.action-plan-toolbar label,.overtime-toolbar label,.rm-toolbar label,.holiday-period-toolbar label{flex:1 1 100%!important;min-width:100%!important;max-width:100%!important}
+ .toolbar select,.holiday-toolbar select,.action-plan-toolbar select,.overtime-toolbar select,.rm-toolbar select,.toolbar input,.rm-toolbar input{width:100%}
+
+ /* un riquadro vuoto non deve tenere mezzo schermo */
+ .holiday-report-card:has(.empty),.chart-card:has(.empty),.overtime-chart-card:has(.empty){min-height:0}
+ .holiday-report-card:has(.empty) .chart,.chart-card:has(.empty) .chart{min-height:0}
+ .empty{padding:18px 12px;font-size:13px}
+
+ /* margini di sicurezza su schermi con notch e barra gesti */
+ .topbar{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+ .page{padding:10px max(10px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+ .sidebar{padding-bottom:max(20px,env(safe-area-inset-bottom))}
+}
+
+/* --------- filtri richiudibili (solo telefono) ---------
+   Il pulsante e' sempre nel DOM ma invisibile fuori dal telefono, cosi' la
+   struttura delle toolbar resta quella di prima su desktop. */
+.mobile-filters-toggle{display:none}
+@media screen and (max-width:720px){
+ .mobile-filters{flex-wrap:wrap;align-items:stretch;row-gap:8px}
+ .mobile-filters>.mobile-filters-toggle{order:-1;flex:1 1 100%;min-width:0;max-width:100%;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:13px;font-weight:800;text-align:left}
+ .mobile-filters>.mobile-filters-toggle .mff-label{flex:0 0 auto;text-transform:uppercase;font-size:11px;letter-spacing:.04em;color:var(--muted)}
+ .mobile-filters>.mobile-filters-toggle .mff-summary{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .mobile-filters>.mobile-filters-toggle .mff-chevron{flex:0 0 auto;transition:transform .18s ease;font-size:16px;color:var(--muted)}
+ .mobile-filters.open>.mobile-filters-toggle{background:#f3f4f5}
+ .mobile-filters.open>.mobile-filters-toggle .mff-chevron{transform:rotate(180deg)}
+ .mobile-filters:not(.open) label{display:none!important}
+ .mobile-filters:not(.open) :is(.toolbar-group,.holiday-toolbar-group,.action-plan-toolbar-group,.overtime-toolbar-group,.rm-toolbar-group):not(:has(:not(label))){display:none!important}
+}
+@media(prefers-reduced-motion:reduce){.mobile-filters>.mobile-filters-toggle .mff-chevron{transition:none}}
