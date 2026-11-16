@@ -552,6 +552,8 @@ function ensureMobileAgendaClickDelegation(){
  if(mobileAgendaClickDelegationReady)return;
  const host=$('#mobileAgenda');if(!host)return;
  host.addEventListener('click',e=>{
+  const piu=e.target.closest?.('[data-mobile-add]');
+  if(piu&&host.contains(piu)){mobileAgendaOpenPicker(piu.dataset.date);return}
   const voce=e.target.closest?.('[data-mobile-entry]');
   if(voce&&host.contains(voce)&&voce.dataset.store){openCell(voce.dataset.store,voce.dataset.date);return}
   const day=e.target.closest?.('[data-mobile-cell]');
@@ -567,6 +569,14 @@ function mobileAgendaEntry(e,dove,storeId,ds){ const m=typeMeta[e.event_type]||t
   +`<span class="event-chip ${m.cls}">${m.abbr}</span>`
   +`<span class="agenda-entry-where">${esc(dove)}</span>`
   +`<span class="agenda-entry-note">${esc(e.note||e.raw_text||m.label)}${inSospeso?` \u00b7 ${esc(inSospeso)}`:''}</span></button>` }
+/* Sul telefono un giorno contiene piu' negozi: prima si sceglie dove inserire,
+   poi si apre lo stesso editor del desktop. Per il distretto serve la traccia
+   NOTE, altrimenti openCell non offre alcun modulo di inserimento. */
+function mobileAgendaOpenPicker(ds){ const stores=calendarFilteredStores();
+ const voci=[`<button type="button" class="btn agenda-pick" data-pick-store="">INFO VARIE \u00b7 Distretto</button>`]
+  .concat(stores.map(st=>`<button type="button" class="btn agenda-pick" data-pick-store="${esc(st.id)}">${st.code?esc(st.code)+' \u00b7 ':''}${esc(st.name)}</button>`));
+ showModal(`Nuovo inserimento \u00b7 ${fmtDate(parseDate(ds))}`,`<p class="muted" style="margin:0 0 10px">Scegli dove inserire.</p><div class="agenda-pick-list">${voci.join('')}</div>`);
+ $$('.agenda-pick').forEach(b=>b.onclick=()=>{ const id=b.dataset.pickStore; id?openCell(id,ds):openCell(null,ds,null,'NOTE') }) }
 function mobileAgendaDmMarkup(dates,idx){ const stores=calendarFilteredStores(),today=isoDate(new Date()); let h='';
  for(let w=0;w<dates.length;w+=7){ const wi=isoWeekInfo(dates[w]);
   h+=`<div class="agenda-week card"><h4>W${String(wi.week).padStart(2,'0')} \u00b7 ${fmtDate(dates[w])} \u2013 ${fmtDate(dates[Math.min(w+6,dates.length-1)])}</h4>`;
@@ -574,7 +584,7 @@ function mobileAgendaDmMarkup(dates,idx){ const stores=calendarFilteredStores(),
    for(const e of (idx.get(eventDateKey(null,ds))||[]))voci.push(mobileAgendaEntry(e,'Distretto','',ds));
    for(const st of stores)for(const e of (idx.get(eventDateKey(st.id,ds))||[]))voci.push(mobileAgendaEntry(e,st.name,st.id,ds));
    h+=`<div class="agenda-day ${ds===today?'today':''}" data-mobile-cell data-date="${ds}"><strong>${DAYS[d.getDay()]} ${d.getDate()}</strong>`
-    +`<div class="agenda-events">${voci.length?voci.join(''):'<span class="muted">\u2014</span>'}</div></div>`;
+    +`<div class="agenda-events">${voci.length?voci.join(''):'<span class="muted">\u2014</span>'}</div>${calendarLocked?'':`<button type="button" class="agenda-add" data-mobile-add data-date="${ds}" title="Aggiungi" aria-label="Aggiungi">+</button>`}</div>`;
   } h+='</div>'; }
  return h||'<div class="empty">Nessuna settimana da mostrare.</div>' }
 function renderMobileAgenda(dates,idx){if(currentUser.role==='ADMIN'){ $('#mobileAgenda').innerHTML=mobileAgendaDmMarkup(dates,idx);ensureMobileAgendaClickDelegation();return}const st=storeById(currentUser.store_id);if(!st){$('#mobileAgenda').innerHTML='<div class="empty">Calendario negozio in caricamento…</div>';return}const today=isoDate(new Date());let h='';for(let w=0;w<dates.length;w+=7){const wi=isoWeekInfo(dates[w]);h+=`<div class="agenda-week card"><h4>W${String(wi.week).padStart(2,'0')} · ${fmtDate(dates[w])} – ${fmtDate(dates[Math.min(w+6,dates.length-1)])}</h4>`;for(let i=w;i<Math.min(w+7,dates.length);i++){const d=dates[i],ds=isoDate(d),ev=idx.get(eventDateKey(st.id,ds))||[];h+=`<div class="agenda-day ${ds===today?'today':''}" data-mobile-cell data-date="${ds}"><strong>${DAYS[d.getDay()]} ${d.getDate()}</strong><div class="agenda-events">${ev.length?ev.map(e=>{const m=typeMeta[e.event_type]||typeMeta.NOTE;return `<span class="event-chip ${m.cls} ${calendarPendingLabel(e)?'calendar-pending-event':''}">${m.abbr}</span><span style="font-size:11px">${esc(e.note||e.raw_text||m.label)}${calendarPendingLabel(e)?` · ${esc(calendarPendingLabel(e))}`:''}</span>`}).join(''):'<span class="muted">—</span>'}</div></div>`}h+='</div>'}$('#mobileAgenda').innerHTML=h;ensureMobileAgendaClickDelegation()}

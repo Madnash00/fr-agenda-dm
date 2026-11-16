@@ -2515,7 +2515,9 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 .phone-view-toggle{display:none}
 @media screen and (max-width:720px){
  .phone-view-toggle.available{display:block;width:100%;margin-bottom:8px}
- body:not(.phone-grid) #page-calendar:has(.calendar-card.phone-agenda) .zoom-control{display:none}
+ /* In elenco zoom e adatta visuale non hanno effetto; il lucchetto resta,
+    perche e cio che abilita l inserimento. */
+ body:not(.phone-grid) #page-calendar:has(.calendar-card.phone-agenda) :is(.zoom-label,#fitCalendarBtn){display:none}
  .calendar-card.phone-agenda{display:none}
  .mobile-agenda.phone-agenda{display:block}
  body.phone-grid .calendar-card.phone-agenda{display:block}
@@ -2553,4 +2555,39 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  .holiday-month-col{position:relative}
  .holiday-month-value,.holiday-month-label{font-size:11px}
  .holiday-month-label{transform:translateY(18px)}
+}
+
+/* --------- menu laterale su schermi stretti ---------
+   Il menu scorre insieme al pannello: se la sua area puo' comprimersi, le
+   sezioni in fondo finiscono sotto ai tasti dei collegamenti, che vengono
+   disegnati dopo. Qui l'area mantiene la propria altezza e il contenuto si
+   legge in tre gruppi distinti: navigazione, collegamenti, impostazioni. */
+.nav-foot-label{display:none}
+@media screen and (max-width:1023px){
+ .sidebar .nav{flex:0 0 auto;min-height:auto}
+ .sidebar .sidebar-foot{flex:0 0 auto}
+ .sidebar .nav-foot-label{display:block;margin:14px 0 2px;padding:0 4px;font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8d979f}
+ .sidebar .sidebar-foot>.nav-section{margin-top:12px;padding-top:10px;border-top:1px solid #3a4248}
+ .sidebar .sidebar-foot>.nav-section~.nav-btn{color:#aeb6bc}
+ /* Tutte le etichette partono allo stesso punto, con o senza icona. */
+ .sidebar .nav-launch-btn{position:relative;justify-content:flex-start;text-align:left;padding-left:32px}
+ .sidebar .nav-launch-btn>img,.sidebar .nav-launch-btn>.launch-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%)}
+ .sidebar .nav-launch-btn>img,.sidebar .nav-launch-btn>.launch-icon{flex:0 0 16px;width:16px;height:16px;object-fit:contain}
+ .sidebar .nav-launch-btn>span:not(.launch-arrow){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+ .sidebar .nav-launch-btn>.launch-arrow,.sidebar .nav-launch-btn>span:last-child{flex:0 0 auto}
+}
+@media screen and (max-width:720px){
+ .sidebar .nav-group-btn{min-height:42px;font-size:11px}
+ .sidebar .nav .nav-sub-btn{min-height:40px;font-size:12px}
+ .sidebar .nav-launch-btn{min-height:44px;font-size:10.5px;gap:10px}
+ .sidebar .sidebar-foot>.nav-btn{min-height:42px;font-size:12px}
+}
+
+/* --------- inserimento dal calendario a elenco (telefono) --------- */
+@media screen and (max-width:720px){
+ .mobile-agenda .agenda-day{grid-template-columns:62px minmax(0,1fr) 36px}
+ .mobile-agenda .agenda-add{align-self:start;width:36px;height:36px;border:1px dashed var(--line);border-radius:10px;background:#fff;color:var(--accent);font-size:20px;font-weight:800;line-height:1}
+ .mobile-agenda .agenda-add:active{background:#faf2f5}
+ .agenda-pick-list{display:grid;gap:8px}
+ .agenda-pick-list .btn{min-height:46px;justify-content:flex-start;text-align:left;font-weight:800}
 }
