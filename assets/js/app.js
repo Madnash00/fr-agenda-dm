@@ -1802,16 +1802,13 @@ function apYtdCalculate(v){
  ];
  return {ticketsAC,visitsAC,ticketsAP,visitsAP,salesAP,levers,impacts,warning:Math.abs(ticketsAP*atvAP-salesAP)/salesAP>.03||Math.abs(v.upt*v.asp-v.atv)/v.atv>.03};
 }
-/* La MS e' una quota di mercato: la sua variazione si legge in percentuale,
-   non in euro, e la colonna del grafico va etichettata di conseguenza. */
-function apYtdPercent(x){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}
 function apYtdEuro(x){return Number(x).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0})}
 function apYtdInt(x){return Math.round(x).toLocaleString('it-IT')}
 function apYtdImpactChart(d){
  if(!d||!Array.isArray(d.impacts))return '<div class="apy-help">Inserisci dati validi per visualizzare il grafico.</div>';
  const max=Math.max(1,...d.impacts.map(x=>Math.abs(x[1])));
  return '<div class="apy-impact-chart" role="img" aria-label="Impatto economico per KPI: verde sopra lo zero, rosso sotto">'+d.impacts.map(([label,value,unit])=>{
-  const magnitude=Math.max(0,Math.min(100,100*Math.abs(value)/max)),amount=(value>0?'+':'')+(unit==='ms'?apYtdPercent(value):apYtdEuro(value));
+  const magnitude=Math.max(0,Math.min(100,100*Math.abs(value)/max)),amount=(value>0?'+':'')+apYtdEuro(value);
   return '<div class="apy-impact-col '+(value<0?'negative':value>0?'positive':'neutral')+'" aria-label="'+esc(label+': '+amount+(unit==='ms'?' (variazione MS)':''))+'">'
    +'<div class="apy-impact-up">'+(value>0?'<span class="apy-impact-bar positive" style="height:'+magnitude.toFixed(2)+'%"></span>':'')+'</div>'
    +'<div class="apy-impact-baseline"></div>'
@@ -2157,10 +2154,10 @@ function buildActionPlanPdfBytes(plan){
    const cx=x+8+step*(i+.5),m=Math.min(barH-2,(Math.abs(val)||0)/denom*(barH-2));
    if(val!==0)rect(cx-3,val>0?bas-m:bas,6,Math.max(.7,m),val>0?GREEN:RED);
    text(cx-step*.43,top+103,5.4,label==='INCASSATO'?'INC':label,'F2',MUTED);
-   const v=unit==='ms'?num(val,1)+'%':num(val/1000,1)+'k';
+   const v=unit==='ms'?num(val,0):num(val/1000,1)+'k';
    text(cx-step*.43,top+114,5.25,(val>0?'+':'')+v,'F1',val<0?RED:GREEN);
   });
-  text(x+8,top+130,5.6,'Impatto vs AP (k EUR); MS: %','F1',MUTED);
+  text(x+8,top+130,5.6,'Impatto vs AP (k EUR); MS: EUR','F1',MUTED);
  }
  // Layout elastico in una sola pagina: nessun testo viene eliminato.
  function buildBlocks(font,columns){

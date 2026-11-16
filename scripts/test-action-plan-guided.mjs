@@ -33,7 +33,10 @@ assert.equal(apGuidedMeta('Nota storica'),null,'Nota legacy erroneamente trattat
 assert.ok(guided.includes("length>3"),'Limite 3 selezioni mancante');
 assert.ok(guided.includes("if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}"),'Confermare un obiettivo deve avanzare la revisione del form NEGOZIO');
 assert.ok(app.includes('actionPlanStoreRevision!==submittedRevision'),'Salvataggi in volo non devono perdere modifiche successive');
-assert.ok(guided.includes("['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE']"),'Frequenze monitoraggio mancanti');
+/* Il TIMING a frequenza fissa e stato sostituito dalle sessioni di CHECK:
+   il monitoraggio si fissa a date scelte, non a cadenza dichiarata. */
+assert.ok(!guided.includes("['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE']"),'Le frequenze TIMING non devono tornare');
+assert.ok(guided.includes('apAddCheckBtn'),'Il monitoraggio avviene ora per sessioni di CHECK');
 for(const name of ['sales','visits','cr','upt','asp','atv','ms']){
  const pattern=new RegExp('(?:^|\\n) '+name+':\\{actions:\\[(.*?)\\],tools:\\[(.*?)\\]\\}', 's');
  const match=guided.match(pattern);assert.ok(match,'Mancano idee per '+name);
