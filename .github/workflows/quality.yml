@@ -64,5 +64,7 @@ jobs:
         run: node scripts/test-reset-profile-password.mjs
       - name: Riquadro Account modificabile
         run: node scripts/test-account-edit.mjs
+      - name: Negozio condiviso fra piu DM
+        run: node scripts/test-multi-dm-stores.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
