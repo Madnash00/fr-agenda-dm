@@ -31,6 +31,7 @@ execFileSync(process.execPath,['scripts/test-reset-profile-password.mjs'],{stdio
 execFileSync(process.execPath,['scripts/test-account-edit.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-multi-dm-stores.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-store-menu-reserved.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-action-plan-owner-ms.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
 assert.doesNotMatch(html,/<style(?:\s|>)/i,'Application CSS must be in the CSS asset');

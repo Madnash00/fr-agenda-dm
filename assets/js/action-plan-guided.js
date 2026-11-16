@@ -36,7 +36,7 @@ function openApGuidedObjective(index=null){
  if(!editor)return;
  const old=Number.isInteger(index)?actionPlanDraftObjectives[index]:null,meta=apGuidedMeta(old?.notes);
  const v=apYtdRead('app-');if(!apYtdCalculate(v)){toast('Completa i KPI del PERIODO ACTION PLAN prima di aggiungere un obiettivo.',true);return}
- const data={kpi:meta?.kpi||'',target:meta?.target??'',actions:meta?.actions||[],tools:meta?.tools||[],otherAction:meta?.otherAction||'',otherTool:meta?.otherTool||'',owner:old?.tasks?.[0]?.owner||'',timing:old?.tasks?.[0]?.timing_monitoraggio||'',nextSteps:apGuidedNotes(old?.notes),status:old?.status||'IN_PROGRESS'};
+ const data={kpi:meta?.kpi||'',target:meta?.target??'',actions:meta?.actions||[],tools:meta?.tools||[],otherAction:meta?.otherAction||'',otherTool:meta?.otherTool||'',owner:'',timing:old?.tasks?.[0]?.timing_monitoraggio||'',nextSteps:apGuidedNotes(old?.notes),status:old?.status||'IN_PROGRESS'};
  const page=document.getElementById('ap-objectives-page');page?.classList.add('ap-guided-editing');
  editor.classList.remove('hidden');
  editor.innerHTML='<div class="ap-guided-objective"><header class="ap-guided-head"><strong>AGGIUNGI OBIETTIVO</strong><span id="apGuidedProgress">1 / 3</span><button type="button" class="btn small" id="apGuidedCancel">CHIUDI</button></header><div id="apGuidedStep"></div><footer class="apy-footer ap-guided-footer"><button type="button" class="btn apy-back-button" id="apGuidedPrevious">INDIETRO</button><button type="button" class="btn primary" id="apGuidedContinue">PROCEDI</button></footer></div>';
@@ -46,7 +46,7 @@ function openApGuidedObjective(index=null){
  const collect=()=>{
   if(step===0){data.kpi=editor.querySelector('#apGuidedKpi')?.value||'';data.target=editor.querySelector('#apGuidedTarget')?.value||''}
   if(step===1){const ideas=AP_GUIDED_IDEAS[data.kpi];data.actions=[...editor.querySelectorAll('[data-ap-guided-kind="actions"]:checked')].map(x=>ideas.actions[Number(x.value)]);data.tools=[...editor.querySelectorAll('[data-ap-guided-kind="tools"]:checked')].map(x=>ideas.tools[Number(x.value)]);data.otherAction=editor.querySelector('#apGuidedOtherAction')?.value.trim()||'';data.otherTool=editor.querySelector('#apGuidedOtherTool')?.value.trim()||''}
-  if(step===2){data.owner=editor.querySelector('#apGuidedOwner')?.value.trim()||'';data.timing=editor.querySelector('#apGuidedTiming')?.value||'';data.nextSteps=editor.querySelector('#apGuidedNextSteps')?.value.trim()||''}
+  if(step===2){data.timing=editor.querySelector('#apGuidedTiming')?.value||'';data.nextSteps=editor.querySelector('#apGuidedNextSteps')?.value.trim()||''}
  };
  const preview=()=>{
   const k=editor.querySelector('#apGuidedKpi')?.value||'',target=apYtdParse(editor.querySelector('#apGuidedTarget')?.value),def=AP_GUIDED_KPIS.find(x=>x.id===k),p=apGuidedProjection(k,target,v),out=editor.querySelector('#apGuidedPreview');
@@ -66,7 +66,7 @@ function openApGuidedObjective(index=null){
    root.innerHTML='<h4>2. AZIONI E STRUMENTI</h4><p class="muted">Seleziona al massimo 3 azioni e 3 strumenti. Puoi aggiungere una voce personalizzata per ciascun gruppo.</p><div class="ap-guided-columns"><section><h5>AZIONI · 6 PROPOSTE</h5>'+apGuidedChoiceHtml('actions',ideas.actions,data.actions)+'<label class="ap-guided-other">ALTRO · AZIONE<textarea id="apGuidedOtherAction" rows="2">'+esc(data.otherAction)+'</textarea></label></section><section><h5>STRUMENTI · 6 PROPOSTE</h5>'+apGuidedChoiceHtml('tools',ideas.tools,data.tools)+'<label class="ap-guided-other">ALTRO · STRUMENTO<textarea id="apGuidedOtherTool" rows="2">'+esc(data.otherTool)+'</textarea></label></section></div>';
    root.querySelectorAll('[data-ap-guided-kind]').forEach(x=>x.onchange=()=>{if(root.querySelectorAll('[data-ap-guided-kind="'+x.dataset.apGuidedKind+'"]:checked').length>3){x.checked=false;toast('Massimo 3 opzioni per gruppo.',true)}});
   }else{
-   root.innerHTML='<h4>3. MONITORAGGIO</h4><div class="ap-guided-fields"><label>OWNER<input id="apGuidedOwner" type="text" maxlength="160" value="'+esc(data.owner)+'" placeholder="Referente"></label><label>TIMING<select id="apGuidedTiming"><option value="">Seleziona</option>'+['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE'].map(t=>'<option'+(data.timing===t?' selected':'')+'>'+t+'</option>').join('')+'</select></label><label class="ap-guided-span">NEXT STEPS<textarea id="apGuidedNextSteps" rows="6" placeholder="Descrivi i prossimi passi, le responsabilità e il piano di lavoro">'+esc(data.nextSteps)+'</textarea></label></div>';
+   root.innerHTML='<h4>3. MONITORAGGIO</h4><div class="ap-guided-fields"><label>TIMING<small class="ap-guided-hint">Ogni quanto monitoriamo questo obiettivo?</small><select id="apGuidedTiming"><option value="">Seleziona</option>'+['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE'].map(t=>'<option'+(data.timing===t?' selected':'')+'>'+t+'</option>').join('')+'</select></label><label class="ap-guided-span">NEXT STEPS<small class="ap-guided-hint">Quali sono i prossimi passi che mi possono portare al raggiungimento dell\'obiettivo?</small><textarea id="apGuidedNextSteps" rows="6" placeholder="Descrivi i prossimi passi, le responsabilità e il piano di lavoro">'+esc(data.nextSteps)+'</textarea></label></div>';
   }
   requestAnimationFrame(apFitActionPlanStage);
  };
@@ -76,15 +76,18 @@ function openApGuidedObjective(index=null){
   collect();
   if(step===0){const target=apYtdParse(data.target);if(!apGuidedProjection(data.kpi,target,v)){toast('Inserisci un KPI e un valore valido. CR max 100%; ingressi interi.',true);return}data.target=target;step=1;draw();return}
   if(step===1){if(!(data.actions.length||data.otherAction)||!(data.tools.length||data.otherTool)){toast('Indica almeno una AZIONE e uno STRUMENTO, anche con ALTRO.',true);return}step=2;draw();return}
-  if(!data.owner||!data.timing||!data.nextSteps){toast('Compila OWNER, TIMING e NEXT STEPS.',true);return}
+  if(!data.timing||!data.nextSteps){toast('Compila TIMING e NEXT STEPS.',true);return}
   const def=AP_GUIDED_KPIS.find(x=>x.id===data.kpi),p=apGuidedProjection(data.kpi,Number(data.target),v);if(!def||!p){toast('KPI non valido: verifica il valore target.',true);return}
   const actions=[...data.actions,...(data.otherAction?[data.otherAction]:[])],tools=[...data.tools,...(data.otherTool?[data.otherTool]:[])];
   const metadata={kpi:data.kpi,target:data.target,ac:p.base,baselineSales:p.sales,projectedSales:p.forecast,projectedDelta:p.delta,actions:data.actions,tools:data.tools,otherAction:data.otherAction,otherTool:data.otherTool};
   const notes=data.nextSteps+'\n[APOBJ2:'+btoa(encodeURIComponent(JSON.stringify(metadata)))+']',oldTasks=old?.tasks||[];
-  const obj={objective_id:old?.objective_id||'',objective_text:def.label+' '+apGuidedAmount(data.target,def.unit),actions:actions.join(' · '),tools:tools.join(' · '),status:data.status,notes,tasks:actions.map(task=>({task,tools:tools.join(' · '),owner:data.owner,timing_monitoraggio:data.timing,checkpoints:oldTasks.find(t=>t.task===task)?.checkpoints||[]}))};
+  const obj={objective_id:old?.objective_id||'',objective_text:def.label+' '+apGuidedAmount(data.target,def.unit),actions:actions.join(' · '),tools:tools.join(' · '),status:data.status,notes,tasks:actions.map(task=>({task,tools:tools.join(' · '),owner:apPlanOwner(),timing_monitoraggio:data.timing,checkpoints:oldTasks.find(t=>t.task===task)?.checkpoints||[]}))};
   if(old)actionPlanDraftObjectives[index]=obj;else actionPlanDraftObjectives.push(obj);
   if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}
   close();
  };
  draw();
 }
+/* Il referente non si dichiara piu' per singolo obiettivo: si indica una volta
+   sola sull'Action Plan, e le azioni lo ereditano. */
+function apPlanOwner(){return String(document.getElementById('apOwner')?.value||'').trim()}
