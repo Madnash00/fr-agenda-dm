@@ -50,10 +50,19 @@ assert.ok(ctx.mobileAgendaDmMarkup([],new Map()).includes('empty'),'Senza date s
    comparire quando il calendario e' in sola consultazione. */
 assert.equal((out.match(/data-mobile-add/g)||[]).length,7,'Ogni giorno deve avere il comando di inserimento');
 assert.ok(/data-mobile-add data-date="2026-11-16"/.test(out),'Il comando deve portare la data del giorno');
+/* Il comando c'e' sempre, come le celle della griglia sul desktop: il lucchetto
+   non ridisegna il calendario, quindi uno stato cotto nel markup resterebbe
+   fermo a dopo lo sblocco. La verifica avviene al tocco. */
 ctx.calendarLocked=true;
-assert.equal((ctx.mobileAgendaDmMarkup(giorni,idx).match(/data-mobile-add/g)||[]).length,0,
- 'Col calendario bloccato il comando di inserimento non deve comparire');
+assert.equal((ctx.mobileAgendaDmMarkup(giorni,idx).match(/data-mobile-add/g)||[]).length,7,
+ 'Il comando non deve dipendere dallo stato del lucchetto al momento del disegno');
 ctx.calendarLocked=false;
+const delegaLock=estrai('function ensureMobileAgendaClickDelegation()');
+assert.ok(/if\(calendarLocked\)\{toast\(/.test(delegaLock),
+ 'A calendario bloccato il tocco deve avvisare invece di aprire');
+assert.ok(delegaLock.includes('lucchetto'),'L avviso deve dire dove si sblocca');
+assert.ok(estrai('function updateCalendarLockUI()').includes("$('#mobileAgenda')?.classList.toggle('calendar-locked',calendarLocked)"),
+ 'Lo stato del lucchetto deve vedersi anche sull elenco');
 
 const picker=estrai('function mobileAgendaOpenPicker(');
 assert.ok(picker.includes("openCell(id,ds)")&&picker.includes("openCell(null,ds,null,'NOTE')"),
@@ -73,8 +82,12 @@ assert.ok(delega.includes("closest?.('[data-mobile-entry]')")&&delega.includes('
 assert.ok(delega.includes("currentUser?.role==='STORE'"),'Il comportamento del profilo NEGOZIO non deve cambiare');
 
 // --- attivazione e ritorno alla griglia ---
-assert.ok(app.includes("const elencoTelefono=currentUser.role==='ADMIN'||currentUser.role==='STORE';"),
- 'L elenco si attiva per i profili DM e NEGOZIO');
+/* L'attivazione deve stare dentro showApp, la funzione che l'app chiama dopo
+   l'accesso: altrove il codice esisterebbe senza mai essere eseguito. */
+const showApp=estrai('function showApp(');
+assert.ok(showApp.includes("const elencoTelefono=currentUser.role==='ADMIN'||currentUser.role==='STORE';"),
+ 'L elenco si attiva per i profili DM e NEGOZIO, dentro showApp');
+assert.ok(showApp.includes("classList.toggle('phone-agenda',elencoTelefono)"),'showApp deve accendere l elenco');
 /* La vecchia classe store-mobile non veniva mai aggiunta: se ricompare e' un
    secondo meccanismo per lo stesso scopo, e uno dei due restera' morto. */
 assert.ok(!app.includes('store-mobile'),'store-mobile e superata da phone-agenda');
