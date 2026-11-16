@@ -2466,3 +2466,31 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  .mobile-filters:not(.open) :is(.toolbar-group,.holiday-toolbar-group,.action-plan-toolbar-group,.overtime-toolbar-group,.rm-toolbar-group):not(:has(:not(label))){display:none!important}
 }
 @media(prefers-reduced-motion:reduce){.mobile-filters>.mobile-filters-toggle .mff-chevron{transition:none}}
+
+/* --------- tabelle dense come schede (solo telefono) ---------
+   Una tabella da nove colonne su 390px resta leggibile solo scendendo a 8px.
+   Sotto i 720px le righe diventano schede: ogni cella porta la propria
+   etichetta in data-label, la cella marcata mobile-title fa da titolo.
+   Fuori da questa media query il markup resta una tabella normale. */
+@media screen and (max-width:720px){
+ table.mobile-cards{display:block;width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+ table.mobile-cards thead{display:none}
+ table.mobile-cards tbody{display:grid;gap:8px}
+ /* griglia, non blocco: serve a portare in testa la cella titolo, che nel
+    markup sta dopo le prime colonne (regione, codice, DM). */
+ table.mobile-cards tr{display:grid;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+ table.mobile-cards td{display:grid;grid-template-columns:minmax(92px,42%) 1fr;gap:10px;align-items:baseline;padding:8px 12px;border:0;border-top:1px solid #f1f0ee;text-align:left;white-space:normal}
+ table.mobile-cards td::before{content:attr(data-label);justify-self:start;text-align:left;font-size:10.5px;font-weight:850;line-height:1.5;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+ table.mobile-cards td:not([data-label])::before{content:none}
+ table.mobile-cards td:not([data-label]){display:block}
+ table.mobile-cards td.mobile-title{order:-1;display:block;padding:11px 12px;border-top:0;background:#f7f8f8;font-size:15px;font-weight:900;line-height:1.25}
+ table.mobile-cards td.mobile-title::before{content:none}
+ table.mobile-cards td.mobile-title strong{font-weight:900}
+ table.mobile-cards td.actions-cell{order:1;display:block;padding:10px 12px;background:#fcfcfb}
+ table.mobile-cards td.actions-cell .action-plan-row-actions{display:flex;gap:8px}
+ table.mobile-cards td.actions-cell .btn{flex:1 1 auto}
+ table.mobile-cards td.premise-cell{white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
+ table.mobile-cards td.objectives-cell{grid-template-columns:1fr;gap:4px}
+ table.mobile-cards .action-plan-progress{display:flex;align-items:center;gap:8px}
+ table.mobile-cards .action-plan-progress-track{flex:1 1 auto}
+}

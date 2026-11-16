@@ -33,12 +33,12 @@ const dipendenti=[{employee_name:'Mario Rossi',employee_role:'SA',level:'4',mont
 
 const dmNegozi=ctx.overtimeStoresTableMarkup(negozi,coverage);
 const rmNegozi=ctx.overtimeStoresTableMarkup(negozi.map(x=>({...x,dm_name:'Lorenzo Riccomi'})),coverage,{dmColumn:true});
-assert.ok(dmNegozi.includes('class="data-table overtime-table"'),'La tabella DM deve usare lo stile overtime-table');
-assert.equal(rmNegozi.replace(/<th>DM<\/th>/,'').replace(/<td>Lorenzo Riccomi<\/td>/g,''),dmNegozi,
+assert.ok(dmNegozi.includes('class="data-table overtime-table mobile-cards"'),'La tabella DM deve usare lo stile overtime-table, con la resa a schede sul telefono');
+assert.equal(rmNegozi.replace(/<th>DM<\/th>/,'').replace(/<td data-label="DM">Lorenzo Riccomi<\/td>/g,''),dmNegozi,
  'La tabella negozi del profilo RM deve coincidere con quella del DM, a meno della colonna DM');
 const dmDip=ctx.overtimeEmployeesTableMarkup(dipendenti,coverage);
 const rmDip=ctx.overtimeEmployeesTableMarkup(dipendenti.map(x=>({...x,dm_name:'Lorenzo Riccomi'})),coverage,{dmColumn:true});
-assert.equal(rmDip.replace(/<th>DM<\/th>/,'').replace(/<td>Lorenzo Riccomi<\/td>/g,''),dmDip,
+assert.equal(rmDip.replace(/<th>DM<\/th>/,'').replace(/<td data-label="DM">Lorenzo Riccomi<\/td>/g,''),dmDip,
  'La tabella dipendenti del profilo RM deve coincidere con quella del DM');
 assert.ok(!ctx.overtimeEmployeesTableMarkup(dipendenti,coverage,{showLevel:false}).includes('<th>Livello</th>'),
  'Il profilo NEGOZIO non deve vedere la colonna Livello');
