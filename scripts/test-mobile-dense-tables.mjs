@@ -84,4 +84,15 @@ for(const [nome,html] of Object.entries(prodotti)){
 assert.ok(prodotti.piani.includes('class="actions-cell"'),'I pulsanti vanno raccolti in una cella propria');
 assert.ok(blocco.includes('td.actions-cell{order:1'),'La cella delle azioni va in fondo alla scheda');
 
+/* Striscia dei mesi: allargando le colonne per rendere leggibili le etichette,
+   la striscia esce dal contenitore. Due condizioni la tengono dentro: il
+   contenitore deve scorrere, e l'etichetta, che e' in posizione assoluta, deve
+   avere un riferimento nella propria colonna. Senza, si allarga tutta la pagina. */
+const strip=css.slice(css.indexOf('striscia dei mesi sul telefono'));
+assert.ok(/#rmHolidayMonthlyChart,#holidayMonthlyChart\{[^}]*overflow-x:auto/.test(strip),
+ 'Il contenitore della striscia deve scorrere');
+assert.ok(strip.includes('.holiday-month-col{position:relative}'),
+ 'Le etichette dei mesi devono essere ancorate alla propria colonna');
+assert.ok(/\.holiday-month-bars\{[^}]*minmax\(46px/.test(strip),'Le colonne devono reggere un'+String.fromCharCode(39)+'etichetta da 11px');
+
 console.log('PASS: tabelle dense rese a schede sul telefono, con titolo ed etichette su ogni cella');

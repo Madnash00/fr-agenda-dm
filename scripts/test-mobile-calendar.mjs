@@ -53,7 +53,11 @@ assert.ok(delega.includes("closest?.('[data-mobile-entry]')")&&delega.includes('
 assert.ok(delega.includes("currentUser?.role==='STORE'"),'Il comportamento del profilo NEGOZIO non deve cambiare');
 
 // --- attivazione e ritorno alla griglia ---
-assert.ok(app.includes("const elencoTelefono=currentUser.role==='ADMIN';"),'L elenco si attiva per il profilo DM');
+assert.ok(app.includes("const elencoTelefono=currentUser.role==='ADMIN'||currentUser.role==='STORE';"),
+ 'L elenco si attiva per i profili DM e NEGOZIO');
+/* La vecchia classe store-mobile non veniva mai aggiunta: se ricompare e' un
+   secondo meccanismo per lo stesso scopo, e uno dei due restera' morto. */
+assert.ok(!app.includes('store-mobile'),'store-mobile e superata da phone-agenda');
 assert.ok(app.includes("classList.toggle('phone-agenda',elencoTelefono)"),'Serve la classe che accende l elenco');
 assert.ok(html.includes('id="phoneViewToggle"'),'Serve il pulsante per tornare alla griglia');
 assert.ok(app.includes("document.body.classList.toggle('phone-grid')"),'Il pulsante deve commutare la vista');
