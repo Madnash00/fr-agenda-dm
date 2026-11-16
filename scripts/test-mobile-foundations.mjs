@@ -26,12 +26,15 @@ assert.ok(/env\(safe-area-inset-bottom\)/.test(blocco),'Servono i margini di sic
 const idSuLabel=/:is\([^)]*#page-rm[^)]*\)[^{]*\.rm-toolbar label\{[^}]*display/.test(css);
 assert.ok(idSuLabel,'Se questa regola sparisce, rivedere le priorita del livello telefono');
 for(const regola of ['.rm-toolbar label,.holiday-period-toolbar label{font-size:11px!important}',
- '.mobile-filters:not(.open) label{display:none!important}'])
+ '.mobile-filters:not(.open) :is(label,.multi-filter-wrap,.zoom-control){display:none!important}'])
  assert.ok(css.includes(regola),`Serve priorita esplicita: ${regola}`);
 
 // --- niente regole telefono fuori dalla media query ---
 const fuori=css.slice(0,i);
 assert.ok(!fuori.includes('.mobile-filters:not(.open)'),'Le regole del pannello non devono valere su desktop');
+/* I filtri del calendario non sono <label> ma blocchi .multi-filter-wrap e .zoom-control:
+   se la regola tornasse a chiudere i soli label resterebbero fuori dal pannello. */
+assert.ok(/:not\(\.open\)[^{]*\.multi-filter-wrap/.test(css),'Il pannello deve chiudere anche i filtri a blocchi del calendario');
 assert.ok(css.includes('.mobile-filters-toggle{display:none}'),'Fuori dal telefono il pulsante resta invisibile');
 
 // --- il pannello filtri, eseguito davvero ---
