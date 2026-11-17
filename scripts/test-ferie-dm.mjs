@@ -15,12 +15,12 @@ const estrai=(testo,inizio)=>{const r=testo.split('\n'),i=r.findIndex(x=>x.start
  assert.fail(`Frammento non compilabile: ${inizio}`)};
 
 /* Contesto: gli helper di app.js che la pagina usa, eseguiti davvero. */
-const host={};
+const host={},profilo={rm:true,adm:false};
 const nodo=()=>({innerHTML:'',textContent:'',className:'',value:'',classList:{toggle(){},add(){},remove(){}},querySelectorAll:()=>[]});
 const ctx={Number,String,Math,Array,Object,Map,Set,Date,JSON,console,isNaN,
  DAYS:['DOM','LUN','MAR','MER','GIO','VEN','SAB'],
  MONTHS:['GENNAIO','FEBBRAIO','MARZO','APRILE','MAGGIO','GIUGNO','LUGLIO','AGOSTO','SETTEMBRE','OTTOBRE','NOVEMBRE','DICEMBRE'],
- $:sel=>host[sel]||(host[sel]=nodo()),toast:()=>{},currentUser:{role:'ADMIN'},setTimeout,clearTimeout,Promise,Intl};
+ $:sel=>host[sel]||(host[sel]=nodo()),toast:()=>{},currentUser:{role:'ADMIN'},isRetailManager:()=>profilo.rm,isSuperAdmin:()=>profilo.adm,setTimeout,clearTimeout,Promise,Intl};
 vm.createContext(ctx);
 for(const n of ['function esc(','function addDays(','function isoDate(','function parseDate(','function fmtDate(','function isoWeekInfo(',
  'const IT_FIXED_HOLIDAYS=','const itEasterCache=','function itEasterSunday(','function itHolidayName(',
@@ -123,6 +123,19 @@ assert.ok(/APRILE 2026[\s\S]*2 mod\.[\s\S]*12 h/.test(host['#dmFerieAuditMonthly
 vm.runInContext("dmFerieAuditFilters.dm='anna'",ctx);ctx.renderDmFerieAudit();
 assert.ok(host['#dmFerieAuditMeta'].textContent.startsWith('1 modifiche filtrate · 4 ore variate'),'Il filtro DM restringe righe, ore e grafici');
 vm.runInContext("dmFerieAuditFilters.dm=''",ctx);
+
+// --- il registro e' riservato a RM e ADMIN ---
+{const visto=[];ctx.window={agendaCloudApi:{request:async(azione)=>{visto.push(azione);return {events:[],next_cursor:null}}}};
+ for(const [chi,rm,adm,atteso] of [['un DM',false,false,false],['il RM',true,false,true],['un ADMIN',false,true,true]]){
+  profilo.rm=rm;profilo.adm=adm;visto.length=0;
+  assert.equal(ctx.dmFerieAuditVisible(),atteso,`Registro per ${chi}: ${atteso?'visibile':'nascosto'}`);
+  await ctx.loadDmFerieAudit(true);
+  assert.equal(visto.includes('getDmHolidayAudit'),atteso,`Per ${chi} il registro ${atteso?'si':'non si'} carica`);
+ }
+ profilo.rm=true;profilo.adm=false;}
+const caricamento=fer.slice(fer.indexOf('async function loadDmHolidays('),fer.indexOf('function dmFerieIndex('));
+assert.ok(caricamento.includes("$('#dmFerieAuditPanel')?.classList.toggle('hidden',!dmFerieAuditVisible());"),'Il pannello del registro si nasconde a chi non puo vederlo');
+assert.ok(/id="dmFerieAuditPanel" class="card holiday-planning-audit hidden"/.test(html),'E parte nascosto: nessun lampo di contenuto prima del controllo');
 
 // --- maschera FERIE del calendario: ore obbligatorie ---
 assert.equal(ctx.ferieHoursLabel(''),'Tutto il giorno (8h)','Una ferie storica senza ore vale la giornata intera');

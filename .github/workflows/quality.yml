@@ -74,5 +74,7 @@ jobs:
         run: node scripts/test-action-plan-check.mjs
       - name: Ferie DM · planning, chiusure, registro e ore sul calendario
         run: node scripts/test-ferie-dm.mjs
+      - name: Gestione Profili · voci, collegamenti e descrizioni
+        run: node scripts/test-gestione-profili.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs
