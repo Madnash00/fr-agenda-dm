@@ -76,6 +76,8 @@ jobs:
         run: node scripts/test-ferie-dm.mjs
       - name: Ferie DM, Scarica Excel e PDF
         run: node scripts/test-ferie-dm-export.mjs
+      - name: Ferie DM, riallineamento del calendario
+        run: node scripts/test-ferie-dm-calendar-sync.mjs
       - name: Gestione Profili · voci, collegamenti e descrizioni
         run: node scripts/test-gestione-profili.mjs
       - name: Synthetic client cache benchmark
