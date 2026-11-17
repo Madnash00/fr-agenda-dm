@@ -3,7 +3,7 @@ function fp(v){let h=0xcbf29ce484222325n;for(let i=0;i<v.length;i++){h^=BigInt(v
 let html=readFileSync('index.html','utf8');
 /* Stesso elenco verificato da scripts/check.mjs: se manca un asset qui, il check
    fallisce senza che esista un comando per risolverlo. */
-for(const path of ['assets/css/app.css','assets/css/personnel-hours.css','assets/js/cloud-api.js','assets/js/app.js','assets/js/action-plan-guided.js','assets/js/personnel-hours.js']){
+for(const path of ['assets/css/app.css','assets/css/personnel-hours.css','assets/js/cloud-api.js','assets/js/app.js','assets/js/action-plan-guided.js','assets/js/ferie-dm.js','assets/js/personnel-hours.js']){
  const anchor='./'+path+'?v=',pos=html.indexOf(anchor);
  if(pos<0||html.indexOf(anchor,pos+anchor.length)>=0)throw new Error('Missing or repeated reference: '+anchor);
  const start=pos+anchor.length,previous=html.slice(start,start+16);

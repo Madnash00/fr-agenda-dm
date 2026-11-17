@@ -2642,3 +2642,57 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  #actionPlanForm .ap-check-lights{width:100%}
  #actionPlanForm .ap-check-light{flex:1 1 auto;justify-content:center;min-height:36px}
 }
+
+/* --------- FERIE DM ----------------------------------------------------
+   Tre tipi di giornata, tre colori: weekend rossi, festivita' nazionali verdi,
+   chiusure aziendali blu. Tutto sotto #page-dmholidays: il Planning Ferie dei
+   negozi usa le stesse classi di tabella e non deve cambiare. Il colore della
+   giornata prevale sul giallo delle celle con ore, altrimenti una chiusura
+   (8 ore a tutti) sparirebbe dietro il giallo. */
+#page-dmholidays .dm-ferie-table td.has-hours{background:#fff7d6}
+#page-dmholidays .dm-ferie-table th.dm-day-weekend{background:#f6c9c9;color:#7d1f1f}
+#page-dmholidays .dm-ferie-table td.dm-day-weekend{background:#fde6e6}
+#page-dmholidays .dm-ferie-table th.dm-day-holiday{background:#c9e8d2;color:#1d5c32}
+#page-dmholidays .dm-ferie-table td.dm-day-holiday{background:#e4f4e8}
+#page-dmholidays .dm-ferie-table th.dm-day-closure{background:#c8dbf7;color:#1c4b93}
+#page-dmholidays .dm-ferie-table td.dm-day-closure{background:#e3edfc}
+#page-dmholidays .dm-ferie-table td.has-hours .holiday-hours-input,#page-dmholidays .dm-ferie-table td.has-hours .hours-value{font-weight:900;color:#2b2f33}
+#page-dmholidays .dm-ferie-table td.dm-ferie-legacy{box-shadow:inset 0 0 0 1px #c99a16}
+#page-dmholidays .dm-ferie-table tr.dm-ferie-own .holiday-employee-cell{background:#fff4f8;color:#7a2e4f}
+#page-dmholidays .dm-ferie-table .holiday-hours-input{background:transparent}
+#page-dmholidays .dm-ferie-legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#page-dmholidays .dm-legend{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:750;color:#3f474d;padding:4px 9px;border-radius:999px;border:1px solid #e3e7ea;background:#fff}
+#page-dmholidays .dm-legend::before{content:'';width:11px;height:11px;border-radius:3px}
+#page-dmholidays .dm-legend.dm-day-weekend::before{background:#f6c9c9}
+#page-dmholidays .dm-legend.dm-day-holiday::before{background:#c9e8d2}
+#page-dmholidays .dm-legend.dm-day-closure::before{background:#c8dbf7}
+#page-dmholidays .dm-ferie-closure-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+#page-dmholidays .dm-ferie-closure-form label{display:grid;gap:5px;font-size:11px;font-weight:750;color:#44505d}
+#page-dmholidays .dm-ferie-closure-form label:nth-child(2){flex:1 1 220px}
+#page-dmholidays .dm-ferie-closures{display:flex;flex-wrap:wrap;gap:8px}
+#page-dmholidays .dm-closure-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 6px 5px 11px;border-radius:999px;background:#e3edfc;border:1px solid #c8dbf7;color:#1c4b93;font-size:11.5px}
+#page-dmholidays .dm-closure-day{font-weight:850;font-variant-numeric:tabular-nums}
+#page-dmholidays .dm-closure-label{color:#36557f}
+#page-dmholidays .dm-closure-remove{border:0;background:#fff;color:#1c4b93;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
+#page-dmholidays .dm-closure-remove:hover{background:#c8dbf7}
+#page-dmholidays .dm-ferie-you{display:inline-block;margin-left:6px;font-size:9px;font-weight:900;letter-spacing:.05em;color:#fff;background:#984266;border-radius:4px;padding:1px 5px;vertical-align:middle}
+#page-dmholidays tr.dm-ferie-own td{background:#fffafc}
+/* I due campi del quadro hanno la misura di un numero, non di una colonna. */
+#page-dmholidays .holiday-summary-table input{width:96px;min-width:80px;max-width:100%;text-align:right;margin-left:auto;display:block}
+
+/* Maschera FERIE del calendario: le ore sono obbligatorie e devono vedersi. */
+.ferie-hours-box{border:1px solid #e3e7ea;border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:0}
+.ferie-hours-box.hidden{display:none}
+.ferie-hours-box legend{font-size:10.5px;font-weight:850;letter-spacing:.04em;color:#984266;padding:0 4px}
+.ferie-hours-choice{display:inline-flex!important;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#2c3640;cursor:pointer}
+.ferie-hours-choice input{width:auto;margin:0}
+.ferie-hours-value{width:110px;min-width:0}
+
+@media screen and (max-width:720px){
+ #page-dmholidays .dm-ferie-closure-form{display:grid;grid-template-columns:1fr}
+ #page-dmholidays .dm-ferie-closure-form .btn{min-height:44px}
+ #page-dmholidays .dm-closure-remove{width:32px;height:32px}
+ .ferie-hours-box{flex-direction:column;align-items:flex-start}
+ .ferie-hours-choice{min-height:40px}
+ .ferie-hours-value{width:100%}
+}
