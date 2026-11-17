@@ -133,6 +133,35 @@ const PROFILE_ADMIN_INFO={chi:'Ha sempre tutte le funzioni dei DM, che non si po
 function normalizeProfileMenuClient(raw){const result={};for(const [role,groups] of Object.entries(PROFILE_MENU_GROUPS)){result[role]={};groups.forEach(g=>g[2].forEach(([key])=>{const v=raw?.enabled?.[role]?.[key];result[role][key]=v===undefined?profileMenuDefaultOn(role,key):v!==false}))}return result}
 function profileMenuAllowed(page){if(isSuperAdmin())return true;const role=isRetailManager()?'RM':currentUser?.role==='STORE'?'NEGOZIO':'DM';const v=profileMenuConfig?.enabled?.[role]?.[page];return v===undefined?profileMenuDefaultOn(role,page):v!==false}
 let profileMenuTab='DM';
+/* ECCEZIONI PER UTENTE: bozza modificata in pagina e salvata con il pulsante
+   della maschera, insieme alle scelte dei profili. Vuota = nessuna eccezione. */
+let profileOverridesDraft=null;const profileOverrideUser={};
+function profileOverrideLabel(r,u){return r==='NEGOZIO'?`${u.code?u.code+' · ':''}${u.name}${u.dm?' · '+u.dm:''}`:`${u.name}${u.admin?' · flag ADMIN':''}`}
+function profileOverrideCount(id){return Object.keys(profileOverridesDraft?.[id]?.items||{}).length}
+function profileOverrideProfileOn(r,key){const cb=document.querySelector(`[data-profile-key="${r}|${key}"]`);return cb?cb.checked:!!normalizeProfileMenuClient(profileMenuConfig)[r]?.[key]}
+function renderProfileExceptionsBox(r){
+ const host=document.querySelector(`[data-override-box="${r}"]`);if(!host)return;
+ const dir=profileMenuConfig?.user_directory?.[r]||[],nome=PROFILE_INFO[r]?.nome||r;
+ if(!dir.length){host.innerHTML=`<h4>Eccezioni per utente</h4><p class="profile-exc-note">Nessun utente attivo con il profilo ${esc(nome)}.</p>`;return}
+ const sel=dir.some(u=>u.id===profileOverrideUser[r])?profileOverrideUser[r]:'',con=dir.filter(u=>profileOverrideCount(u.id));
+ let html=`<h4>Eccezioni per utente</h4><p class="profile-exc-note">Accendi o spegni una voce solo per un utente: l’eccezione prevale sulla scelta del profilo ${esc(nome)}, nel menu e nell’accesso.</p>`
+  +(con.length?`<div class="profile-exc-chips">${con.map(u=>`<button type="button" class="profile-exc-chip${u.id===sel?' active':''}" data-override-pick="${r}|${esc(u.id)}">${esc(profileOverrideLabel(r,u))}<b>${profileOverrideCount(u.id)}</b></button>`).join('')}</div>`:'<p class="profile-exc-note">Nessuna eccezione per questo profilo.</p>')
+  +`<label class="profile-exc-select"><span>Utente</span><select data-override-user="${r}"><option value="">Scegli un utente…</option>${dir.map(u=>`<option value="${esc(u.id)}" ${u.id===sel?'selected':''}>${esc(profileOverrideLabel(r,u))}${profileOverrideCount(u.id)?` (${profileOverrideCount(u.id)} eccez.)`:''}</option>`).join('')}</select></label>`;
+ if(sel){
+  const u=dir.find(x=>x.id===sel),items=profileOverridesDraft?.[sel]?.items||{};
+  if(u.admin)html+=`<p class="profile-exc-warn">Ha il flag ADMIN: vede sempre tutte le sezioni e le eccezioni non gli si applicano.</p>`;
+  html+=`<div class="profile-exc-groups">${PROFILE_MENU_GROUPS[r].map(([,label,pages])=>`<div class="profile-exc-group"><strong>${esc(label)}</strong>${pages.map(([k,n])=>{const v=items[k],pOn=profileOverrideProfileOn(r,k),eff=v===undefined?pOn:v;
+   return `<div class="profile-exc-row${v!==undefined?' is-exception':''}${eff?'':' is-off'}"><span class="profile-exc-name"><span>${esc(n)}</span><small data-override-profile="${r}|${k}">Profilo: ${pOn?'attiva':'spenta'}</small></span><select data-override-item="${r}|${esc(sel)}|${k}" aria-label="${esc(n)} per ${esc(u.name)}"><option value="" ${v===undefined?'selected':''}>Come profilo</option><option value="on" ${v===true?'selected':''}>Attiva per lui/lei</option><option value="off" ${v===false?'selected':''}>Spenta per lui/lei</option></select></div>`}).join('')}</div>`).join('')}</div>`
+   +(Object.keys(items).length?`<button type="button" class="btn small" data-override-clear="${r}|${esc(sel)}">Togli le eccezioni di ${esc(u.name)}</button>`:'');
+ }
+ host.innerHTML=html;
+ host.querySelector('[data-override-user]').onchange=e=>{profileOverrideUser[r]=e.target.value;renderProfileExceptionsBox(r)};
+ host.querySelectorAll('[data-override-pick]').forEach(b=>b.onclick=()=>{profileOverrideUser[r]=b.dataset.overridePick.split('|')[1];renderProfileExceptionsBox(r)});
+ host.querySelectorAll('[data-override-item]').forEach(el=>el.onchange=()=>{const [role,id,key]=el.dataset.overrideItem.split('|');profileOverridesDraft=profileOverridesDraft||{};const cur=profileOverridesDraft[id]||{profile:role,items:{}};
+  if(el.value==='')delete cur.items[key];else cur.items[key]=el.value==='on';
+  if(Object.keys(cur.items).length)profileOverridesDraft[id]=cur;else delete profileOverridesDraft[id];renderProfileExceptionsBox(role)});
+ const clr=host.querySelector('[data-override-clear]');if(clr)clr.onclick=()=>{const [role,id]=clr.dataset.overrideClear.split('|');delete profileOverridesDraft[id];renderProfileExceptionsBox(role)};
+}
 function profileMenuItemMarkup(role,key,name,state){
  const link=key.startsWith('link-'),info=link?{vede:PROFILE_LINK_INFO[key]||'',fa:'Apre il collegamento in una nuova scheda.'}:(PROFILE_SECTION_INFO[role+'|'+key]||{});
  const on=!!state[role][key],attivabile=!profileMenuDefaultOn(role,key);
@@ -143,6 +172,7 @@ function profileMenuCounts(role,state){const keys=PROFILE_MENU_GROUPS[role].flat
 function renderStoreMenuSettings(){
  if(!isSuperAdmin())return;const host=$('#storeMenuSettingsList');if(!host)return;
  const state=normalizeProfileMenuClient(profileMenuConfig),ruoli=[...Object.keys(PROFILE_MENU_GROUPS),'ADMIN'];
+ if(profileOverridesDraft===null)profileOverridesDraft=JSON.parse(JSON.stringify(profileMenuConfig?.user_overrides||{}));
  if(!ruoli.includes(profileMenuTab))profileMenuTab='DM';
  const tab=r=>{const c=r==='ADMIN'?null:profileMenuCounts(r,state);return `<button type="button" class="profile-tab${r===profileMenuTab?' active':''}" data-profile-tab="${r}" role="tab" aria-selected="${r===profileMenuTab}">${esc(r==='ADMIN'?'ADMIN':PROFILE_INFO[r].nome)}<small data-profile-count="${r}">${c?`${c.on}/${c.tot} attive`:'tutte le funzioni'}</small></button>`};
  const elenco=(titolo,righe)=>righe.length?`<div class="profile-box"><h4>${titolo}</h4><ul>${righe.map(([a,b])=>`<li>${b?`<strong>${esc(a)}</strong> · ${esc(b)}`:esc(a)}</li>`).join('')}</ul></div>`:'';
@@ -152,15 +182,17 @@ function renderStoreMenuSettings(){
   return `<div class="profile-panel${r===profileMenuTab?'':' hidden'}" data-profile-panel="${r}"><div class="profile-intro"><h3>${esc(info.nome)}</h3><p>${esc(info.chi)}</p></div>`
    +elenco('Rispetto agli altri profili',info.confronto.map(t=>[t,'']))
    +`<div class="profile-groups">${PROFILE_MENU_GROUPS[r].map(([group,label,pages])=>`<section class="profile-section"><label class="store-menu-setting profile-section-head"><span><strong>${esc(label)}</strong><small>Intera sezione</small></span><span class="store-menu-switch"><input type="checkbox" data-profile-section="${r}|${group}" ${pages.every(([k])=>state[r][k])?'checked':''}><span></span></span></label>${pages.map(([k,n])=>profileMenuItemMarkup(r,k,n,state)).join('')}</section>`).join('')}</div>`
+   +`<div class="profile-box profile-exc" data-override-box="${r}"></div>`
    +elenco('Non disponibile per questo profilo',info.escluse)+'</div>';
  };
  host.innerHTML=`<div class="profile-tabs" role="tablist">${ruoli.map(tab).join('')}</div>${ruoli.map(pannello).join('')}`;
+Object.keys(PROFILE_MENU_GROUPS).forEach(renderProfileExceptionsBox);
  host.querySelectorAll('[data-profile-tab]').forEach(b=>b.onclick=()=>{profileMenuTab=b.dataset.profileTab;host.querySelectorAll('[data-profile-tab]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-selected',String(x===b))});host.querySelectorAll('[data-profile-panel]').forEach(p=>p.classList.toggle('hidden',p.dataset.profilePanel!==profileMenuTab))});
- const aggiorna=role=>{const st={[role]:{}};host.querySelectorAll(`[data-profile-key^="${role}|"]`).forEach(x=>{const k=x.dataset.profileKey.split('|')[1];st[role][k]=x.checked;x.closest('.profile-item')?.classList.toggle('is-on',x.checked)});const c=profileMenuCounts(role,st),el=host.querySelector(`[data-profile-count="${role}"]`);if(el)el.textContent=`${c.on}/${c.tot} attive`;PROFILE_MENU_GROUPS[role].forEach(([g,,pages])=>{const head=host.querySelector(`[data-profile-section="${role}|${g}"]`);if(head)head.checked=pages.every(([k])=>st[role][k])})};
+ const aggiorna=role=>{const st={[role]:{}};host.querySelectorAll(`[data-profile-key^="${role}|"]`).forEach(x=>{const k=x.dataset.profileKey.split('|')[1];st[role][k]=x.checked;x.closest('.profile-item')?.classList.toggle('is-on',x.checked)});const c=profileMenuCounts(role,st),el=host.querySelector(`[data-profile-count="${role}"]`);if(el)el.textContent=`${c.on}/${c.tot} attive`;PROFILE_MENU_GROUPS[role].forEach(([g,,pages])=>{const head=host.querySelector(`[data-profile-section="${role}|${g}"]`);if(head)head.checked=pages.every(([k])=>st[role][k])});renderProfileExceptionsBox(role)};
  host.querySelectorAll('[data-profile-section]').forEach(el=>el.onchange=()=>{const [role,group]=el.dataset.profileSection.split('|');PROFILE_MENU_GROUPS[role].find(x=>x[0]===group)[2].forEach(([key])=>{const cb=host.querySelector(`[data-profile-key="${role}|${key}"]`);if(cb)cb.checked=el.checked});aggiorna(role)});
  host.querySelectorAll('[data-profile-key]').forEach(el=>el.onchange=()=>aggiorna(el.dataset.profileKey.split('|')[0]));
 }
-async function saveStoreMenuSettings(){if(!isSuperAdmin())return;const enabled={};Object.keys(PROFILE_MENU_GROUPS).forEach(role=>enabled[role]={});document.querySelectorAll('[data-profile-key]').forEach(el=>{const [role,key]=el.dataset.profileKey.split('|');enabled[role][key]=el.checked});try{const saved=await window.agendaCloudApi.request('saveProfileMenuConfig',{enabled});profileMenuConfig=saved;renderStoreMenuSettings();toast('Gestione profili aggiornata')}catch(err){toast(err.message||'Salvataggio non riuscito',true)}}
+async function saveStoreMenuSettings(){if(!isSuperAdmin())return;const enabled={};Object.keys(PROFILE_MENU_GROUPS).forEach(role=>enabled[role]={});document.querySelectorAll('[data-profile-key]').forEach(el=>{const [role,key]=el.dataset.profileKey.split('|');enabled[role][key]=el.checked});try{const saved=await window.agendaCloudApi.request('saveProfileMenuConfig',{enabled,user_overrides:profileOverridesDraft||{}});profileMenuConfig=saved;profileOverridesDraft=null;renderStoreMenuSettings();toast('Gestione profili aggiornata')}catch(err){toast(err.message||'Salvataggio non riuscito',true)}}
 let appParametersCache=null;
 async function loadAppParameters(){
  if(!isSuperAdmin())return;

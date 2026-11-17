@@ -37,6 +37,7 @@ execFileSync(process.execPath,['scripts/test-ferie-dm.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-ferie-dm-export.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-ferie-dm-calendar-sync.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-store-multi-dm-contract.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-profile-exceptions.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
