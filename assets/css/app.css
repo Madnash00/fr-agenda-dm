@@ -2726,3 +2726,5 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  .profile-groups{grid-template-columns:1fr}
  .profile-tab{flex:1 1 40%}
 }
+/* FERIE DM · smaltimento ferie: pillola con colore dal rosso (0%) al verde (100%) */
+#page-dmholidays .dm-smalt-pill{display:inline-block;min-width:52px;padding:3px 9px;border-radius:999px;font-weight:900;font-variant-numeric:tabular-nums;text-align:center;line-height:1.35}
