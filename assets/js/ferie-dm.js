@@ -12,6 +12,9 @@ let dmFerieAuditFilters={dm:'',date:'',week:'',month:'',field:''};
 let dmFerieAuditModalState=null;
 
 function dmFerieKey(dmId,date){return String(dmId)+'|'+String(date)}
+/* Il registro modifiche e' uno strumento di controllo: lo vedono il RM e gli
+   ADMIN (profilo ADMIN o flag ADMIN). Il backend applica la stessa regola. */
+function dmFerieAuditVisible(){return isRetailManager()||isSuperAdmin()}
 function dmFerieBackendMessage(err){
  return String(err?.code||'')==='UNKNOWN_ACTION'
   ?'FERIE DM richiede il backend aggiornato (build 2026-11-17-ferie-dm-v15): incolla il nuovo Code.gs e crea una nuova versione della distribuzione.'
@@ -72,7 +75,8 @@ async function loadDmHolidays(force=false){
   const data=await window.agendaCloudApi.request('getDmHolidayPlanning',{year,__force:force});
   if(seq!==dmFerieState.seq)return;
   dmFerieState.data=data;dmFerieState.year=Number(data.year)||year;dmFerieIndex();renderDmFerie();dmFerieSetStatus('');
-  void loadDmFerieAudit(true);
+  $('#dmFerieAuditPanel')?.classList.toggle('hidden',!dmFerieAuditVisible());
+  if(dmFerieAuditVisible())void loadDmFerieAudit(true);
  }catch(err){
   if(seq!==dmFerieState.seq)return;
   dmFerieSetStatus('');
@@ -264,6 +268,7 @@ function dmFerieCalendarRefresh(){
 
 /* ----------------------------------------------------- registro modifiche */
 async function loadDmFerieAudit(reset=true){
+ if(!dmFerieAuditVisible())return;
  const year=dmFerieState.year||Number($('#dmFerieYear')?.value)||new Date().getFullYear();
  const st=dmFerieAuditState,seq=++st.seq;
  if(reset){st.rows=[];st.cursor=null;st.complete=false;st.error='';st.year=year;st.visibleLimit=150}

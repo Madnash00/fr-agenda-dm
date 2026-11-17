@@ -32,7 +32,7 @@ function applica(ruolo,{profile_role=ruolo}={}){
   currentUser:{role:ruolo,profile_role,store_id:ruolo==='STORE'?'S1':null},
   isSuperAdmin:()=>profile_role==='ADMIN',
   isRetailManager:()=>ruolo==='RM',
-  profileMenuAllowed:()=>true,
+  profileMenuAllowed:()=>true,applyProfileLinkVisibility:()=>{},
   $$:sel=>sel.includes('nav-section')?sezioni:voci};
  vm.createContext(ctx);
  vm.runInContext(estrai('function applyProfileMenuVisibility()'),ctx);

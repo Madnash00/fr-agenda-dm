@@ -2696,3 +2696,33 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  .ferie-hours-choice{min-height:40px}
  .ferie-hours-value{width:100%}
 }
+
+/* --------- Gestione Profili · schede per profilo -----------------------
+   Ogni voce porta la descrizione di cosa il profilo vede, fa e non fa: la
+   maschera deve spiegare le conseguenze di un interruttore, non solo mostrarlo. */
+#storeMenuSettingsList.store-menu-settings-list{display:block;padding:4px 16px 16px}
+.profile-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.profile-tab{display:grid;gap:2px;text-align:left;padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-weight:850;font-size:12px;color:#2c3640}
+.profile-tab small{font-weight:650;font-size:10.5px;color:var(--muted)}
+.profile-tab.active{border-color:#984266;box-shadow:inset 0 0 0 1px #984266;background:#fff6fa}
+.profile-panel.hidden{display:none}
+.profile-intro h3{margin:0 0 4px;font-size:15px}
+.profile-intro p{margin:0 0 12px;color:#4a5359;font-size:12.5px;line-height:1.45;max-width:900px}
+.profile-box{border:1px solid #e3e7ea;border-radius:10px;padding:10px 14px;margin-bottom:12px;background:#fafbfc}
+.profile-box h4{margin:0 0 6px;font-size:11px;letter-spacing:.04em;color:#984266}
+.profile-box ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:12px;color:#36404a}
+.profile-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:start;margin-bottom:12px}
+.profile-section{display:grid;gap:6px;padding:10px;border:1px solid #dfe3e5;border-radius:12px;background:#f9fafb;margin:0}
+.profile-section .profile-section-head{background:#eef1f3}
+.profile-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 11px;opacity:.72}
+.profile-item.is-on{opacity:1}
+.profile-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.profile-item-name{font-weight:850;font-size:12.5px;color:#2c3640;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.profile-badge{font-size:9px;font-weight:900;letter-spacing:.05em;color:#1c4b93;background:#e3edfc;border-radius:4px;padding:2px 6px}
+.profile-item-info{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:8px 0 0;font-size:11.5px;line-height:1.4}
+.profile-item-info dt{font-weight:850;color:#6b7680}
+.profile-item-info dd{margin:0;color:#36404a}
+@media screen and (max-width:720px){
+ .profile-groups{grid-template-columns:1fr}
+ .profile-tab{flex:1 1 40%}
+}
