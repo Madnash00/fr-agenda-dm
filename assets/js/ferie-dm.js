@@ -266,9 +266,13 @@ async function flushDmFerieQueue(forceRetry=false){
 }
 /* Il calendario del DM tiene gli eventi in memoria: dopo una modifica dal
    planning va riletto, altrimenti mostrerebbe le ferie di prima. */
+/* Dopo un salvataggio il calendario deve rileggere il centrale: le letture in
+   cache e la scorciatoia dell'intervallo "appena letto" mostrerebbero ancora le
+   ferie tolte. Se il calendario e' aperto, si ridisegna. */
 function dmFerieCalendarRefresh(){
  if(currentUser?.role!=='ADMIN'||typeof refreshCloudState!=='function')return;
- void refreshCloudState().catch(()=>{});
+ if(typeof calendarRangeFreshUntil!=='undefined')calendarRangeFreshUntil.clear();
+ void refreshCloudState().then(()=>{if($('#page-calendar')?.classList.contains('active')&&typeof renderCalendar==='function')renderCalendar()}).catch(()=>{});
 }
 
 /* ----------------------------------------------------- registro modifiche */
