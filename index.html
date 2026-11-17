@@ -14,13 +14,13 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=ff08e52af0bb5d37">
+<link rel="stylesheet" href="./assets/css/app.css?v=43252183e21b5e31">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=69df3329b4c8db44"></script>
 <script defer src="./assets/js/action-plan-guided.js?v=58d2f96f1f6eeac1"></script>
 <script defer src="./assets/js/app.js?v=ddc5a7aeb043b247"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
-<script defer src="./assets/js/ferie-dm.js?v=58182d381062c156"></script>
+<script defer src="./assets/js/ferie-dm.js?v=253d1ede54ceea21"></script>
 <script defer src="./assets/js/personnel-hours.js?v=c73f5b2a4a224e50"></script>
 </head>
 <body>
@@ -207,6 +207,8 @@
   <div class="holiday-toolbar-group">
    <label>Anno<select id="dmFerieYear"></select></label>
    <button id="reloadDmFerieBtn" class="btn" type="button">Aggiorna</button>
+   <button id="downloadDmFerieExcelBtn" class="btn" type="button">Scarica Excel</button>
+   <button id="downloadDmFeriePdfBtn" class="btn" type="button">Scarica PDF</button>
   </div>
   <div class="holiday-toolbar-group"><p id="dmFerieMeta" class="holiday-view-note"></p><span id="dmFerieSaveStatus" class="holiday-saving" aria-live="polite"></span><button type="button" class="btn small hidden" id="retryDmFerieSaveBtn">RIPROVA SALVATAGGIO</button></div>
  </div>
