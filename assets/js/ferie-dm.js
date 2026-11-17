@@ -10,6 +10,8 @@ let dmFerieQueue=new Map(),dmFerieTimer=null,dmFerieSaving=null,dmFerieRetry=fal
 let dmFerieAuditState={rows:[],cursor:null,complete:false,loading:false,error:'',year:0,seq:0,visibleLimit:150};
 let dmFerieAuditFilters={dm:'',date:'',week:'',month:'',field:''};
 let dmFerieAuditModalState=null;
+/* Il registro parte chiuso: si apre con il pulsante e si carica solo allora. */
+let dmFerieAuditOpen=false,dmFerieAuditStale=true;
 
 function dmFerieKey(dmId,date){return String(dmId)+'|'+String(date)}
 /* Il registro modifiche e' uno strumento di controllo: lo vedono il RM e gli
@@ -59,6 +61,7 @@ function initDmFerieControls(){
  const pdf=$('#downloadDmFeriePdfBtn');if(pdf)pdf.onclick=()=>downloadDmFeriePdf();
  const retry=$('#retryDmFerieSaveBtn');if(retry)retry.onclick=()=>flushDmFerieQueue(true);
  const form=$('#dmFerieClosureForm');if(form)form.onsubmit=e=>{e.preventDefault();addDmFerieClosure()};
+ const tg=$('#dmFerieAuditToggle');if(tg)tg.onclick=()=>toggleDmFerieAudit();
  const ra=$('#reloadDmFerieAudit');if(ra)ra.onclick=()=>loadDmFerieAudit(true);
  const more=$('#loadMoreDmFerieAudit');if(more)more.onclick=()=>{if(dmFerieAuditState.error){void loadDmFerieAudit(false);return}dmFerieAuditState.visibleLimit+=150;renderDmFerieAudit()};
  const clear=$('#dmFerieAuditClearFilters');if(clear)clear.onclick=()=>{dmFerieAuditFilters={dm:'',date:'',week:'',month:'',field:''};for(const id of ['Dm','Date','Week','Month','Field']){const el=$('#dmFerieAuditFilter'+id);if(el)el.value=''}dmFerieAuditState.visibleLimit=150;renderDmFerieAudit()};
@@ -269,8 +272,19 @@ function dmFerieCalendarRefresh(){
 }
 
 /* ----------------------------------------------------- registro modifiche */
+function toggleDmFerieAudit(open=!dmFerieAuditOpen){
+ dmFerieAuditOpen=!!open;
+ const tg=$('#dmFerieAuditToggle'),body=$('#dmFerieAuditBody'),lbl=$('#dmFerieAuditToggle .dm-audit-toggle-label');
+ if(tg)tg.setAttribute('aria-expanded',dmFerieAuditOpen?'true':'false');
+ if(body)body.classList.toggle('hidden',!dmFerieAuditOpen);
+ if(lbl)lbl.textContent=dmFerieAuditOpen?'Chiudi':'Apri';
+ if(dmFerieAuditOpen&&dmFerieAuditStale)void loadDmFerieAudit(true);
+}
 async function loadDmFerieAudit(reset=true){
  if(!dmFerieAuditVisible())return;
+ /* chiuso: niente richieste, si ricarica alla prossima apertura */
+ if(!dmFerieAuditOpen){dmFerieAuditStale=true;return}
+ dmFerieAuditStale=false;
  const year=dmFerieState.year||Number($('#dmFerieYear')?.value)||new Date().getFullYear();
  const st=dmFerieAuditState,seq=++st.seq;
  if(reset){st.rows=[];st.cursor=null;st.complete=false;st.error='';st.year=year;st.visibleLimit=150}
@@ -474,7 +488,8 @@ function dmFerieXlsxBlob(model){
   r++;
  }
  const widths=[30,...Array(31).fill(5.4),10];
- const sheet=planningSheetXml({rows,maxCol:LAST,widths,merges,rowHeights,freeze:{x:1,y:0}});
+ /* si apre con zoom all'80%: stessa vista di insieme della pagina */
+ const sheet=planningSheetXml({rows,maxCol:LAST,widths,merges,rowHeights,freeze:{x:1,y:0}}).replace('<sheetView workbookViewId="0">','<sheetView workbookViewId="0" zoomScale="80" zoomScaleNormal="80">');
  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="165" formatCode="0.0%"/></numFmts><fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fills.slice(2).map(c=>`<fill><patternFill patternType="solid"><fgColor rgb="${c}"/><bgColor indexed="64"/></patternFill></fill>`).join('')}</fills><borders count="2"><border/><border><left style="thin"><color rgb="FFDDE1E4"/></left><right style="thin"><color rgb="FFDDE1E4"/></right><top style="thin"><color rgb="FFDDE1E4"/></top><bottom style="thin"><color rgb="FFDDE1E4"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
  const name=`Ferie DM ${model.year}`;
  const files=[{name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'},

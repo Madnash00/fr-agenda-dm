@@ -126,6 +126,7 @@ vm.runInContext("dmFerieAuditFilters.dm=''",ctx);
 
 // --- il registro e' riservato a RM e ADMIN ---
 {const visto=[];ctx.window={agendaCloudApi:{request:async(azione)=>{visto.push(azione);return {events:[],next_cursor:null}}}};
+ vm.runInContext('dmFerieAuditOpen=true',ctx); /* qui conta solo chi puo vederlo: il pannello e aperto */
  for(const [chi,rm,adm,atteso] of [['un DM',false,false,false],['il RM',true,false,true],['un ADMIN',false,true,true]]){
   profilo.rm=rm;profilo.adm=adm;visto.length=0;
   assert.equal(ctx.dmFerieAuditVisible(),atteso,`Registro per ${chi}: ${atteso?'visibile':'nascosto'}`);
@@ -133,6 +134,31 @@ vm.runInContext("dmFerieAuditFilters.dm=''",ctx);
   assert.equal(visto.includes('getDmHolidayAudit'),atteso,`Per ${chi} il registro ${atteso?'si':'non si'} carica`);
  }
  profilo.rm=true;profilo.adm=false;}
+// --- il registro e' un pulsante: chiuso non carica nulla, aperto mostra analisi e registro ---
+{const visto=[];ctx.window={agendaCloudApi:{request:async(azione)=>{visto.push(azione);return {events:[],next_cursor:null}}}};
+ const attr={},cls=new Set(['hidden']);
+ host['#dmFerieAuditToggle']={setAttribute:(k,v)=>{attr[k]=v}};
+ host['#dmFerieAuditBody']={classList:{toggle:(c,v)=>{v?cls.add(c):cls.delete(c)}}};
+ host['#dmFerieAuditToggle .dm-audit-toggle-label']={textContent:'Apri'};
+ vm.runInContext('dmFerieAuditOpen=false;dmFerieAuditStale=false',ctx);profilo.rm=true;
+ await ctx.loadDmFerieAudit(true);
+ assert.equal(visto.length,0,'Registro chiuso: nessuna richiesta al backend');
+ assert.equal(vm.runInContext('dmFerieAuditStale',ctx),true,'e viene segnato da ricaricare alla prossima apertura');
+ ctx.toggleDmFerieAudit();await new Promise(r=>setTimeout(r,0));
+ assert.equal(attr['aria-expanded'],'true','Il pulsante dichiara lo stato aperto');
+ assert.ok(!cls.has('hidden'),'Aperto: compaiono analisi, registro e approfondimenti');
+ assert.equal(host['#dmFerieAuditToggle .dm-audit-toggle-label'].textContent,'Chiudi');
+ assert.deepEqual(visto,['getDmHolidayAudit'],'All apertura il registro si carica');
+ visto.length=0;ctx.toggleDmFerieAudit();
+ assert.ok(cls.has('hidden')&&attr['aria-expanded']==='false','Si richiude con lo stesso pulsante');
+ ctx.toggleDmFerieAudit();await new Promise(r=>setTimeout(r,0));
+ assert.equal(visto.length,0,'Riaprendolo senza novita non si ricarica');
+ vm.runInContext('dmFerieAuditOpen=false;dmFerieAuditStale=false',ctx);}
+assert.ok(/<button type="button" id="dmFerieAuditToggle" class="dm-audit-toggle" aria-expanded="false" aria-controls="dmFerieAuditBody">/.test(html),'Il titolo del registro e un pulsante accessibile, chiuso di partenza');
+{const i=html.indexOf('id="dmFerieAuditBody" class="dm-audit-body hidden"'),j=html.indexOf('</section>',i);assert.ok(i>0,'Il contenuto parte nascosto');
+ for(const id of ['reloadDmFerieAudit','dmFerieAuditFilterDm','dmFerieAuditWeeklyChart','dmFerieAuditMonthlyChart','dmFerieAuditPeaks','dmFerieAuditTable','loadMoreDmFerieAudit'])
+  {const k=html.indexOf(`id="${id}"`);assert.ok(k>i&&k<j,`${id} sta dentro la parte che si apre`)}}
+assert.ok(fer.includes("const tg=$('#dmFerieAuditToggle');if(tg)tg.onclick=()=>toggleDmFerieAudit();"),'Il pulsante e collegato');
 const caricamento=fer.slice(fer.indexOf('async function loadDmHolidays('),fer.indexOf('function dmFerieIndex('));
 assert.ok(caricamento.includes("$('#dmFerieAuditPanel')?.classList.toggle('hidden',!dmFerieAuditVisible());"),'Il pannello del registro si nasconde a chi non puo vederlo');
 assert.ok(/id="dmFerieAuditPanel" class="card holiday-planning-audit hidden"/.test(html),'E parte nascosto: nessun lampo di contenuto prima del controllo');
