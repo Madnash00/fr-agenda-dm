@@ -14,12 +14,13 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=af1da9c51eb55f5e">
+<link rel="stylesheet" href="./assets/css/app.css?v=23454e67245fd66b">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
-<script defer src="./assets/js/cloud-api.js?v=e5edb74553114998"></script>
+<script defer src="./assets/js/cloud-api.js?v=0f698d0e8f808041"></script>
 <script defer src="./assets/js/action-plan-guided.js?v=58d2f96f1f6eeac1"></script>
-<script defer src="./assets/js/app.js?v=2febdb5cdedb4dd6"></script>
+<script defer src="./assets/js/app.js?v=0f6ee540fee15552"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
+<script defer src="./assets/js/ferie-dm.js?v=8b66a4cb8905a945"></script>
 <script defer src="./assets/js/personnel-hours.js?v=c73f5b2a4a224e50"></script>
 </head>
 <body>
@@ -47,6 +48,7 @@
     <button class="nav-btn nav-sub-btn active" data-page="calendar" data-store-menu-key="calendar">Calendario</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="agenda">Agenda</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="dmoverview">Overview DM</button>
+    <button class="nav-btn nav-sub-btn admin-only" data-page="dmholidays">Ferie DM</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="report">Report Agenda</button>
    </div>
   </div>
@@ -74,7 +76,7 @@
   </div>
   <div class="nav-section rm-only hidden open active" data-nav-section="rm-calendar">
    <button class="nav-group-btn" type="button" data-nav-group="rm-calendar" aria-expanded="true"><span>RETAIL MANAGER</span><span class="nav-chevron">›</span></button>
-   <div class="nav-submenu"><button class="nav-btn nav-sub-btn active" data-page="rmcalendar">Calendario DM</button></div>
+   <div class="nav-submenu"><button class="nav-btn nav-sub-btn active" data-page="rmcalendar">Overview DM</button><button class="nav-btn nav-sub-btn" data-page="dmholidays">Ferie DM</button></div>
   </div>
   <div class="nav-section rm-only hidden" data-nav-section="rm-supervision">
    <button class="nav-group-btn" type="button" data-nav-group="rm-supervision" aria-expanded="false"><span>SUPERVISIONE</span><span class="nav-chevron">›</span></button>
@@ -189,7 +191,7 @@
   <div class="rm-toolbar-group"><label>Vista<select id="rmCalendarView"><option value="day">Giorno</option><option value="week">Settimana</option><option value="month" selected>Mese</option></select></label><label>Data<input id="rmCalendarDate" type="date"></label><label>DM<select id="rmCalendarDm"><option value="">Tutti i DM</option></select></label><button id="rmCalFitBtn" class="btn rm-calendar-fit-btn" type="button" aria-pressed="false" title="Adatta tutte le righe del calendario all’altezza dello schermo">ADATTA</button><button id="reloadRMCalendarBtn" class="btn">Aggiorna</button></div>
  </div>
  <div id="rmCalendarKpis" class="kpi-grid"></div>
- <div class="card rm-calendar-card"><div class="section-head"><div><h3>Calendario Retail Manager</h3><p id="rmCalendarRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="rmCalendarGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
+ <div class="card rm-calendar-card"><div class="section-head"><div><h3>Overview DM</h3><p id="rmCalendarRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="rmCalendarGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
 </section>
 <section id="page-dmoverview" class="page admin-only hidden">
  <div class="card rm-toolbar">
@@ -200,6 +202,52 @@
  <div class="card rm-calendar-card"><div class="section-head"><div><h3>Overview DM</h3><p id="dmOvRangeLabel" class="muted">Vista sintetica delle attività inserite dai DM.</p></div><span class="status ok">SOLA CONSULTAZIONE</span></div><div id="dmOvGrid" class="rm-calendar-scroll"><div class="empty">Caricamento…</div></div></div>
 </section>
 
+<section id="page-dmholidays" class="page">
+ <div class="holiday-toolbar card">
+  <div class="holiday-toolbar-group">
+   <label>Anno<select id="dmFerieYear"></select></label>
+   <button id="reloadDmFerieBtn" class="btn" type="button">Aggiorna</button>
+  </div>
+  <div class="holiday-toolbar-group"><p id="dmFerieMeta" class="holiday-view-note"></p><span id="dmFerieSaveStatus" class="holiday-saving" aria-live="polite"></span><button type="button" class="btn small hidden" id="retryDmFerieSaveBtn">RIPROVA SALVATAGGIO</button></div>
+ </div>
+ <div class="card dm-ferie-closures-card">
+  <div class="section-head"><div><h3>Chiusure aziendali</h3><p class="muted">Valgono per tutti i DM. Inserendo una chiusura, chi quel giorno non ha ferie riceve 8 ore di default, poi modificabili nel proprio planning.</p></div></div>
+  <form id="dmFerieClosureForm" class="dm-ferie-closure-form">
+   <label>Data<input id="dmFerieClosureDate" type="date" required></label>
+   <label>Descrizione<input id="dmFerieClosureLabel" type="text" maxlength="80" placeholder="Es. Ponte del 2 giugno"></label>
+   <button class="btn primary" type="submit">Aggiungi chiusura</button>
+  </form>
+  <div id="dmFerieClosures" class="dm-ferie-closures"><div class="empty">Caricamento…</div></div>
+ </div>
+ <div class="card holiday-summary-card">
+  <div class="section-head"><div><h3>Quadro ferie DM</h3><p class="muted">I DM sono gli account attivi. Ognuno modifica la propria riga; le ore programmate si aggiornano dal planning e dal calendario.</p></div></div>
+  <div id="dmFerieSummary" class="table-scroll"><div class="empty">Caricamento…</div></div>
+ </div>
+ <div class="card holiday-planning-card">
+  <div class="section-head"><div><h3>Planning giornaliero</h3><p class="muted">Ore di ferie da 0,25 a 8. Ogni giornata compare anche sul calendario del DM, e viceversa. Il salvataggio è automatico.</p></div>
+   <div class="dm-ferie-legend" aria-label="Legenda colori"><span class="dm-legend dm-day-weekend">Sabato e domenica</span><span class="dm-legend dm-day-holiday">Festività nazionali</span><span class="dm-legend dm-day-closure">Chiusura aziendale</span></div></div>
+  <div id="dmFerieGrid" class="holiday-planning-scroll"><div class="empty">Nessun dato caricato.</div></div>
+ </div>
+ <div class="card holiday-planning-audit">
+  <div class="section-head"><div><h3>Registro modifiche · Ferie DM</h3><p class="muted">Ogni variazione di planning, quadro e chiusure, da FERIE DM, dal calendario e dall’importazione.</p></div><button type="button" class="btn small" id="reloadDmFerieAudit">Aggiorna registro</button></div>
+  <div class="holiday-audit-filters">
+   <label>DM<input id="dmFerieAuditFilterDm" type="search" placeholder="Cerca DM" autocomplete="off"></label>
+   <label>DATA PLANNING<input id="dmFerieAuditFilterDate" type="date"></label>
+   <label>WEEK PLANNING<select id="dmFerieAuditFilterWeek"><option value="">Tutte</option></select></label>
+   <label>MESE PLANNING<select id="dmFerieAuditFilterMonth"><option value="">Tutti</option></select></label>
+   <label>CAMPO<select id="dmFerieAuditFilterField"><option value="">Tutti</option></select></label>
+   <button id="dmFerieAuditClearFilters" type="button" class="btn small">Azzera filtri</button>
+  </div>
+  <div id="dmFerieAuditMeta" class="holiday-view-note"></div>
+  <div class="holiday-audit-reports">
+   <div class="holiday-audit-report"><h4>Variazioni per WEEK</h4><div class="holiday-audit-chart-caption"><span class="holiday-audit-legend-count">Modifiche</span><span class="holiday-audit-legend-hours">Ore variate</span></div><div id="dmFerieAuditWeeklyChart" class="holiday-audit-chart" aria-label="Modifiche per settimana"></div></div>
+   <div class="holiday-audit-report"><h4>Variazioni per MESE</h4><div class="holiday-audit-chart-caption"><span class="holiday-audit-legend-count">Modifiche</span><span class="holiday-audit-legend-hours">Ore variate</span></div><div id="dmFerieAuditMonthlyChart" class="holiday-audit-chart" aria-label="Modifiche per mese"></div></div>
+  </div>
+  <div id="dmFerieAuditPeaks" class="holiday-audit-peaks" aria-live="polite"></div>
+  <div id="dmFerieAuditTable" class="table-scroll"><div class="empty">Caricamento…</div></div>
+  <div id="dmFerieAuditMore" class="hidden" style="display:flex;justify-content:center;padding-top:10px"><button type="button" class="btn small" id="loadMoreDmFerieAudit">Mostra altre 150 righe</button></div>
+ </div>
+</section>
 <section id="page-rmholidays" class="page rm-only hidden">
  <div class="card rm-toolbar">
   <div class="rm-toolbar-group">

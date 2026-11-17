@@ -72,5 +72,7 @@ jobs:
         run: node scripts/test-action-plan-owner-ms.mjs
       - name: Action Plan · sessioni di CHECK
         run: node scripts/test-action-plan-check.mjs
+      - name: Ferie DM · planning, chiusure, registro e ore sul calendario
+        run: node scripts/test-ferie-dm.mjs
       - name: Synthetic client cache benchmark
         run: node scripts/benchmark-api-client.mjs

@@ -9,7 +9,8 @@ const html=readFileSync('index.html','utf8');
 // --- voce di menu al posto richiesto ---
 const nav=html.slice(html.indexOf('data-nav-section="agenda"'),html.indexOf('data-nav-section="store-holidays"'));
 const voci=[...nav.matchAll(/data-page="([a-z]+)"/g)].map(m=>m[1]);
-assert.deepEqual(voci,['calendar','agenda','dmoverview','report'],'Overview DM va sotto Agenda, dentro AGENDA DM');
+/* Ferie DM e' stata aggiunta subito sotto Overview DM, su richiesta. */
+assert.deepEqual(voci,['calendar','agenda','dmoverview','dmholidays','report'],'Overview DM va sotto Agenda, e Ferie DM subito dopo, dentro AGENDA DM');
 assert.ok(/data-page="dmoverview">Overview DM</.test(nav),'La voce deve chiamarsi Overview DM');
 assert.ok(/class="nav-btn nav-sub-btn admin-only" data-page="dmoverview"/.test(nav),'La voce e riservata al profilo DM');
 
