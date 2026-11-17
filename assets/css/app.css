@@ -2728,3 +2728,14 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 }
 /* FERIE DM · smaltimento ferie: pillola con colore dal rosso (0%) al verde (100%) */
 #page-dmholidays .dm-smalt-pill{display:inline-block;min-width:52px;padding:3px 9px;border-radius:999px;font-weight:900;font-variant-numeric:tabular-nums;text-align:center;line-height:1.35}
+/* FERIE DM · registro modifiche richiudibile */
+#page-dmholidays .dm-audit-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:15px;border:0;background:transparent;text-align:left;cursor:pointer;color:inherit;font:inherit}
+#page-dmholidays .dm-audit-toggle-text{display:grid;gap:4px}
+#page-dmholidays .dm-audit-toggle-title{font-size:16px;font-weight:850;color:var(--ink,#2b2f33)}
+#page-dmholidays .dm-audit-toggle-cta{display:inline-flex;align-items:center;gap:8px;flex:none;padding:7px 12px;border:1px solid var(--line,#dde1e4);border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;color:#44505d;background:#fff}
+#page-dmholidays .dm-audit-toggle:hover .dm-audit-toggle-cta{background:#f2f4f5}
+#page-dmholidays .dm-audit-toggle:focus-visible{outline:2px solid #984266;outline-offset:4px;border-radius:8px}
+#page-dmholidays .dm-audit-toggle-chevron{display:inline-block;font-size:16px;line-height:1;transition:transform .18s ease}
+#page-dmholidays .dm-audit-toggle[aria-expanded="true"] .dm-audit-toggle-chevron{transform:rotate(90deg)}
+#page-dmholidays .dm-audit-body{padding:0 0 4px}
+#page-dmholidays .dm-audit-body-head{display:flex;justify-content:flex-end;padding:0 16px 8px}

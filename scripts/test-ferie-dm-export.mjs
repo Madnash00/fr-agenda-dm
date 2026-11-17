@@ -94,6 +94,8 @@ const verde=ctx.dmFerieSmaltColor(100).bgHex,rosso=ctx.dmFerieSmaltColor(0).bgHe
 assert.ok(xl.styles.includes('FF'+rosso),'Lo smaltimento in Excel usa la stessa scala della pagina');
 assert.ok(xl.styles.includes('FFC8DBF7')&&xl.styles.includes('FFF6C9C9')&&xl.styles.includes('FFC9E8D2'),'Chiusure, weekend e festivita con i colori della pagina');
 assert.ok(/orientation="landscape" fitToWidth="1"/.test(sheet),'Stampabile in A4 orizzontale');
+assert.ok(sheet.includes('<sheetView workbookViewId="0" zoomScale="80" zoomScaleNormal="80">'),'Il file Excel si apre con zoom all 80%');
+assert.ok(!app.includes('zoomScale'),'Lo zoom riguarda solo Ferie DM: gli altri export Excel restano come sono');
 
 // --- PDF ---
 const pdf=ctx.dmFeriePdfBytes(m),ptxt=Buffer.from(pdf).toString('latin1');

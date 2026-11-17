@@ -14,13 +14,13 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=43252183e21b5e31">
+<link rel="stylesheet" href="./assets/css/app.css?v=bdf5971412cd1833">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <script defer src="./assets/js/cloud-api.js?v=69df3329b4c8db44"></script>
 <script defer src="./assets/js/action-plan-guided.js?v=58d2f96f1f6eeac1"></script>
 <script defer src="./assets/js/app.js?v=ddc5a7aeb043b247"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
-<script defer src="./assets/js/ferie-dm.js?v=253d1ede54ceea21"></script>
+<script defer src="./assets/js/ferie-dm.js?v=1eb173b8482fad31"></script>
 <script defer src="./assets/js/personnel-hours.js?v=c73f5b2a4a224e50"></script>
 </head>
 <body>
@@ -231,7 +231,9 @@
   <div id="dmFerieGrid" class="holiday-planning-scroll"><div class="empty">Nessun dato caricato.</div></div>
  </div>
  <div id="dmFerieAuditPanel" class="card holiday-planning-audit hidden">
-  <div class="section-head"><div><h3>Registro modifiche · Ferie DM</h3><p class="muted">Ogni variazione di planning, quadro e chiusure, da FERIE DM, dal calendario e dall’importazione.</p></div><button type="button" class="btn small" id="reloadDmFerieAudit">Aggiorna registro</button></div>
+  <button type="button" id="dmFerieAuditToggle" class="dm-audit-toggle" aria-expanded="false" aria-controls="dmFerieAuditBody"><span class="dm-audit-toggle-text"><span class="dm-audit-toggle-title">Registro modifiche · Ferie DM</span><span class="muted">Ogni variazione di planning, quadro e chiusure, da FERIE DM, dal calendario e dall’importazione. Apri per analisi, registro e approfondimenti.</span></span><span class="dm-audit-toggle-cta"><span class="dm-audit-toggle-label">Apri</span><span class="dm-audit-toggle-chevron" aria-hidden="true">›</span></span></button>
+  <div id="dmFerieAuditBody" class="dm-audit-body hidden">
+  <div class="dm-audit-body-head"><button type="button" class="btn small" id="reloadDmFerieAudit">Aggiorna registro</button></div>
   <div class="holiday-audit-filters">
    <label>DM<input id="dmFerieAuditFilterDm" type="search" placeholder="Cerca DM" autocomplete="off"></label>
    <label>DATA PLANNING<input id="dmFerieAuditFilterDate" type="date"></label>
@@ -248,6 +250,7 @@
   <div id="dmFerieAuditPeaks" class="holiday-audit-peaks" aria-live="polite"></div>
   <div id="dmFerieAuditTable" class="table-scroll"><div class="empty">Caricamento…</div></div>
   <div id="dmFerieAuditMore" class="hidden" style="display:flex;justify-content:center;padding-top:10px"><button type="button" class="btn small" id="loadMoreDmFerieAudit">Mostra altre 150 righe</button></div>
+  </div>
  </div>
 </section>
 <section id="page-rmholidays" class="page rm-only hidden">
