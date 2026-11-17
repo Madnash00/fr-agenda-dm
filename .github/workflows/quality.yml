@@ -78,6 +78,8 @@ jobs:
         run: node scripts/test-ferie-dm-export.mjs
       - name: Ferie DM, riallineamento del calendario
         run: node scripts/test-ferie-dm-calendar-sync.mjs
+      - name: Negozio con piu DM, perimetro del calendario
+        run: node scripts/test-store-multi-dm-contract.mjs
       - name: Gestione Profili · voci, collegamenti e descrizioni
         run: node scripts/test-gestione-profili.mjs
       - name: Synthetic client cache benchmark
