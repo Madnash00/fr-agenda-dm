@@ -36,6 +36,7 @@ execFileSync(process.execPath,['scripts/test-action-plan-check.mjs'],{stdio:'inh
 execFileSync(process.execPath,['scripts/test-ferie-dm.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-ferie-dm-export.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-ferie-dm-calendar-sync.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-store-multi-dm-contract.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
@@ -102,7 +103,7 @@ assert.ok(app.includes('ensureMobileAgendaClickDelegation()') && !app.includes("
 for(const k of ['reportRequestSequence','overtimeCheckRequestSequence','rmCalendarRequestSequence','holidayConsolidatedRequestSequence'])assert.ok(app.includes(k),'Latest request guard missing: '+k);
 assert.ok(api.includes("if(keys.length<=48)return"),'Avoid parsing persistent cache entries when pruning is not required');
 assert.ok(app.includes("if(ev?.event_type==='STORE_VISIT'&&(!storeVisitsVisibilityReady||!storeVisitsVisibleToStores))"),'STORE SV must fail closed before verified visibility');
-const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContract('),app.indexOf('function storeCalendarReady()'));assert.ok(storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))")>=0&&storeContractSource.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;')>storeContractSource.indexOf("if(dir.some(st=>String(st.admin_id||'')!==serverAdmin))"),'STORE privacy must be applied only after DM ownership and store scope checks');
+const storeContractSource=app.slice(app.indexOf('function setStoreCalendarContract('),app.indexOf('function storeCalendarReady()'));assert.ok(storeContractSource.indexOf("if(dir.some(st=>!scopeAdmins.has(String(st.admin_id||''))))")>=0&&storeContractSource.indexOf('storeVisitsVisibleToStores=cal.store_visits_visible_to_stores;')>storeContractSource.indexOf("if(dir.some(st=>!scopeAdmins.has(String(st.admin_id||''))))"),'STORE privacy must be applied only after DM ownership and store scope checks');
 // Store-only holiday and overtime UX regression locks.
 assert.ok(html.includes('id="holidayPlanningAuditPanel"')&&html.includes('id="holidayPlanningAuditTable"'),'DM planning audit panel must be below the grid');
 assert.ok(app.includes("function holidayPlanningAuditIsDm(){return currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'}"),'Only DM profile may see planning audit');
