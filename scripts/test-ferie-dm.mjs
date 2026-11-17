@@ -159,6 +159,9 @@ assert.ok(/<button type="button" id="dmFerieAuditToggle" class="dm-audit-toggle"
  for(const id of ['reloadDmFerieAudit','dmFerieAuditFilterDm','dmFerieAuditWeeklyChart','dmFerieAuditMonthlyChart','dmFerieAuditPeaks','dmFerieAuditTable','loadMoreDmFerieAudit'])
   {const k=html.indexOf(`id="${id}"`);assert.ok(k>i&&k<j,`${id} sta dentro la parte che si apre`)}}
 assert.ok(fer.includes("const tg=$('#dmFerieAuditToggle');if(tg)tg.onclick=()=>toggleDmFerieAudit();"),'Il pulsante e collegato');
+assert.ok(/#page-dmholidays #dmFerieAuditPanel\{margin-top:16px\}/.test(css),'Il registro e staccato dal planning giornaliero');
+assert.ok(/#page-dmholidays \.dm-ferie-closures\{gap:5px;padding:0 16px 14px\}/.test(css)&&/\.dm-ferie-closures-card \.dm-ferie-closure-form\{padding:0 16px\}/.test(css),'Le chiusure stanno dentro il loro box, con il margine del titolo');
+assert.ok(/#page-dmholidays \.dm-closure-chip\{[^}]*font-size:9\.5px/.test(css),'Le chiusure riepilogate sono compatte');
 const caricamento=fer.slice(fer.indexOf('async function loadDmHolidays('),fer.indexOf('function dmFerieIndex('));
 assert.ok(caricamento.includes("$('#dmFerieAuditPanel')?.classList.toggle('hidden',!dmFerieAuditVisible());"),'Il pannello del registro si nasconde a chi non puo vederlo');
 assert.ok(/id="dmFerieAuditPanel" class="card holiday-planning-audit hidden"/.test(html),'E parte nascosto: nessun lampo di contenuto prima del controllo');
