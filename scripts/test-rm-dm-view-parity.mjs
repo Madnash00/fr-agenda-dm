@@ -58,13 +58,14 @@ assert.ok(rmBlocco.includes('sorted(cStores)'),'La tabella del profilo RM deve o
 assert.ok(!/sorted\(stores\)[^\n]*store-disposal-badge/.test(rmBlocco),
  'La tabella non deve piu ordinare sul valore aggregato dal backend');
 const withPct=src.find(l=>l.includes('cStores=stores.map(withPct)'));
-assert.ok(withPct&&withPct.includes('holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours)'),
+assert.ok(withPct&&withPct.includes('holidayConsolidatedDisposal(x.entitlement_year_end,x.residual_ac_hours,x.residual_ap_hours)'),
  'Lo smaltimento del profilo RM deve usare la formula sul residuo, come il profilo DM');
 
 /* La formula e' la stessa del DM: a parita di riga deve dare lo stesso numero. */
 const riga1={entitlement_year_end:100,residual_ac_hours:25,used_hours:60};
 assert.equal(ctx.holidayConsolidatedDisposal(riga1.entitlement_year_end,riga1.residual_ac_hours),75,
  'Lo smaltimento si calcola sul residuo, non sul goduto');
+assert.equal(ctx.holidayConsolidatedDisposal(100,25,25),60,'Con residuo AP la base e AP + proiezione AC, come nel profilo DM');
 assert.notEqual(riga1.used_hours/riga1.entitlement_year_end*100,75,
  'La formula precedente dava un valore diverso: e il motivo della divergenza fra le due viste');
 assert.equal(ctx.holidayConsolidatedFmtPct(null),'—','Senza spettanza la percentuale resta non disponibile');

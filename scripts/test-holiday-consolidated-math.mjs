@@ -1,4 +1,6 @@
-/* Verifica che lo SMALTIMENTO 31/12 segua la logica del file aziendale.
+/* Verifica dello SMALTIMENTO 31/12. Base 100% = RESIDUO AP + PROIEZIONE AC
+   (SPETT.31/12), richiesta del 18/11/2026: smaltito = base - DA SMALTIRE AC+AP.
+   Senza residuo AP il valore coincide con la logica del file aziendale.
    Il riferimento sono righe reali (anonimizzate) del consolidato FR_Ferie_Dip:
    in esse %SMALT del file coincide con (SPETT - RESIDUO A.C.F/ANNO)/SPETT,
    non con TOT.GODUTO/SPETT, perche' TOT.GODUTO comprende anche le ferie AP godute. */
@@ -28,6 +30,14 @@ for(const [name,used,residualAc,ent,expected] of rows){
  if(Math.abs(wrong-expected)>0.6)
   assert.ok(Math.abs(got-wrong)>0.6,`La formula vecchia (goduto/spettanza) non deve essere reintrodotta per ${name}`);
 }
+// Con residuo AP la base cresce: SPETT 300, AP 100 -> base 400.
+assert.strictEqual(fn(300,0,100),75,'Residuo AP da smaltire: 300 di 400 smaltiti = 75%');
+assert.strictEqual(fn(300,0,0),100,'Senza AP resta il valore del file aziendale');
+assert.strictEqual(fn(300,100,100),50,'Da smaltire AC+AP 200 su base 400 = 50%');
+assert.strictEqual(fn(300,300,100),0,'Nulla smaltito: 0%');
+assert.ok(Math.abs(fn(300,0,-20)-300/280*100)<1e-9,'AP negativo: stessa regola delle colonne (DA SMALTIRE AC+AP = -20 su base 280)');
+assert.ok(fn(154.75,43.75,50)<fn(154.75,43.75,0),'Il residuo AP abbassa la percentuale a parita di AC');
+assert.strictEqual(fn(100,0,-150),null,'Base non positiva: non calcolabile');
 // Nessuna spettanza: il dato non e' calcolabile e non deve diventare 0%.
 assert.strictEqual(fn(0,0),null,'Senza spettanza lo smaltimento deve essere nullo, non 0%');
 assert.strictEqual(fn('',12),null,'Spettanza vuota deve dare valore nullo');
