@@ -55,6 +55,7 @@ assert.ok(c47.delta.pct===null&&!c47.html.includes('%'),'AP a zero: niente perce
 assert.ok(ctx.weeklyRevenueCell(rev,2026,5,7)===null,'Settimana senza dati: cella invariata');
 assert.ok(ctx.weeklyRevenueCell({years:{'2026':{weeks:{'9':50}}}},2026,9,7).html.includes('AP n.d.'),'Senza AP lo dice');
 {const f=ctx.weeklyRevenueCell({years:{'2025':{weeks:{'48':15340}}}},2026,48,7);assert.ok(f.html.includes('AC n.d.')&&f.html.includes('AP 15.340 €')&&!f.html.includes('AP n.d.'),'Settimana futura: AC non ancora disponibile, mostra l AP come riferimento');}
+{const f=ctx.weeklyRevenueCell({years:{'2026':{weeks:{'47':6300},partial_week:47}}},2027,47,7);assert.ok(f.html.includes('AP 6300 €<i class="week-rev-partial">parz.</i>')&&f.title.includes('(parziale)'),'Nel planning dell anno dopo, l AP parziale e segnalato');}
 const corta=ctx.weeklyRevenueCell({years:{'2026':{weeks:{'1':25300}},'2025':{weeks:{'1':20000}}}},2026,1,3);
 assert.ok(corta.html.includes('25,3k €'),'Settimana spezzata a inizio o fine anno: formato compatto');
 assert.ok(c1.title.includes('AP 2025 800 €'),'Il dettaglio completo resta nel tooltip');
@@ -64,6 +65,7 @@ assert.ok(/id="holidayPeriodReload"[^>]*>Ricarica<\/button>\s*<button id="import
 const grid=estrai('function renderHolidayGrid(');
 assert.ok(grid.includes('weeklyRevenueCell(rev,w.year,w.week,x.span)')&&grid.includes("' with-revenue':''"),'Il planning (DM e NEGOZIO usano la stessa griglia) mostra il fatturato sotto ogni settimana');
 const modale=estrai('function openWeeklyRevenueImportModal(');
+assert.ok(modale.includes('opts=st.years.length?[st.years[0]+1,...st.years]')&&modale.includes('lavorano sul planning ${y} con il fatturato ${y-1} di riferimento'),'Si puo scegliere l anno successivo a quello del file: il file diventa l AP del planning nuovo');
 assert.ok(modale.includes('A quale anno si riferiscono le settimane di fatturato (AC)?')&&modale.includes('<select id="weeklyRevenueYear">'),'Il pulsante chiede l anno e lo fa scegliere');
 const invio=estrai('async function commitWeeklyRevenueImport(');
 assert.ok(invio.includes(".filter(r=>r.year===year||r.year===year-1)")&&invio.includes("request('importStoreWeeklyRevenue',{year,rows,filename:st.filename,partial})"),'Si inviano solo AC e AP dell anno scelto');
