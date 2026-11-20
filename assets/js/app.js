@@ -1506,7 +1506,7 @@ function weeklyRevenueCell(rev,year,week,span){
  const pct=d&&d.pct!==null?`${sign(d.pct)}${Math.abs(d.pct).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})}%`:'';
  const eur=d?`${sign(d.eur)}${weeklyRevenueEuro(Math.abs(d.eur),compact)}`:'';
  const title=`W${String(week).padStart(2,'0')} · Fatturato AP ${apY} ${ap===null?'n.d.':weeklyRevenueEuro(ap)} · APP ${appY} ${app===null?'n.d.':weeklyRevenueEuro(app)}${d?` · Delta AP vs APP ${eur}${pct?' ('+pct+')':''}`:''}${partial?` · settimana ${apY} parziale`:''}`;
- const html=`<span class="week-rev"><span class="week-rev-ac">${ap===null?'AP n.d.':'AP '+weeklyRevenueEuro(ap,compact)}${partial?'<i class="week-rev-partial">parz.</i>':''}</span>${d?`<span class="week-rev-delta ${cls(d.eur)}">${eur}${pct&&!compact?` · ${pct}`:''}</span>${compact&&pct?`<span class="week-rev-delta ${cls(d.eur)}">${pct}</span>`:''}`:`<span class="week-rev-delta">${app===null?'APP n.d.':'APP '+weeklyRevenueEuro(app,compact)}</span>`}</span>`;
+ const html=`<span class="week-rev"><span class="week-rev-ac">${ap===null?'AP n.d.':'AP '+weeklyRevenueEuro(ap,compact)}${partial?'<i class="week-rev-partial">parz.</i>':''}</span><span class="week-rev-app">${app===null?'APP n.d.':'APP '+weeklyRevenueEuro(app,compact)}</span><span class="week-rev-delta ${d?cls(d.eur):''}">${d?(compact?(pct||eur):`${eur}${pct?` · ${pct}`:''}`):'Δ n.d.'}</span></span>`;
  return {html,title,ap,app,delta:d,partial};
 }
 /* Lettura del file: formato lungo (Anno, Codice CICS, Settimana, Fatturato)
@@ -1553,14 +1553,27 @@ function openWeeklyRevenueImportModal(){
  $('#weeklyRevenueCancel').onclick=()=>closeModal();
  $('#weeklyRevenueConfirm').onclick=()=>commitWeeklyRevenueImport();
 }
+/* L'esito resta nella maschera finche non la si chiude: il solo avviso a
+   tempo spariva insieme alla schermata di attesa e non veniva notato. */
+function weeklyRevenueResultHtml(out){
+ const anni=Object.keys(out.years||{}).sort(),manca=out.missing_stores||[];
+ return `<div class="weekly-rev-result ok" role="status"><strong>✓ Fatturato importato</strong>
+  <p>${out.stores} negozi aggiornati${out.active_stores?` su ${out.active_stores} attivi in anagrafica`:''} · anni ${anni.join(', ')||'—'}</p>
+  ${anni.length?`<ul class="weekly-rev-map">${anni.map(Number).filter(y=>anni.includes(String(y))).map(y=>y+1).reverse().map(y=>`<li>Planning <strong>${y}</strong> → AP ${y-1}${anni.includes(String(y-2))?` · APP ${y-2}`:' · APP non caricato'}</li>`).join('')}</ul>`:''}
+  ${manca.length?`<div class="weekly-rev-missing"><strong>${manca.length} negozi senza fatturato nel file</strong> (codice negozio non presente nel file o mancante in anagrafica): ${manca.map(x=>`${esc(x.name)}${x.code?' ('+esc(x.code)+')':' (senza codice)'}`).join(', ')}.</div>`:'<p>Tutti i negozi attivi hanno il fatturato.</p>'}
+  ${out.unknown_codes?`<p class="weekly-rev-note">${out.unknown_codes} codici del file non corrispondono a negozi in anagrafica e sono stati ignorati (negozi di altri distretti).</p>`:''}</div>`;
+}
 async function commitWeeklyRevenueImport(){
- const st=weeklyRevenueImportState;if(!st)return;const btn=$('#weeklyRevenueConfirm');if(btn){btn.disabled=true;btn.textContent='Importazione…'}
+ const st=weeklyRevenueImportState;if(!st)return;const btn=$('#weeklyRevenueConfirm'),box=document.querySelector('.weekly-rev-import');if(btn){btn.disabled=true;btn.textContent='Importazione…'}
  const rows=st.rows.filter(r=>Number.isInteger(r.year));
  try{const out=await window.agendaCloudApi.request('importStoreWeeklyRevenue',{rows,filename:st.filename,partial:st.partial});
-  closeModal();weeklyRevenueImportState=null;
-  toast(`Fatturato importato: ${out.stores} negozi · anni ${Object.keys(out.years||{}).sort().join(', ')}${out.unknown_codes?` · ${out.unknown_codes} codici non in anagrafica ignorati`:''}`);
+  weeklyRevenueImportState=null;
+  if(box){box.innerHTML=weeklyRevenueResultHtml(out)+'<div class="weekly-rev-actions"><button type="button" class="btn primary" id="weeklyRevenueClose">Chiudi</button></div>';$('#weeklyRevenueClose').onclick=()=>closeModal()}
+  toast(`Fatturato importato: ${out.stores} negozi · anni ${Object.keys(out.years||{}).sort().join(', ')}`);
   if(holidayPlanningCache&&!holidayPlanningCache.all_stores)void loadHolidayPlanning(true);}
- catch(err){if(btn){btn.disabled=false;btn.textContent='Importa fatturato'}toast('Import non riuscito: '+(err?.message||err),true)}
+ catch(err){if(btn){btn.disabled=false;btn.textContent='Importa fatturato'}
+  const msg='Import non riuscito: '+(err?.message||err);if(box&&!box.querySelector('.weekly-rev-result'))box.insertAdjacentHTML('afterbegin',`<div class="weekly-rev-result error" role="alert"><strong>${esc(msg)}</strong></div>`);else{const e=box?.querySelector('.weekly-rev-result');if(e)e.innerHTML=`<strong>${esc(msg)}</strong>`}
+  toast(msg,true)}
 }
 function setHolidaySaveStatus(text,cls=''){const el=$('#holidaySaveStatus');if(el){el.textContent=text;el.className='holiday-saving '+cls}const retry=$('#retryHolidaySaveBtn');if(retry){retry.classList.toggle('hidden',!(holidaySaveRetryRequired&&holidayPlanQueue.size&&currentUser?.role==='STORE'));retry.disabled=!!holidaySaveInFlight}}
 function holidayPlanKeydown(e,inp){const move={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];if(!move)return;e.preventDefault();updateHolidayPlanCell(inp,true);const r=Number(inp.dataset.row),c=Number(inp.dataset.col),next=$(`[data-holiday-hours][data-row="${r+move[0]}"][data-col="${c+move[1]}"]`);if(next){next.focus();next.select()}}
