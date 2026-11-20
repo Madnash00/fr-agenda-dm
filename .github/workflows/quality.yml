@@ -82,6 +82,8 @@ jobs:
         run: node scripts/test-store-multi-dm-contract.mjs
       - name: Gestione Profili, eccezioni per utente
         run: node scripts/test-profile-exceptions.mjs
+      - name: Fatturato settimanale nel planning ferie
+        run: node scripts/test-weekly-revenue.mjs
       - name: Gestione Profili · voci, collegamenti e descrizioni
         run: node scripts/test-gestione-profili.mjs
       - name: Synthetic client cache benchmark

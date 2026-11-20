@@ -25,7 +25,7 @@ assert.equal(prova(base({stores:[st('STO1','ADM1'),st('STO2','ADM1')],store_coun
 assert.equal(prova(base({stores:[st('STO1','ADM1'),st('STO3','ADM2')],store_count:2})),'STORE_CALENDAR_SCOPE_INVALID','Senza dichiarazione, negozi di altri DM restano rifiutati');
 assert.equal(prova({...condiviso,admin_id:'ADM2'}),'STORE_CALENDAR_ADMIN_INVALID','Il DM proprietario del negozio deve restare quello della sessione');
 assert.equal(prova({...condiviso,store_count:2}),'STORE_CALENDAR_SCOPE_INVALID','Il numero dichiarato deve coincidere');
-assert.ok(/EXPECTED_BACKEND_BUILD='2026-11-17-eccezioni-profilo-v19'/.test(api),'Il frontend attende il backend V17');
+assert.ok(/EXPECTED_BACKEND_BUILD='2026-11-20-fatturato-settimanale-v20'/.test(api),'Il frontend attende il backend corrente');
 /* Il nome del DM arriva fino al tooltip: senza, due F nella colonna INFO VARIE non si distinguono. */
 assert.ok(app.includes("dm_name:e.dm_name?String(e.dm_name):''")&&app.includes("dm_name:String(src.dm_name||fallback?.dm_name||'')"),'Entrambe le conversioni degli eventi conservano il nome del DM');
 console.log('PASS: account NEGOZIO con piu DM abbinati, perimetro di tutti i DM accettato e ancora verificato');
