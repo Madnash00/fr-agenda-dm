@@ -41,38 +41,40 @@ fogli['Foglio1']=[['Fatturato'],['Codice CICS','Nome','W01','W02'],['111','X',10
 const n=ctx.weeklyRevenueParseWorkbook(wb(['Foglio1']));
 assert.ok(n.noYear&&n.rows[0].year==='?','Senza anno nel file, l anno lo sceglie chi importa');
 
-// --- celle del planning ---
+// --- celle del planning: planning N -> AP = N-1, APP = N-2 ---
 const rev={years:{'2026':{weeks:{'1':1000,'2':1200.5,'3':900,'47':300},partial_week:47},'2025':{weeks:{'1':800,'2':1500,'3':900,'47':0}}}};
 assert.ok(ctx.weeklyRevenueHasData(rev)&&!ctx.weeklyRevenueHasData({years:{}})&&!ctx.weeklyRevenueHasData(null));
-const c1=ctx.weeklyRevenueCell(rev,2026,1,7);
-assert.ok(c1.html.includes('1000 €')&&c1.html.includes('+200 €')&&c1.html.includes('+25,0%')&&c1.html.includes('week-rev-delta pos'),'AC, delta in euro e in percentuale, in verde se positivo');
-const c2=ctx.weeklyRevenueCell(rev,2026,2,7);
+const c1=ctx.weeklyRevenueCell(rev,2027,1,7);
+assert.ok(c1.html.includes('AP 1000 €')&&c1.html.includes('+200 €')&&c1.html.includes('+25,0%')&&c1.html.includes('week-rev-delta pos'),'Planning 2027: AP 2026 e delta vs APP 2025, in euro e percentuale');
+assert.equal(c1.ap,1000);assert.equal(c1.app,800);
+assert.ok(c1.title.includes('AP 2026 1000 €')&&c1.title.includes('APP 2025 800 €'),'Il tooltip dichiara gli anni');
+const c2=ctx.weeklyRevenueCell(rev,2027,2,7);
 assert.ok(c2.html.includes('−300 €')&&c2.html.includes('−20,0%')&&c2.html.includes('neg'),'Negativo in rosso');
-assert.ok(ctx.weeklyRevenueCell(rev,2026,3,7).html.includes('+0,0%')===false&&ctx.weeklyRevenueCell(rev,2026,3,7).html.includes('0,0%'),'Pari: zero senza segno');
-const c47=ctx.weeklyRevenueCell(rev,2026,47,7);
-assert.ok(c47.partial&&c47.html.includes('parz.')&&c47.title.includes('settimana parziale'),'Settimana parziale segnalata');
-assert.ok(c47.delta.pct===null&&!c47.html.includes('%'),'AP a zero: niente percentuale, che non avrebbe senso');
-assert.ok(ctx.weeklyRevenueCell(rev,2026,5,7)===null,'Settimana senza dati: cella invariata');
-assert.ok(ctx.weeklyRevenueCell({years:{'2026':{weeks:{'9':50}}}},2026,9,7).html.includes('AP n.d.'),'Senza AP lo dice');
-{const f=ctx.weeklyRevenueCell({years:{'2025':{weeks:{'48':15340}}}},2026,48,7);assert.ok(f.html.includes('AC n.d.')&&f.html.includes('AP 15.340 €')&&!f.html.includes('AP n.d.'),'Settimana futura: AC non ancora disponibile, mostra l AP come riferimento');}
-{const f=ctx.weeklyRevenueCell({years:{'2026':{weeks:{'47':6300},partial_week:47}}},2027,47,7);assert.ok(f.html.includes('AP 6300 €<i class="week-rev-partial">parz.</i>')&&f.title.includes('(parziale)'),'Nel planning dell anno dopo, l AP parziale e segnalato');}
-const corta=ctx.weeklyRevenueCell({years:{'2026':{weeks:{'1':25300}},'2025':{weeks:{'1':20000}}}},2026,1,3);
+assert.ok(ctx.weeklyRevenueCell(rev,2027,3,7).html.includes('0,0%')&&!ctx.weeklyRevenueCell(rev,2027,3,7).html.includes('+0,0%'),'Pari: zero senza segno');
+const c47=ctx.weeklyRevenueCell(rev,2027,47,7);
+assert.ok(c47.partial&&c47.html.includes('parz.')&&c47.title.includes('settimana 2026 parziale'),'La W47 2026 parziale e segnalata nel planning 2027');
+assert.ok(c47.delta.pct===null&&!c47.html.includes('%'),'APP a zero: niente percentuale');
+assert.ok(ctx.weeklyRevenueCell(rev,2027,5,7)===null,'Settimana senza dati: cella invariata');
+assert.ok(ctx.weeklyRevenueCell(rev,2026,1,7).html.includes('AP 800 €')&&ctx.weeklyRevenueCell(rev,2026,1,7).html.includes('APP n.d.'),'Planning 2026: AP 2025, APP 2024 assente dichiarato');
+assert.ok(ctx.weeklyRevenueCell(rev,2028,1,7).html.includes('AP n.d.')&&ctx.weeklyRevenueCell(rev,2028,1,7).html.includes('APP 1000 €'),'Planning 2028: AP 2027 non ancora caricato, APP 2026 come riferimento');
+assert.ok(ctx.weeklyRevenueCell(rev,2025,1,7)===null,'Nessun dato del 2024 e 2023: nessuna cella');
+const corta=ctx.weeklyRevenueCell({years:{'2026':{weeks:{'1':25300}},'2025':{weeks:{'1':20000}}}},2027,1,3);
 assert.ok(corta.html.includes('25,3k €'),'Settimana spezzata a inizio o fine anno: formato compatto');
-assert.ok(c1.title.includes('AP 2025 800 €'),'Il dettaglio completo resta nel tooltip');
 
 // --- integrazione in pagina ---
 assert.ok(/id="holidayPeriodReload"[^>]*>Ricarica<\/button>\s*<button id="importWeeklyRevenueBtn"[^>]*>Importa fatturato<\/button>/.test(html),'Pulsante in Periodi Negozi');
 const grid=estrai('function renderHolidayGrid(');
 assert.ok(grid.includes('weeklyRevenueCell(rev,w.year,w.week,x.span)')&&grid.includes("' with-revenue':''"),'Il planning (DM e NEGOZIO usano la stessa griglia) mostra il fatturato sotto ogni settimana');
 const modale=estrai('function openWeeklyRevenueImportModal(');
-assert.ok(modale.includes('opts=st.years.length?[st.years[0]+1,...st.years]')&&modale.includes('lavorano sul planning ${y} con il fatturato ${y-1} di riferimento'),'Si puo scegliere l anno successivo a quello del file: il file diventa l AP del planning nuovo');
-assert.ok(modale.includes('A quale anno si riferiscono le settimane di fatturato (AC)?')&&modale.includes('<select id="weeklyRevenueYear">'),'Il pulsante chiede l anno e lo fa scegliere');
+assert.ok(!modale.includes('<select')&&!/A quale anno/.test(modale),'La maschera non chiede l anno');
+assert.ok(modale.includes('Planning <strong>${y}</strong> → AP ${y-1}'),'Spiega a quale planning va ciascun anno');
 const invio=estrai('async function commitWeeklyRevenueImport(');
-assert.ok(invio.includes(".filter(r=>r.year===year||r.year===year-1)")&&invio.includes("request('importStoreWeeklyRevenue',{year,rows,filename:st.filename,partial})"),'Si inviano solo AC e AP dell anno scelto');
+assert.ok(invio.includes("request('importStoreWeeklyRevenue',{rows,filename:st.filename,partial:st.partial})")&&!invio.includes('year-1'),'Si inviano tutti gli anni del file, ciascuno con il proprio anno');
+assert.ok(estrai('function wireWeeklyRevenueImport(').includes('parsed.noYear||!parsed.years.length'),'Un file senza anno viene rifiutato invece di indovinarlo');
 assert.ok(/importStoreWeeklyRevenue:\['holiday','audit'\]/.test(api),'Dopo l import il planning si rilegge dal centrale');
 assert.ok(/\.with-revenue thead tr:nth-child\(3\) th\{top:73px\}/.test(css),'Le intestazioni fisse restano allineate con la riga piu alta');
 
 if(process.env.FATTURATO_JSON){const J=JSON.parse(readFileSync(process.env.FATTURATO_JSON,'utf8'));Object.assign(fogli,J.sheets);const v=ctx.weeklyRevenueParseWorkbook({SheetNames:J.names,Sheets:Object.fromEntries(J.names.map(x=>[x,x]))});
  console.log('FILE VERO:',v.format,'anni',v.years,'parziale',JSON.stringify(v.partial),'negozi',v.stores,'righe',v.rows.length);
- for(const k of ['35877|2026','35877|2025','31258|2026'])console.log(' ',k,JSON.stringify(Object.entries(v.rows.find(x=>x.code+'|'+x.year===k)?.weeks||{}).slice(0,3)),'... W47',v.rows.find(x=>x.code+'|'+x.year===k)?.weeks[47]);}
+ for(const k of ['35877|2026','35877|2025','35877|2024','45025|2024'])console.log(' ',k,JSON.stringify(Object.entries(v.rows.find(x=>x.code+'|'+x.year===k)?.weeks||{}).slice(0,3)),'... W47',v.rows.find(x=>x.code+'|'+x.year===k)?.weeks[47]);}
 console.log('PASS: fatturato settimanale, lettura file, scelta anno e celle del planning');
