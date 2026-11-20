@@ -1471,6 +1471,7 @@ function wireHolidayPeriodsEditor(){
  $('#holidayPeriodNextYear').onclick=()=>{const y=holidayPeriodYear();if(y&&y<2100){$('#holidayPeriodYear').value=y+1;loadHolidayPeriodsEditor()}};
  $('#holidayPeriodReload').onclick=()=>{if(holidayPeriodDirty&&!confirm('Scartare le modifiche non salvate?'))return;holidayPeriodDirty=false;loadHolidayPeriodsEditor(true)};
  $('#holidayPeriodSave').onclick=saveHolidayPeriodsEditor;
+ wireWeeklyRevenueImport();
  $$('[data-holiday-period-level]').forEach(b=>b.onclick=()=>holidayPeriodSelectLevel(b.dataset.holidayPeriodLevel));
  host.addEventListener('pointerdown',holidayPeriodPointerDown);document.addEventListener('pointermove',holidayPeriodPointerMove);document.addEventListener('pointerup',holidayPeriodPointerUp);document.addEventListener('pointercancel',holidayPeriodPointerCancel);
  host.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-period-date]')){e.preventDefault();holidayPeriodPaint(e.target.dataset.periodDate,e.target.dataset.periodDate)}});
@@ -1480,13 +1481,86 @@ function renderHolidayGrid(){
  const emps=holidayPlanningCache.employees||[],readOnly=!!holidayPlanningCache.read_only,year=holidayPlanningCache.year;
  if(!emps.length){host.innerHTML='<div class="empty">Aggiungi almeno un dipendente per visualizzare il calendario ferie.</div>';return}
  const dates=holidayYearDates(year),months=holidayRuns(dates,d=>`${d.getFullYear()}-${d.getMonth()}`,d=>MONTHS[d.getMonth()]),weeks=holidayRuns(dates,d=>{const w=isoWeekInfo(d);return `${w.year}-${w.week}`},d=>{const w=isoWeekInfo(d);return `W${String(w.week).padStart(2,'0')}`}),today=isoDate(new Date());
- let h='<table class="holiday-plan-table"><thead><tr><th class="holiday-employee-head" rowspan="3">Dipendente</th>';
+ let h=`<table class="holiday-plan-table${weeklyRevenueHasData(holidayPlanningCache.weekly_revenue)?' with-revenue':''}"><thead><tr><th class="holiday-employee-head" rowspan="3">Dipendente</th>`;
  h+=months.map(x=>`<th class="month-head" colspan="${x.span}">${esc(x.label)}</th>`).join('')+'</tr><tr>';
- h+=weeks.map(x=>`<th class="week-head" colspan="${x.span}">${esc(x.label)}</th>`).join('')+'</tr><tr>';
+ const rev=holidayPlanningCache.weekly_revenue,hasRev=weeklyRevenueHasData(rev);
+ h+=weeks.map(x=>{const w=isoWeekInfo(dates[x.start]),cell=hasRev?weeklyRevenueCell(rev,w.year,w.week,x.span):null;return `<th class="week-head${cell?' has-revenue':''}" colspan="${x.span}"${cell?` title="${esc(cell.title)}"`:''}>${esc(x.label)}${cell?cell.html:''}</th>`}).join('')+'</tr><tr>';
  h+=dates.map(d=>{const ds=isoDate(d),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0,level=holidayPeriodLevelForDate(ds);return `<th class="day-head ${level==='high'?'holiday-alert-high':level==='full'?'holiday-alert-full':''} ${weekend?'weekend':''} ${sun?'sunday':''} ${ds===today?'today':''}" title="${esc(fmtDate(ds))}${level?' · '+holidayPeriodLabel(level):''}">${DAYS[d.getDay()]}<br><strong>${d.getDate()}</strong></th>`}).join('')+'</tr></thead><tbody>';
  for(const [ri,emp] of emps.entries()){const id=String(emp.employee_id);h+=`<tr><td class="holiday-employee-cell" title="${esc(emp.employee_name)}">${esc(emp.employee_name)}</td>`;for(const [ci,d] of dates.entries()){const ds=isoDate(d),key=`${id}|${ds}`,val=holidayPlanningCache.planMap?.get(key)||0,display=String(val).toUpperCase()==='R'?'R':(holidayPlanCellHours(val)>0?holidayHoursFmt(val):''),weekend=[0,6].includes(d.getDay()),sun=d.getDay()===0,alertLevel=holidayPeriodLevelForDate(ds);h+=`<td class="${weekend?'weekend':''} ${sun?'sunday':''} ${holidayPlanHasValue(val)?'has-hours':''} ${alertLevel==='high'?'holiday-alert-high':alertLevel==='full'?'holiday-alert-full':''}" data-holiday-cell="${key}">${readOnly?(display?`<span class="hours-value">${display}</span>`:''):`<input class="holiday-hours-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${display}" data-holiday-hours data-employee-id="${id}" data-date="${ds}" data-row="${ri}" data-col="${ci}" aria-label="${esc(emp.employee_name)} ${ds}">`}</td>`}h+='</tr>'}
  h+='</tbody></table>';host.innerHTML=h;
  if(!readOnly)$$('[data-holiday-hours]').forEach(inp=>{inp.oninput=()=>updateHolidayPlanCell(inp,false);inp.onblur=()=>updateHolidayPlanCell(inp,true);inp.onkeydown=e=>holidayPlanKeydown(e,inp)});
+}
+/* FATTURATO SETTIMANALE NEL PLANNING FERIE
+   Sotto ogni settimana: fatturato AC e scostamento dall'AP (stessa settimana
+   dell'anno precedente), in euro e in percentuale. Le settimane sono quelle
+   commerciali Miroglio, che coincidono con le settimane ISO del planning. */
+function weeklyRevenueHasData(rev){return !!rev&&Object.values(rev.years||{}).some(y=>Object.keys(y?.weeks||{}).length)}
+function weeklyRevenueValue(rev,year,week){const v=rev?.years?.[String(year)]?.weeks?.[String(week)];const n=Number(v);return v===undefined||v===null||v===''||!Number.isFinite(n)?null:n}
+function weeklyRevenueEuro(v,compact=false){if(compact&&Math.abs(v)>=1000)return (v/1000).toLocaleString('it-IT',{maximumFractionDigits:1})+'k €';return Math.round(v).toLocaleString('it-IT')+' €'}
+function weeklyRevenueDelta(ac,ap){if(ac===null||ap===null)return null;return {eur:ac-ap,pct:ap!==0?(ac-ap)/Math.abs(ap)*100:null}}
+function weeklyRevenueCell(rev,year,week,span){
+ const ac=weeklyRevenueValue(rev,year,week),ap=weeklyRevenueValue(rev,year-1,week);
+ if(ac===null&&ap===null)return null;
+ const d=weeklyRevenueDelta(ac,ap),partial=Number(rev?.years?.[String(year)]?.partial_week)===Number(week),compact=span<5,sign=v=>v>0?'+':v<0?'−':'',cls=v=>v>0?'pos':v<0?'neg':'';
+ const pct=d&&d.pct!==null?`${sign(d.pct)}${Math.abs(d.pct).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})}%`:'';
+ const eur=d?`${sign(d.eur)}${weeklyRevenueEuro(Math.abs(d.eur),compact)}`:'';
+ const title=`W${String(week).padStart(2,'0')} ${year} · Fatturato AC ${ac===null?'n.d.':weeklyRevenueEuro(ac)} · AP ${year-1} ${ap===null?'n.d.':weeklyRevenueEuro(ap)}${d?` · Delta ${eur}${pct?' ('+pct+')':''}`:''}${partial?' · settimana parziale':''}`;
+ const html=`<span class="week-rev"><span class="week-rev-ac">${ac===null?'AC n.d.':weeklyRevenueEuro(ac,compact)}${partial?'<i class="week-rev-partial">parz.</i>':''}</span>${d?`<span class="week-rev-delta ${cls(d.eur)}">${eur}${pct&&!compact?` · ${pct}`:''}</span>${compact&&pct?`<span class="week-rev-delta ${cls(d.eur)}">${pct}</span>`:''}`:`<span class="week-rev-delta">${ap===null?'AP n.d.':'AP '+weeklyRevenueEuro(ap,compact)}</span>`}</span>`;
+ return {html,title,ac,ap,delta:d,partial};
+}
+/* Lettura del file: formato lungo (Anno, Codice CICS, Settimana, Fatturato)
+   se presente, altrimenti i fogli per settimana (W01...W53) con l'anno nel
+   nome del foglio o nel titolo. La settimana parziale si legge dal titolo. */
+function weeklyRevenueParseWorkbook(wb){
+ const H=normalizeHolidayImportHeader,num=v=>{if(typeof v==='number')return v;const t=String(v??'').trim().replace(/\s|€/g,'');if(!t)return null;const n=Number(t.includes(',')?t.replace(/\./g,'').replace(',','.'):t);return Number.isFinite(n)?n:null};
+ const code=v=>String(v??'').trim().replace(/\.0+$/,''),agg=new Map(),partial={},yearOfText=t=>{const m=String(t||'').match(/\b(20\d\d)\b/);return m?Number(m[1]):null};
+ const put=(c,y,w,v)=>{if(!c||!y||!(w>=1&&w<=53)||v===null)return;const k=c+'|'+y,r=agg.get(k)||{code:c,year:y,weeks:{}};r.weeks[w]=Math.round(((r.weeks[w]||0)+v)*100)/100;agg.set(k,r)};
+ const sheets=wb.SheetNames.map(n=>({name:n,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,raw:true})}));
+ for(const sh of sheets){const t=String(sh.rows?.[0]?.[0]??'');const m=t.match(/W(\d{1,2})\s*PARZIALE/i),y=yearOfText(sh.name)||yearOfText(t);if(m&&y)partial[y]=Number(m[1])}
+ let format='',noYear=false;
+ for(const sh of sheets){const hi=sh.rows.slice(0,6).findIndex(r=>{const h=(r||[]).map(H);return h.includes('ANNO')&&h.some(x=>x.startsWith('CODICE'))&&h.includes('SETTIMANA')});if(hi<0)continue;
+  const h=sh.rows[hi].map(H),iy=h.indexOf('ANNO'),ic=h.findIndex(x=>x.startsWith('CODICE')),iw=h.indexOf('SETTIMANA'),iv=h.findIndex(x=>x.startsWith('FATTURATO'));if(iv<0)continue;
+  format='lungo';for(const r of sh.rows.slice(hi+1))put(code(r?.[ic]),Number(r?.[iy]),Number(r?.[iw]),num(r?.[iv]));break}
+ if(!format)for(const sh of sheets){const hi=sh.rows.slice(0,6).findIndex(r=>(r||[]).map(H).some(x=>x.startsWith('CODICE'))&&(r||[]).some(x=>/^W\d{1,2}$/i.test(String(x??'').trim())));if(hi<0)continue;
+  const head=sh.rows[hi],ic=head.map(H).findIndex(x=>x.startsWith('CODICE')),y=yearOfText(sh.name)||yearOfText(sh.rows?.[0]?.[0]);if(!y)noYear=true;format='settimane';
+  const cols=head.map((x,i)=>{const m=String(x??'').trim().match(/^W(\d{1,2})$/i);return m?[i,Number(m[1])]:null}).filter(Boolean);
+  for(const r of sh.rows.slice(hi+1))for(const [i,w] of cols)put(code(r?.[ic]),y||'?',w,num(r?.[i]))}
+ const rows=[...agg.values()],years=[...new Set(rows.map(r=>r.year).filter(y=>y!=='?'))].sort((a,b)=>b-a);
+ return {rows,years,partial,format,noYear,stores:new Set(rows.map(r=>r.code)).size};
+}
+let weeklyRevenueImportState=null;
+function wireWeeklyRevenueImport(){
+ const btn=$('#importWeeklyRevenueBtn'),inp=$('#importWeeklyRevenueFile');if(!btn||!inp)return;
+ btn.onclick=()=>{inp.value='';inp.click()};
+ inp.onchange=async()=>{const f=inp.files?.[0];if(!f)return;btn.disabled=true;
+  try{await ensureXlsx();const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:false}),parsed=weeklyRevenueParseWorkbook(wb);
+   if(!parsed.rows.length){toast('Nel file non ho trovato fatturati settimanali per negozio.',true);return}
+   weeklyRevenueImportState={...parsed,filename:f.name};openWeeklyRevenueImportModal()}
+  catch(err){console.error('Import fatturato',err);toast('File non leggibile: '+(err?.message||err),true)}
+  finally{btn.disabled=false}};
+}
+function openWeeklyRevenueImportModal(){
+ const st=weeklyRevenueImportState,now=new Date().getFullYear(),opts=st.years.length?st.years:[now+1,now,now-1,now-2],def=st.years[0]||now;
+ showModal('Importa fatturato settimanale',`<div class="weekly-rev-import">
+  <p><strong>${esc(st.filename)}</strong> · ${st.stores} negozi · ${st.years.length?'anni nel file: '+st.years.join(', '):'il file non indica l’anno'}</p>
+  <label class="weekly-rev-year"><span>A quale anno si riferiscono le settimane di fatturato (AC)?</span><select id="weeklyRevenueYear">${opts.map(y=>`<option value="${y}" ${y===def?'selected':''}>${y}</option>`).join('')}</select></label>
+  <p id="weeklyRevenueYearNote" class="weekly-rev-note"></p>
+  <p class="weekly-rev-note">Vengono importati solo i negozi presenti in anagrafica. Il fatturato dell’anno scelto sostituisce quello già caricato per gli stessi negozi.</p>
+  <div class="weekly-rev-actions"><button type="button" class="btn" id="weeklyRevenueCancel">Annulla</button><button type="button" class="btn primary" id="weeklyRevenueConfirm">Importa fatturato</button></div></div>`);
+ const sel=$('#weeklyRevenueYear'),note=()=>{const y=Number(sel.value),hasAp=st.noYear?false:st.years.includes(y-1);$('#weeklyRevenueYearNote').textContent=st.noYear?`Le settimane del file diventano il fatturato ${y}; il confronto AP userà il ${y-1} già caricato, se presente.`:`AC = ${y}${hasAp?` · AP = ${y-1}, dallo stesso file`:` · il file non contiene il ${y-1}: il confronto AP userà il ${y-1} già caricato, se presente`}${st.partial[y]?` · W${String(st.partial[y]).padStart(2,'0')} parziale`:''}.`};
+ sel.onchange=note;note();
+ $('#weeklyRevenueCancel').onclick=()=>closeModal();
+ $('#weeklyRevenueConfirm').onclick=()=>commitWeeklyRevenueImport(Number(sel.value));
+}
+async function commitWeeklyRevenueImport(year){
+ const st=weeklyRevenueImportState;if(!st)return;const btn=$('#weeklyRevenueConfirm');if(btn){btn.disabled=true;btn.textContent='Importazione…'}
+ const rows=st.rows.map(r=>r.year==='?'?{...r,year}:r).filter(r=>r.year===year||r.year===year-1),partial={};
+ for(const y of [year,year-1])if(st.partial[y])partial[y]=st.partial[y];
+ try{const out=await window.agendaCloudApi.request('importStoreWeeklyRevenue',{year,rows,filename:st.filename,partial});
+  closeModal();weeklyRevenueImportState=null;
+  toast(`Fatturato importato: ${out.stores} negozi · AC ${out.year}${out.years?.[String(out.ap_year)]?` · AP ${out.ap_year}`:''}${out.unknown_codes?` · ${out.unknown_codes} codici non in anagrafica ignorati`:''}`);
+  if(holidayPlanningCache&&!holidayPlanningCache.all_stores)void loadHolidayPlanning(true);}
+ catch(err){if(btn){btn.disabled=false;btn.textContent='Importa fatturato'}toast('Import non riuscito: '+(err?.message||err),true)}
 }
 function setHolidaySaveStatus(text,cls=''){const el=$('#holidaySaveStatus');if(el){el.textContent=text;el.className='holiday-saving '+cls}const retry=$('#retryHolidaySaveBtn');if(retry){retry.classList.toggle('hidden',!(holidaySaveRetryRequired&&holidayPlanQueue.size&&currentUser?.role==='STORE'));retry.disabled=!!holidaySaveInFlight}}
 function holidayPlanKeydown(e,inp){const move={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];if(!move)return;e.preventDefault();updateHolidayPlanCell(inp,true);const r=Number(inp.dataset.row),c=Number(inp.dataset.col),next=$(`[data-holiday-hours][data-row="${r+move[0]}"][data-col="${c+move[1]}"]`);if(next){next.focus();next.select()}}

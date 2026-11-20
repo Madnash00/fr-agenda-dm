@@ -2769,3 +2769,18 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 .profile-exc-name small{font-size:10.5px;font-weight:650;color:#7a848c;text-decoration:none}
 .profile-exc-row select{flex:none;width:150px;font-size:11.5px}
 @media screen and (max-width:720px){.profile-exc-select{flex-wrap:wrap}.profile-exc-groups{grid-template-columns:1fr}}
+/* Planning ferie · fatturato settimanale sotto l'intestazione della settimana */
+.holiday-plan-table.with-revenue thead tr:nth-child(2) th{height:50px}
+.holiday-plan-table.with-revenue thead tr:nth-child(3) th{top:73px}
+.holiday-plan-table .week-head .week-rev{display:grid;gap:1px;margin-top:2px;font-size:9.5px;line-height:1.15;font-weight:800;font-variant-numeric:tabular-nums}
+.holiday-plan-table .week-rev-ac{color:#2b2f33}
+.holiday-plan-table .week-rev-delta{color:#6b7680;font-weight:750}
+.holiday-plan-table .week-rev-delta.pos{color:#1f7a3d}
+.holiday-plan-table .week-rev-delta.neg{color:#c62828}
+.holiday-plan-table .week-rev-partial{margin-left:4px;font-style:normal;font-size:8px;font-weight:850;color:#8a5a00;background:#fff4dc;border-radius:4px;padding:0 3px}
+.weekly-rev-import{display:grid;gap:10px}
+.weekly-rev-import p{margin:0}
+.weekly-rev-year{display:grid;gap:6px;font-weight:800}
+.weekly-rev-year select{max-width:160px}
+.weekly-rev-note{font-size:12px;color:#596269}
+.weekly-rev-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
