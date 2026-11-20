@@ -1501,11 +1501,11 @@ function weeklyRevenueDelta(ac,ap){if(ac===null||ap===null)return null;return {e
 function weeklyRevenueCell(rev,year,week,span){
  const ac=weeklyRevenueValue(rev,year,week),ap=weeklyRevenueValue(rev,year-1,week);
  if(ac===null&&ap===null)return null;
- const d=weeklyRevenueDelta(ac,ap),partial=Number(rev?.years?.[String(year)]?.partial_week)===Number(week),compact=span<5,sign=v=>v>0?'+':v<0?'−':'',cls=v=>v>0?'pos':v<0?'neg':'';
+ const d=weeklyRevenueDelta(ac,ap),partial=Number(rev?.years?.[String(year)]?.partial_week)===Number(week),apPartial=Number(rev?.years?.[String(year-1)]?.partial_week)===Number(week),compact=span<5,sign=v=>v>0?'+':v<0?'−':'',cls=v=>v>0?'pos':v<0?'neg':'';
  const pct=d&&d.pct!==null?`${sign(d.pct)}${Math.abs(d.pct).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})}%`:'';
  const eur=d?`${sign(d.eur)}${weeklyRevenueEuro(Math.abs(d.eur),compact)}`:'';
- const title=`W${String(week).padStart(2,'0')} ${year} · Fatturato AC ${ac===null?'n.d.':weeklyRevenueEuro(ac)} · AP ${year-1} ${ap===null?'n.d.':weeklyRevenueEuro(ap)}${d?` · Delta ${eur}${pct?' ('+pct+')':''}`:''}${partial?' · settimana parziale':''}`;
- const html=`<span class="week-rev"><span class="week-rev-ac">${ac===null?'AC n.d.':weeklyRevenueEuro(ac,compact)}${partial?'<i class="week-rev-partial">parz.</i>':''}</span>${d?`<span class="week-rev-delta ${cls(d.eur)}">${eur}${pct&&!compact?` · ${pct}`:''}</span>${compact&&pct?`<span class="week-rev-delta ${cls(d.eur)}">${pct}</span>`:''}`:`<span class="week-rev-delta">${ap===null?'AP n.d.':'AP '+weeklyRevenueEuro(ap,compact)}</span>`}</span>`;
+ const title=`W${String(week).padStart(2,'0')} ${year} · Fatturato AC ${ac===null?'n.d.':weeklyRevenueEuro(ac)} · AP ${year-1} ${ap===null?'n.d.':weeklyRevenueEuro(ap)}${apPartial?' (parziale)':''}${d?` · Delta ${eur}${pct?' ('+pct+')':''}`:''}${partial?' · settimana parziale':''}`;
+ const html=`<span class="week-rev"><span class="week-rev-ac">${ac===null?'AC n.d.':weeklyRevenueEuro(ac,compact)}${partial?'<i class="week-rev-partial">parz.</i>':''}</span>${d?`<span class="week-rev-delta ${cls(d.eur)}">${eur}${pct&&!compact?` · ${pct}`:''}</span>${compact&&pct?`<span class="week-rev-delta ${cls(d.eur)}">${pct}</span>`:''}`:`<span class="week-rev-delta">${ap===null?'AP n.d.':'AP '+weeklyRevenueEuro(ap,compact)}${apPartial?'<i class="week-rev-partial">parz.</i>':''}</span>`}</span>`;
  return {html,title,ac,ap,delta:d,partial};
 }
 /* Lettura del file: formato lungo (Anno, Codice CICS, Settimana, Fatturato)
@@ -1540,14 +1540,16 @@ function wireWeeklyRevenueImport(){
   finally{btn.disabled=false}};
 }
 function openWeeklyRevenueImportModal(){
- const st=weeklyRevenueImportState,now=new Date().getFullYear(),opts=st.years.length?st.years:[now+1,now,now-1,now-2],def=st.years[0]||now;
+ /* Si puo scegliere anche l'anno dopo l'ultimo del file: le settimane AC restano
+    vuote e il planning di quell'anno mostra l'anno del file come AP di riferimento. */
+ const st=weeklyRevenueImportState,now=new Date().getFullYear(),opts=st.years.length?[st.years[0]+1,...st.years]:[now+1,now,now-1,now-2],def=st.years[0]||now;
  showModal('Importa fatturato settimanale',`<div class="weekly-rev-import">
   <p><strong>${esc(st.filename)}</strong> · ${st.stores} negozi · ${st.years.length?'anni nel file: '+st.years.join(', '):'il file non indica l’anno'}</p>
   <label class="weekly-rev-year"><span>A quale anno si riferiscono le settimane di fatturato (AC)?</span><select id="weeklyRevenueYear">${opts.map(y=>`<option value="${y}" ${y===def?'selected':''}>${y}</option>`).join('')}</select></label>
   <p id="weeklyRevenueYearNote" class="weekly-rev-note"></p>
   <p class="weekly-rev-note">Vengono importati solo i negozi presenti in anagrafica. Il fatturato dell’anno scelto sostituisce quello già caricato per gli stessi negozi.</p>
   <div class="weekly-rev-actions"><button type="button" class="btn" id="weeklyRevenueCancel">Annulla</button><button type="button" class="btn primary" id="weeklyRevenueConfirm">Importa fatturato</button></div></div>`);
- const sel=$('#weeklyRevenueYear'),note=()=>{const y=Number(sel.value),hasAp=st.noYear?false:st.years.includes(y-1);$('#weeklyRevenueYearNote').textContent=st.noYear?`Le settimane del file diventano il fatturato ${y}; il confronto AP userà il ${y-1} già caricato, se presente.`:`AC = ${y}${hasAp?` · AP = ${y-1}, dallo stesso file`:` · il file non contiene il ${y-1}: il confronto AP userà il ${y-1} già caricato, se presente`}${st.partial[y]?` · W${String(st.partial[y]).padStart(2,'0')} parziale`:''}.`};
+ const sel=$('#weeklyRevenueYear'),note=()=>{const y=Number(sel.value),hasAp=st.noYear?false:st.years.includes(y-1);const hasAc=st.years.includes(y);$('#weeklyRevenueYearNote').textContent=st.noYear?`Le settimane del file diventano il fatturato ${y}; il confronto AP userà il ${y-1} già caricato, se presente.`:!hasAc?`Il file non contiene il ${y}: si carica il ${y-1} come AP, così i negozi lavorano sul planning ${y} con il fatturato ${y-1} di riferimento sotto ogni settimana.`:`AC = ${y}${hasAp?` · AP = ${y-1}, dallo stesso file`:` · il file non contiene il ${y-1}: il confronto AP userà il ${y-1} già caricato, se presente`}${st.partial[y]?` · W${String(st.partial[y]).padStart(2,'0')} parziale`:''}.`};
  sel.onchange=note;note();
  $('#weeklyRevenueCancel').onclick=()=>closeModal();
  $('#weeklyRevenueConfirm').onclick=()=>commitWeeklyRevenueImport(Number(sel.value));
@@ -1558,7 +1560,7 @@ async function commitWeeklyRevenueImport(year){
  for(const y of [year,year-1])if(st.partial[y])partial[y]=st.partial[y];
  try{const out=await window.agendaCloudApi.request('importStoreWeeklyRevenue',{year,rows,filename:st.filename,partial});
   closeModal();weeklyRevenueImportState=null;
-  toast(`Fatturato importato: ${out.stores} negozi · AC ${out.year}${out.years?.[String(out.ap_year)]?` · AP ${out.ap_year}`:''}${out.unknown_codes?` · ${out.unknown_codes} codici non in anagrafica ignorati`:''}`);
+  toast(`Fatturato importato: ${out.stores} negozi${out.years?.[String(out.year)]?` · AC ${out.year}`:''}${out.years?.[String(out.ap_year)]?` · AP ${out.ap_year}`:''}${out.unknown_codes?` · ${out.unknown_codes} codici non in anagrafica ignorati`:''}`);
   if(holidayPlanningCache&&!holidayPlanningCache.all_stores)void loadHolidayPlanning(true);}
  catch(err){if(btn){btn.disabled=false;btn.textContent='Importa fatturato'}toast('Import non riuscito: '+(err?.message||err),true)}
 }
