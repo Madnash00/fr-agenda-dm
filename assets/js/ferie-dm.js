@@ -209,7 +209,7 @@ function renderDmFerieGrid(){
   }
   h+='</tr>';
  }
- host.innerHTML=h+'</tbody></table>';
+ host.innerHTML=h+'</tbody></table>';if(typeof scrollPlanningToCurrentMonth==='function')scrollPlanningToCurrentMonth(host,'dm|'+String(dates[0]?.getFullYear?.()||''));
  host.querySelectorAll('[data-dm-ferie-hours]').forEach(inp=>{
   inp.oninput=()=>updateDmFerieCell(inp,false);
   inp.onblur=()=>updateDmFerieCell(inp,true);

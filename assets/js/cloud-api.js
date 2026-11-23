@@ -1,7 +1,7 @@
 
 /* CONFIGURAZIONE: dopo il deploy di Apps Script incolla qui l'URL che termina con /exec */
 const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbx5aIQzE7YEwyctRMtTHPMMOxVw3vpIq2YQeayCW8LiFvKQfGf-tT98DvTU5oAJONwt0w/exec';
-const EXPECTED_BACKEND_BUILD='2026-11-23-audit-v27';
+const EXPECTED_BACKEND_BUILD='2026-11-23-snello-v28';
 const STORE_CALENDAR_POLICY=Object.freeze({id:'STORE_DM_CONTEXT_OWN_SM_WRITE_V6',scope:'DM_FULL',view:'STORE_DM_ONLY_OTHER_STORES_V3',contractVersion:6,editableTrack:'SM',hideOtherStoreStoreAuthored:true,protected:true});
 class AgendaApiError extends Error{constructor(code,message,requestId){super(message||code);this.name='AgendaApiError';this.code=code;this.requestId=requestId||null}}
 const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',_token:'',_user:null,
@@ -12,7 +12,7 @@ const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',_toke
 const AGENDA_READ_CACHE_TTL=Object.freeze({
  getAgendaEvents:45000,getReportData:45000,getHolidayPlanning:60000,getHolidayPlanningAudit:0,getHolidayPeriods:30000,getHolidayReport:90000,getHolidayConsolidated:90000,getHolidayConsolidatedReport:120000,
  getStoreOvertimeCheck:120000,getActionPlans:90000,getActionPlanReport:90000,getAuditBundle:45000,listStores:120000,listUsers:120000,getRegions:120000,
- getCalendar:30000,getStoreCalendarContext:0,getStoreMenuConfig:120000,getProfileMenuConfig:120000,getProfileDirectory:120000,getRMCalendar:45000,getRMHolidayPlanning:60000,getRMHolidayReport:90000,getRMHolidayConsolidated:90000,getRMHolidayConsolidatedReport:120000,getRMOvertime:120000,getRMActionPlans:90000,getRMActionPlanReport:90000
+ getCalendar:30000,getStoreCalendarContext:0,getStoreMenuConfig:120000,getProfileMenuConfig:120000,getProfileDirectory:120000,getRMCalendar:45000,getRMHolidayPlanning:60000,getRMHolidayReport:90000,getRMHolidayConsolidated:90000,getRMHolidayConsolidatedReport:120000,getRMOvertime:120000,getRMActionPlans:90000,getRMActionPlanReport:90000,getRMMulti:90000
 });
 const AGENDA_CACHE_STALE_FACTOR=6;
 const AGENDA_NETWORK_ERROR_TEXT=(typeof navigator!=='undefined'&&/iPhone|iPad|iPod/i.test(navigator.userAgent||''))?'Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.':'Connessione al servizio non riuscita. Verifica la connessione e riprova.';
@@ -37,7 +37,7 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
  const generation=domain=>domainGenerations.get(domain)||0;
  const bumpGeneration=domain=>domainGenerations.set(domain,generation(domain)+1);
  const trackWrite=(domain,promise)=>{let group=pendingWrites.get(domain);if(!group){group=new Set();pendingWrites.set(domain,group)}group.add(promise)};
- const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPlanningAudit','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport']);
+ const readActions=new Set(['health','getSession','getBootstrap','getPrefetchBundle','getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getAuditLog','getExportLog','getAuditBundle','getHolidayPlanning','getHolidayPlanningAudit','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','listStores','listUsers','getRegions','getStoreMenuConfig','getProfileMenuConfig','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','getRMMulti']);
  const stableValue=value=>Array.isArray(value)?value.map(stableValue):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,stableValue(value[k])])):value;
  const stableKey=(action,payload)=>action+'|'+JSON.stringify(stableValue(payload));
  const smallHash=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
@@ -118,8 +118,8 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
    else for(const d of writeDomains){const group=pendingWrites.get(d);group?.delete(task);if(group&&!group.size)pendingWrites.delete(d)}
   }
  }
- function prime(action,data,value,ttlOverride){if(value===undefined||value===null)return;const payload={...(data||{})};delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;const ttl=Math.max(1000,Number(ttlOverride)||AGENDA_READ_CACHE_TTL[action]||60000),key=tokenScope()+'|'+stableKey(action,payload)+'|v'+generation(domainOf(action));remember(action,key,value,ttl)}
- return{request,prime,clearCache,clearDomain:clearCache,login:(username,password)=>request('login',{username,password}),logout:()=>request('logout',{})}
+ function prime(action,data,value,ttlOverride,snapshot){if(value===undefined||value===null)return;/* dati presi prima di un salvataggio dello stesso ambito: non metterli in cache */if(snapshot&&(snapshot.get(domainOf(action))||0)!==generation(domainOf(action)))return;const payload={...(data||{})};delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;const ttl=Math.max(1000,Number(ttlOverride)||AGENDA_READ_CACHE_TTL[action]||60000),key=tokenScope()+'|'+stableKey(action,payload)+'|v'+generation(domainOf(action));remember(action,key,value,ttl)}
+ return{request,prime,generations:()=>new Map(domainGenerations),clearCache,clearDomain:clearCache,login:(username,password)=>request('login',{username,password}),logout:()=>request('logout',{})}
 }
 const XLSX_CDN_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 let xlsxLoaderPromise=null;

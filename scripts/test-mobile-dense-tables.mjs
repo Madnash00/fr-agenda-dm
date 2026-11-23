@@ -65,7 +65,7 @@ for(const n of ['function esc(','function overtimeNum(','function overtimeFmt(',
  'function overtimeMetricDisplay(','function overtimeDetailCells(','const OVERTIME_METRIC_HEAD=',
  'function overtimeStoresTableMarkup(','function overtimeEmployeesTableMarkup(','function actionPlanStore(',
  'function actionPlanStoreLabel(','function actionPlanPeriodLabel(','function apYtdPremise(','function actionPlanStatusKey(',
- 'function actionPlanStatusLabel(','function actionPlanPct(','function actionPlanPctFmt(','function actionPlanTableMarkup('])
+ 'function actionPlanStatusLabel(','function actionPlanPct(','function actionPlanPctFmt(','function fmtDmy(','function actionPlanTableMarkup('])
  vm.runInContext(estrai(n),ctx);
 
 const coverage={month_count:3,sickness_months:3,injury_months:3};

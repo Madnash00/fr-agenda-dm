@@ -42,6 +42,7 @@ execFileSync(process.execPath,['scripts/test-weekly-revenue.mjs'],{stdio:'inheri
 execFileSync(process.execPath,['scripts/test-action-plan-alerts.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-action-plan-disable.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-api-timeout.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-snello.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
@@ -128,7 +129,7 @@ assert.ok(app.includes("function holidayPlanningAuditShowPeriodModal()"),'Clicka
 
 assert.ok(read('assets/css/app.css').includes('.holiday-audit-chart-row')&&read('assets/css/app.css').includes('.holiday-audit-filters'),'Holiday audit styles must exist');
 
-assert.ok(app.includes("void loadHolidayPlanningAudit(true);"),'Planning audit must follow holiday plan selection');
+assert.ok(app.includes("void loadHolidayPlanningAudit(true,!!force);"),'Planning audit must follow holiday plan selection');
 assert.ok(html.includes('store-holiday-disclaimer')&&html.includes('La proiezione dei saldi al 31/12 ha valore esclusivamente indicativo'),'Consolidated holiday disclaimer must remain');
 assert.ok(app.includes('store-disposal-badge')&&app.includes('<th>DIPENDENTE</th><th>RUOLO</th><th>RESIDUO AP</th><th>GODUTO</th><th>DA SMALTIRE AC</th><th>DA SMALTIRE AC+AP</th><th>SMALTIMENTO 31/12</th>'),'Store employee consolidated columns must follow the unified requested order');
 // Lo smaltimento segue la formula del file aziendale (residuo), non TOT.GODUTO/SPETT:
