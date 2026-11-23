@@ -1,7 +1,7 @@
 
 /* CONFIGURAZIONE: dopo il deploy di Apps Script incolla qui l'URL che termina con /exec */
 const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbx5aIQzE7YEwyctRMtTHPMMOxVw3vpIq2YQeayCW8LiFvKQfGf-tT98DvTU5oAJONwt0w/exec';
-const EXPECTED_BACKEND_BUILD='2026-11-23-login-veloce-v26';
+const EXPECTED_BACKEND_BUILD='2026-11-23-audit-v27';
 const STORE_CALENDAR_POLICY=Object.freeze({id:'STORE_DM_CONTEXT_OWN_SM_WRITE_V6',scope:'DM_FULL',view:'STORE_DM_ONLY_OTHER_STORES_V3',contractVersion:6,editableTrack:'SM',hideOtherStoreStoreAuthored:true,protected:true});
 class AgendaApiError extends Error{constructor(code,message,requestId){super(message||code);this.name='AgendaApiError';this.code=code;this.requestId=requestId||null}}
 const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',_token:'',_user:null,
@@ -15,6 +15,9 @@ const AGENDA_READ_CACHE_TTL=Object.freeze({
  getCalendar:30000,getStoreCalendarContext:0,getStoreMenuConfig:120000,getProfileMenuConfig:120000,getProfileDirectory:120000,getRMCalendar:45000,getRMHolidayPlanning:60000,getRMHolidayReport:90000,getRMHolidayConsolidated:90000,getRMHolidayConsolidatedReport:120000,getRMOvertime:120000,getRMActionPlans:90000,getRMActionPlanReport:90000
 });
 const AGENDA_CACHE_STALE_FACTOR=6;
+const AGENDA_NETWORK_ERROR_TEXT=(typeof navigator!=='undefined'&&/iPhone|iPad|iPod/i.test(navigator.userAgent||''))?'Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.':'Connessione al servizio non riuscita. Verifica la connessione e riprova.';
+/* Tempi massimi per richiesta (Apps Script a freddo puo' impiegare 30-40 s). */
+const AGENDA_READ_TIMEOUT_MS=45000,AGENDA_LOGIN_TIMEOUT_MS=45000,AGENDA_WRITE_TIMEOUT_MS=90000;
 const AGENDA_CACHE_DOMAIN_BY_READ=Object.freeze({
  getCalendar:'calendar',getStoreCalendarContext:'calendar',getAgendaEvents:'calendar',getReportData:'calendar',
  getHolidayPlanning:'holiday',getHolidayPlanningAudit:'audit',getHolidayPeriods:'holidayPeriods',getHolidayReport:'holiday',getHolidayConsolidated:'holidayConsolidated',getHolidayConsolidatedReport:'holidayConsolidated',
@@ -63,7 +66,7 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
   if(!endpoint||endpoint.includes('INCOLLA_URL_'))throw new AgendaApiError('API_UNAVAILABLE','Configura AGENDA_API_ENDPOINT nell\'index.html.');
   const silent=!!data.__silent,force=!!data.__force,background=!!data.__background,explicitTtl=Number(data.__cacheTtl),payload={...data},sessionToken=String(getToken()||''),startedEpoch=requestEpoch;
   const assertCurrentSession=()=>{if(startedEpoch!==requestEpoch||String(getToken()||'')!==sessionToken)throw new AgendaApiError('STALE_SESSION','Richiesta della sessione precedente ignorata.')};
-  delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;delete payload.__staleRetry;if(window.AgendaAdminContext?.admin_mode){payload.admin_mode=true;payload.target_dm_id=window.AgendaAdminContext.target_dm_id;}
+  delete payload.__silent;delete payload.__force;delete payload.__background;delete payload.__cacheTtl;delete payload.__timeout;delete payload.__staleRetry;if(window.AgendaAdminContext?.admin_mode){payload.admin_mode=true;payload.target_dm_id=window.AgendaAdminContext.target_dm_id;}
   const isRead=readActions.has(action),domain=domainOf(action),writeDomains=isRead?[]:(AGENDA_CACHE_INVALIDATION_BY_WRITE[action]||[]),ttl=action==='getStoreCalendarContext'?0:Number.isFinite(explicitTtl)?Math.max(0,explicitTtl):(AGENDA_READ_CACHE_TTL[action]||0);
   // Reads wait for pending writes in their own domain, not unrelated actions.
   if(isRead){const pending=pendingWrites.get(domain);if(pending?.size){await Promise.allSettled([...pending]);assertCurrentSession()}}
@@ -76,12 +79,27 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
   }
   if(isRead&&inflight.has(inflightKey))return inflight.get(inflightKey);
   const emitBusy=!silent&&!background&&!AGENDA_SOFT_BUSY_ACTIONS.has(action);const emitPageLoad=isRead&&!silent&&!background;
-  const controller=isRead&&typeof AbortController!=='undefined'?new AbortController():null;if(controller)inflightControllers.add(controller);
+  /* Ogni richiesta ha un tempo massimo: prima una risposta mai arrivata lasciava
+     l'app ferma su CARICAMENTO DATI. Le letture riprovano una volta (al secondo
+     colpo Apps Script ha di solito la cache pronta); le scritture mai, perche'
+     potrebbero essere gia' state registrate. */
+  const timeoutMs=Number(data.__timeout)||(isRead?AGENDA_READ_TIMEOUT_MS:action==='login'?AGENDA_LOGIN_TIMEOUT_MS:AGENDA_WRITE_TIMEOUT_MS),attempts=isRead?2:1;let controller=null;
   const task=(async()=>{
    if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-start',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-start',{detail:{action}}));
    try{
-    let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})})}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Connessione al servizio non riuscita. Su iPhone apri l’app con Safari, verifica la connessione e riprova.')}
-    assertCurrentSession();let body;try{body=await response.json()}catch(_){assertCurrentSession();throw new AgendaApiError('API_UNAVAILABLE','Risposta API non valida.')}assertCurrentSession();
+    let body;
+    for(let attempt=1;;attempt++){
+     controller=typeof AbortController!=='undefined'?new AbortController():null;if(controller&&isRead)inflightControllers.add(controller);
+     let timedOut=false,cancelled=false;const timer=controller?setTimeout(()=>{timedOut=true;controller.abort()},timeoutMs):null;
+     if(controller)controller.signal.addEventListener('abort',()=>{if(!timedOut)cancelled=true});
+     try{
+      let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})})}catch(_){assertCurrentSession();if(cancelled)throw new AgendaApiError('STALE_SESSION','Richiesta annullata.');const e=timedOut?new AgendaApiError('API_UNAVAILABLE',isRead?'Il servizio non risponde. Riprova tra qualche istante.':'Il servizio non ha confermato in tempo: aggiorna la sezione per verificare se il salvataggio è avvenuto prima di riprovare.'):new AgendaApiError('API_UNAVAILABLE',AGENDA_NETWORK_ERROR_TEXT);e.timeout=timedOut;e.retryable=true;throw e}
+      assertCurrentSession();try{body=await response.json()}catch(_){assertCurrentSession();if(cancelled)throw new AgendaApiError('STALE_SESSION','Richiesta annullata.');const e=new AgendaApiError('API_UNAVAILABLE',timedOut?'Il servizio non risponde. Riprova tra qualche istante.':'Risposta API non valida.');e.timeout=timedOut;e.retryable=timedOut;throw e}
+      break;
+     }catch(e){if(!(e?.retryable&&attempt<attempts))throw e}
+     finally{clearTimeout(timer);if(controller)inflightControllers.delete(controller)}
+    }
+    assertCurrentSession();
     if(!body?.ok){const err=new AgendaApiError(body?.error?.code||'API_ERROR',body?.error?.message||'Errore API.',body?.requestId);if(err.code==='SESSION_EXPIRED'){clearCache();onSessionExpired()}throw err}
     if(isRead&&generation(domain)!==readGeneration){
      if(Number(data.__staleRetry||0)<2)return request(action,{...data,__force:true,__silent:true,__staleRetry:Number(data.__staleRetry||0)+1});
@@ -90,7 +108,7 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
     if(isRead&&ttl>0)remember(action,key,body.data,ttl);
     if(!isRead&&action!=='login')invalidateForWrite(action);
     return body.data;
-   }finally{if(controller)inflightControllers.delete(controller);if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-end',{detail:{action}}))}
+   }finally{if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-end',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-end',{detail:{action}}))}
   })();
   if(isRead)inflight.set(inflightKey,task);else for(const d of writeDomains)trackWrite(d,task);
   try{return await task}finally{
@@ -109,4 +127,4 @@ function cleanHeader(v){return String(v??'').trim().toLocaleLowerCase('it-IT').r
 function normalizeImportHeaders(headers){return headers.map(h=>HEADER_MAP.get(cleanHeader(h))||'')}
 function normalizeImportRows(matrix){if(!Array.isArray(matrix)||!matrix.length)throw new Error('File vuoto');const headers=matrix[0],keys=normalizeImportHeaders(headers),idIndex=headers.findIndex(h=>cleanHeader(h)==='id');for(const req of ['name','email','username','password','region'])if(!keys.includes(req))throw new Error(`Colonna obbligatoria mancante: ${req==='name'?'Negozio':req==='username'?'ID':req==='password'?'PW':req==='region'?'Regione':req}`);return matrix.slice(1).filter(r=>r.some(v=>String(v??'').trim()!=='')).map((r,i)=>{const o={row:i+2};keys.forEach((k,j)=>{if(k)o[k]=String(r[j]??'').trim()});if(idIndex>=0){const id=String(r[idIndex]??'').trim();o.username=id;o.store_code=id}return o})}
 async function parseStoreWorkbook(file){await ensureXlsx();const data=await file.arrayBuffer(),wb=XLSX.read(data,{type:'array'}),sh=wb.Sheets[wb.SheetNames[0]];return normalizeImportRows(XLSX.utils.sheet_to_json(sh,{header:1,raw:false,defval:''}))}
-window.AgendaSession=AgendaSession;window.parseStoreWorkbook=parseStoreWorkbook;window.agendaCloudApi=createAgendaApi({endpoint:AGENDA_API_ENDPOINT,getToken:()=>AgendaSession.getToken(),onSessionExpired:()=>AgendaSession.clearSession()});window.dispatchEvent(new Event('agenda-cloud-ready'));
+window.AgendaSession=AgendaSession;window.parseStoreWorkbook=parseStoreWorkbook;window.agendaCloudApi=createAgendaApi({endpoint:AGENDA_API_ENDPOINT,getToken:()=>AgendaSession.getToken(),onSessionExpired:()=>{AgendaSession.clearSession();try{window.dispatchEvent(new CustomEvent('agenda-session-expired'))}catch(_){}}});window.dispatchEvent(new Event('agenda-cloud-ready'));
