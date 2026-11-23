@@ -17,7 +17,7 @@ vm.createContext(ctx);
 {const g=readFileSync('assets/js/action-plan-guided.js','utf8');for(const n of ['function apGuidedMeta(','function apObjDisabled(','function apObjActive('])vm.runInContext(g.slice(g.indexOf(n),g.indexOf('\n',g.indexOf(n))),ctx);}
 for(const n of ['function esc(','function actionPlanStore(','function actionPlanStoreLabel(','function actionPlanPeriodLabel(',
  'function apYtdPremise(','function actionPlanStatusKey(','function actionPlanStatusLabel(','function actionPlanPct(',
- 'function actionPlanPctFmt(','function actionPlanTableMarkup(','function rmActionCombine(']) vm.runInContext(estrai(n),ctx);
+ 'function actionPlanPctFmt(','function fmtDmy(','function actionPlanTableMarkup(','function rmActionCombine(']) vm.runInContext(estrai(n),ctx);
 
 const piano={plan_id:'P1',store_id:'S1',plan_date:'2026-09-01',period_year:2026,period_fraction:'H2',premise:'Premessa',
  objectives:[{objective_text:'CR sopra il 18%',status:'IN_PROGRESS'},{objective_text:'UPT 2,1',status:'ACHIEVED'}],objective_count:2,achieved_count:1};
@@ -47,7 +47,7 @@ const rmCtx={...ctx,rmPct:v=>`${(Number(v)||0).toFixed(1)}%`,
 vm.createContext(rmCtx);
 for(const n of ['function esc(','function actionPlanStore(','function actionPlanStoreLabel(','function actionPlanPeriodLabel(',
  'function apYtdPremise(','function actionPlanStatusKey(','function actionPlanStatusLabel(','function actionPlanPct(',
- 'function actionPlanPctFmt(','function actionPlanTableMarkup(','function renderRMActionPlans(']) vm.runInContext(estrai(n),rmCtx);
+ 'function actionPlanPctFmt(','function fmtDmy(','function actionPlanTableMarkup(','function renderRMActionPlans(']) vm.runInContext(estrai(n),rmCtx);
 rmCtx.renderRMActionPlans();
 assert.ok(host.innerHTML.includes('action-plan-table'),'La pagina RM deve usare la tabella del profilo DM, non le schede');
 assert.ok(!host.innerHTML.includes('data-action-plan-open'),'La pagina RM non deve produrre il tasto Apri');

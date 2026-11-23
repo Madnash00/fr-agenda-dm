@@ -2866,3 +2866,5 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
  #overtimeStoreBudgetPanel .store-budget-summary{grid-template-columns:minmax(0,1fr)!important}
  .topbar .mobile-menu{min-width:40px;min-height:40px}
 }
+/* Barra azioni contestuale */
+.top-actions .top-action-off,.top-actions.top-actions-empty{display:none!important}
