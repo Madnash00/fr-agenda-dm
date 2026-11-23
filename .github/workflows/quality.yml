@@ -86,6 +86,8 @@ jobs:
         run: node scripts/test-weekly-revenue.mjs
       - name: Action Plan, alert, azioni con strumento e MS in euro
         run: node scripts/test-action-plan-alerts.mjs
+      - name: Action Plan disattiva, storico modifiche, check e alert
+        run: node scripts/test-action-plan-disable.mjs
       - name: Gestione Profili · voci, collegamenti e descrizioni
         run: node scripts/test-gestione-profili.mjs
       - name: Synthetic client cache benchmark

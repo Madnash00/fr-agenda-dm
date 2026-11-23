@@ -2832,3 +2832,32 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 @media screen and (max-width:720px){#actionPlanForm .ap-pair,#actionPlanForm .ap-check-new{grid-template-columns:minmax(0,1fr)}}
 /* badge alert sulla voce ACTION PLAN (profilo NEGOZIO) */
 .nav .nav-btn .nav-alert-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:6px;padding:0 4px;border-radius:999px;background:#d32f2f;color:#fff;font-size:9.5px;font-weight:900;line-height:1;vertical-align:1px}
+/* ACTION PLAN · obiettivi disattivati, storico modifiche, alert con next steps */
+.action-obj-card.is-disabled{background:#eef0f2!important;border-color:#d5d9dd!important;opacity:.78}
+.action-obj-card.is-disabled strong,.action-obj-card.is-disabled p{color:#7b848c!important}
+.action-obj-card .action-obj-disabled{font-weight:800;letter-spacing:.02em;color:#6b737a!important}
+.action-plan-objective-summary.is-disabled{opacity:.55;text-decoration:line-through}
+.ap-confirm-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(20,26,32,.45);display:grid;place-items:center;padding:16px}
+.ap-confirm{background:#fff;border-radius:12px;max-width:460px;width:100%;padding:18px 20px;box-shadow:0 18px 40px rgba(0,0,0,.25);font-size:13px;color:#2b2f33}
+.ap-confirm h3{margin:0 0 6px;font-size:16px}
+.ap-confirm .ap-confirm-obj{margin:0 0 10px;font-weight:800;color:#7a2f52}
+.ap-confirm ul{margin:0 0 12px;padding-left:18px;display:grid;gap:5px;line-height:1.4}
+.ap-confirm label{display:grid;gap:5px;font-size:12px}
+.ap-confirm input{padding:8px 10px;border:1px solid #cfd8de;border-radius:7px;font-size:13px;letter-spacing:.06em}
+.ap-confirm-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+#actionPlanForm .ap-disabled-banner{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:#eceff1;color:#4f5961;font-size:11.5px;font-weight:800}
+#actionPlanForm .ap-edits{margin:12px 0 0}
+#actionPlanForm .ap-edits-body{margin-top:8px}
+#actionPlanForm .ap-edits-table{width:100%;border-collapse:collapse;font-size:11px}
+#actionPlanForm .ap-edits-table th{text-align:left;font-size:10px;letter-spacing:.04em;color:#6b7680;border-bottom:1px solid #dfe3e5;padding:4px 6px}
+#actionPlanForm .ap-edits-table td{border-bottom:1px solid #eef0f2;padding:5px 6px;vertical-align:top}
+#actionPlanForm .ap-edits-table td:first-child{white-space:nowrap}
+#actionPlanForm .ap-alert-set{align-items:flex-end}
+#actionPlanForm .ap-alert-field{display:grid;gap:4px;font-size:10.5px;font-weight:800;color:#44505d}
+#actionPlanForm .ap-alert-next{flex:1 1 260px}
+#actionPlanForm .ap-alert-next textarea{width:100%;padding:7px 8px;border:1px solid #cfd8de;border-radius:7px;font-size:12px;resize:vertical;font-family:inherit;font-weight:400}
+#actionPlanForm .ap-alert-buttons{display:flex;gap:8px;flex-wrap:wrap}
+#actionPlanForm .ap-alert-row{display:grid;gap:3px}
+#actionPlanForm .ap-alert-row-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#actionPlanForm .ap-alert-row-next{font-size:11px}
+#actionPlanForm .ap-alert-row-by{font-size:10px;opacity:.8}
