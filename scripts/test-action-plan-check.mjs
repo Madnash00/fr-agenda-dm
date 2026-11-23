@@ -16,10 +16,11 @@ const estrai=inizio=>{const r=guided.split('\n'),i=r.findIndex(x=>x.startsWith(i
  for(let n=1;n<=60;n++){const f=r.slice(i,i+n).join('\n');try{new vm.Script(f);return f}catch{}}
  assert.fail(`Frammento non compilabile: ${inizio}`)};
 
-const ctx={String,Number,Array,Object,Map,console,esc:s=>String(s==null?'':s)};
+/* Data della sessione fissata: la DATA CHECK non puo' essere precedente a oggi. */
+const ctx={String,Number,Array,Object,Map,console,esc:s=>String(s==null?'':s),apToday:()=>'2026-11-20'};
 vm.createContext(ctx);
 for(const n of ['const AP_CHECK_LIGHTS=','function apChecksFromTasks(','function apChecksAllPairs(','function apChecksAllActions(','function apCheckRowLabel(','function apCheckStamp(',
- 'function apChecksToCheckpoints(','function apCheckValidate(','function apCheckDateLabel(','function apCheckHtml('])
+ 'function apChecksToCheckpoints(','function apCheckMinDate(','function apCheckValidate(','function apCheckDateLabel(','function apCheckHtml('])
  vm.runInContext(estrai(n),ctx);
 
 // --- il semaforo ha i tre colori richiesti, con il significato richiesto ---

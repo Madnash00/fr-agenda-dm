@@ -62,6 +62,59 @@ const AP_GUIDED_MAX_ACTIONS=3;
 function apGuidedToolsFor(kpi,action){const m=AP_GUIDED_ACTION_TOOLS[kpi]?.[action];return m&&m.length?m:(AP_GUIDED_IDEAS[kpi]?.tools||[])}
 function apGuidedMeta(raw){const m=String(raw||'').match(/\n?\[APOBJ2:([A-Za-z0-9+/=]+)\]\s*$/);if(!m)return null;try{return JSON.parse(decodeURIComponent(atob(m[1])))}catch(_){return null}}
 function apGuidedNotes(raw){return String(raw||'').replace(/\n?\[APOBJ2:[A-Za-z0-9+/=]+\]\s*$/,'').trim()}
+function apGuidedNotesWithMeta(text,meta){return (String(text||'').trim()?String(text).trim()+'\n':'')+'[APOBJ2:'+btoa(encodeURIComponent(JSON.stringify(meta)))+']'}
+function apUserLabel(){return String(currentUser?.display_name||currentUser?.username||'').trim()}
+/* DISATTIVA: l'obiettivo resta consultabile (in grigio) ma esce dai
+   monitoraggi: badge, email di alert, conteggi e avanzamento. Non si riattiva. */
+function apObjDisabled(o){const d=apGuidedMeta(o?.notes)?.disabled;return d&&d.at?d:null}
+function apObjActive(o){return !apObjDisabled(o)}
+function apObjSetDisabled(o){
+ const meta=apGuidedMeta(o.notes)||{},at=new Date().toISOString(),by=apUserLabel();
+ if(meta.disabled?.at)return o;
+ meta.disabled={at,by};meta.edits=[...(Array.isArray(meta.edits)?meta.edits:[]),{at,by,type:'Obiettivo disattivato'}];
+ o.notes=apGuidedNotesWithMeta(apGuidedNotes(o.notes),meta);return o;
+}
+function apConfirmDisable(label,onOk){
+ document.querySelector('.ap-confirm-backdrop')?.remove();
+ const box=document.createElement('div');box.className='ap-confirm-backdrop';
+ box.innerHTML='<div class="ap-confirm" role="dialog" aria-modal="true" aria-labelledby="apConfirmTitle"><h3 id="apConfirmTitle">Disattivare l’obiettivo?</h3>'
+  +'<p class="ap-confirm-obj">'+esc(label)+'</p>'
+  +'<ul><li>L’obiettivo <b>resta nell’Action Plan</b>, in grigio, e si può sempre consultare con tutto il suo storico.</li>'
+  +'<li><b>Non viene più considerato nei monitoraggi</b>: niente email di alert né badge su ACTION PLAN, ed è escluso dal conteggio degli OBJ e dall’avanzamento.</li>'
+  +'<li>Non si può più modificare e <b>non si può riattivare</b>.</li>'
+  +'<li>La disattivazione diventa definitiva quando salvi l’Action Plan.</li></ul>'
+  +'<label><span>Per confermare scrivi <b>DISATTIVA</b></span><input type="text" id="apConfirmInput" autocomplete="off" spellcheck="false"></label>'
+  +'<div class="ap-confirm-foot"><button type="button" class="btn small" id="apConfirmCancel">ANNULLA</button><button type="button" class="btn small danger" id="apConfirmOk" disabled>DISATTIVA</button></div></div>';
+ document.body.appendChild(box);
+ const input=box.querySelector('#apConfirmInput'),ok=box.querySelector('#apConfirmOk'),close=()=>box.remove();
+ input.oninput=()=>{ok.disabled=input.value.trim()!=='DISATTIVA'};
+ input.onkeydown=e=>{if(e.key==='Enter'&&!ok.disabled)ok.click();if(e.key==='Escape')close()};
+ box.querySelector('#apConfirmCancel').onclick=close;
+ box.onclick=e=>{if(e.target===box)close()};
+ ok.onclick=()=>{if(input.value.trim()!=='DISATTIVA')return;close();onOk()};
+ input.focus();
+}
+/* Storico modifiche dell'obiettivo: una riga per ogni tipo di modifica, con
+   data e utente. Si confronta la versione salvata con quella confermata. */
+function apObjChangeTypes(old,oldMeta,newText,newMeta){
+ const out=[],d=apCheckDateLabel;
+ if(String(old?.objective_text||'')!==String(newText||''))out.push('Obiettivo: '+(old?.objective_text||'—')+' → '+newText);
+ const before=apGuidedPairsFromMeta(oldMeta,old),after=newMeta.pairs||[];
+ after.forEach(p=>{const q=before.find(x=>x.action===p.action);if(!q)out.push('Azione aggiunta: '+p.action+(p.tool?' ('+p.tool+')':''));else if((q.tool||'')!==(p.tool||''))out.push('Strumento di “'+p.action+'”: '+(q.tool||'—')+' → '+(p.tool||'—'))});
+ before.forEach(q=>{if(!after.some(p=>p.action===q.action))out.push('Azione tolta: '+q.action)});
+ const oldAlerts=(oldMeta?.alerts||[]).map(a=>a.date);
+ (newMeta.alerts||[]).forEach(a=>{if(!oldAlerts.includes(a.date))out.push('Alert impostato per il '+d(a.date))});
+ const oldChecks=Array.isArray(oldMeta?.checks)?oldMeta.checks:[];
+ (newMeta.checks||[]).forEach(c=>{const o=oldChecks.find(x=>x.id===c.id);if(!o)out.push('CHECK del '+d(c.date)+' registrato');else if((c.history||[]).length>(o.history||[]).length)out.push('CHECK del '+d(c.date)+' modificato')});
+ return out;
+}
+function apEditsHtml(edits,open){
+ const rows=(Array.isArray(edits)?edits:[]).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+ return '<section class="ap-edits"><button type="button" class="btn small" id="apEditsBtn" aria-expanded="'+!!open+'">STORICO MODIFICHE ('+rows.length+')</button>'
+  +'<div class="ap-edits-body'+(open?'':' hidden')+'">'+(rows.length?'<table class="ap-edits-table"><thead><tr><th>DATA</th><th>TIPO MODIFICA</th><th>UTENTE</th></tr></thead><tbody>'
+  +rows.map(e=>'<tr><td>'+esc(apCheckStamp(e.at))+'</td><td>'+esc(e.type||'')+'</td><td>'+esc(e.by||'—')+'</td></tr>').join('')+'</tbody></table>'
+  :'<p class="ap-checks-empty">Nessuna modifica registrata.</p>')+'</div></section>';
+}
 function apGuidedAmount(n,u){return Number(n).toLocaleString('it-IT',{maximumFractionDigits:2})+(u==='€'?' €':u==='%'?'%':u==='ingressi'?' ingressi':u==='capi/scontrino'?' capi/scontrino':'')}
 function apGuidedProjection(kpi,target,v){
  const d=apYtdCalculate(v);if(!d||!Number.isFinite(target)||target<=0||((kpi==='cr'||kpi==='ms')&&target>100)||(kpi==='visits'&&!Number.isInteger(target)))return null;
@@ -112,11 +165,11 @@ function openApGuidedObjective(index=null){
  const old=Number.isInteger(index)?actionPlanDraftObjectives[index]:null,meta=apGuidedMeta(old?.notes);
  const v=apYtdRead('app-');if(!apYtdCalculate(v)){toast('Completa i KPI del PERIODO ACTION PLAN prima di aggiungere un obiettivo.',true);return}
  const pairs=apGuidedPairsFromMeta(meta,old);
- const data={kpi:meta?.kpi||'',target:meta?.target??'',pairs,alerts:Array.isArray(meta?.alerts)?meta.alerts.map(a=>({date:String(a.date||''),set_at:String(a.set_at||'')})).filter(a=>a.date):[],
+ const data={kpi:meta?.kpi||'',target:meta?.target??'',pairs,alerts:Array.isArray(meta?.alerts)?meta.alerts.map(a=>({date:String(a.date||''),set_at:String(a.set_at||''),next_steps:String(a.next_steps||''),by:String(a.by||'')})).filter(a=>a.date):[],disabled:meta?.disabled?.at?meta.disabled:null,edits:Array.isArray(meta?.edits)?meta.edits:[],
   checks:Array.isArray(meta?.checks)?meta.checks.map(c=>({...c,saved:true,rows:(c.rows||[]).map(r=>({...r}))})):apChecksFromTasks(old?.tasks,pairs),legacyNotes:apGuidedNotes(old?.notes),status:old?.status||'IN_PROGRESS'};
  const page=document.getElementById('ap-objectives-page');page?.classList.add('ap-guided-editing');
  editor.classList.remove('hidden');
- editor.innerHTML='<div class="ap-guided-objective"><header class="ap-guided-head"><strong>AGGIUNGI OBIETTIVO</strong><span id="apGuidedProgress">1 / 3</span><button type="button" class="btn small" id="apGuidedCancel">CHIUDI</button></header><div id="apGuidedStep"></div><footer class="apy-footer ap-guided-footer"><button type="button" class="btn apy-back-button" id="apGuidedPrevious">INDIETRO</button><button type="button" class="btn primary" id="apGuidedContinue">PROCEDI</button></footer></div>';
+ editor.innerHTML='<div class="ap-guided-objective"><header class="ap-guided-head"><strong>'+(old?'OBIETTIVO':'AGGIUNGI OBIETTIVO')+'</strong><span id="apGuidedProgress">1 / 3</span><button type="button" class="btn small" id="apGuidedCancel">CHIUDI</button></header><div id="apGuidedStep"></div><div id="apGuidedEdits"></div><footer class="apy-footer ap-guided-footer"><button type="button" class="btn apy-back-button" id="apGuidedPrevious">INDIETRO</button><button type="button" class="btn primary" id="apGuidedContinue">PROCEDI</button></footer></div>';
  const root=editor.querySelector('#apGuidedStep'),next=editor.querySelector('#apGuidedContinue'),back=editor.querySelector('#apGuidedPrevious');
  let step=0;
  const close=()=>{editor.innerHTML='';editor.classList.add('hidden');page?.classList.remove('ap-guided-editing');renderActionPlanObjectivesDraft();requestAnimationFrame(apFitActionPlanStage)};
@@ -149,11 +202,19 @@ function openApGuidedObjective(index=null){
    root.innerHTML='<h4>3. MONITORAGGIO</h4>'+apAlertsHtml(data)+apChecksHtml(data);
    apAlertsWire(editor,data,draw);apChecksWire(editor,data,draw);
   }
+  if(data.disabled){
+   root.insertAdjacentHTML('afterbegin','<p class="ap-disabled-banner">OBIETTIVO DISATTIVATO il '+esc(apCheckStamp(data.disabled.at))+(data.disabled.by?' da '+esc(data.disabled.by):'')+': consultabile, escluso dai monitoraggi.</p>');
+   root.querySelectorAll('input,select,textarea,button').forEach(x=>{if(x.id!=='apAlertHistoryBtn')x.disabled=true});
+   if(step===2)next.textContent='CHIUDI';
+  }
+  const ed=editor.querySelector('#apGuidedEdits');ed.innerHTML=old?apEditsHtml(data.edits,data.editsOpen):'';
+  const eb=ed.querySelector('#apEditsBtn');if(eb)eb.onclick=()=>{collect();data.editsOpen=!data.editsOpen;draw()};
   requestAnimationFrame(apFitActionPlanStage);
  };
  back.onclick=()=>{collect();if(step>0){step--;draw()}};
  editor.querySelector('#apGuidedCancel').onclick=close;
  next.onclick=()=>{
+  if(data.disabled){if(step<2){step++;draw()}else close();return}
   collect();
   if(step===0){const target=apYtdParse(data.target);if(!apGuidedProjection(data.kpi,target,v)){toast('Inserisci un KPI e un valore valido. CR e MS max 100%.',true);return}data.target=target;step=1;draw();return}
   if(step===1){
@@ -167,8 +228,10 @@ function openApGuidedObjective(index=null){
   const basePairs=data.pairs.map(x=>({action:x.action,tool:x.tool})),all=apChecksAllPairs(basePairs,data.checks);
   const checks=data.checks.map(c=>({id:c.id,date:c.date,note:c.note||'',rows:(c.rows||[]).map(r=>({action:r.action,tool:r.tool||'',light:r.light,newAction:r.newAction||'',newTool:r.newTool||''})),created_at:c.created_at||'',history:c.history||[]}));
   const metadata={kpi:data.kpi,target:data.target,ac:p.base,baselineSales:p.sales,projectedSales:p.forecast,projectedDelta:p.delta,pairs:basePairs,actions:basePairs.map(x=>x.action),tools:basePairs.map(x=>x.tool),alerts:data.alerts,checks};
+  const objectiveText=def.label+' '+apGuidedAmount(data.target,def.unit),editAt=new Date().toISOString(),editBy=apUserLabel();
+  metadata.edits=[...data.edits,...(old?apObjChangeTypes(old,meta,objectiveText,metadata):['Obiettivo creato']).map(type=>({at:editAt,by:editBy,type}))];
   const notes=(data.legacyNotes?data.legacyNotes+'\n':'')+'[APOBJ2:'+btoa(encodeURIComponent(JSON.stringify(metadata)))+']',oldTasks=old?.tasks||[];
-  const obj={objective_id:old?.objective_id||'',objective_text:def.label+' '+apGuidedAmount(data.target,def.unit),actions:all.map(x=>x.action).join(' · '),tools:[...new Set(all.map(x=>x.tool).filter(Boolean))].join(' · '),status:data.status,notes,tasks:all.map(x=>({task:x.action,tools:x.tool,owner:apPlanOwner(),timing_monitoraggio:'',checkpoints:apChecksToCheckpoints(x.action,data.checks,oldTasks)}))};
+  const obj={objective_id:old?.objective_id||'',objective_text:objectiveText,actions:all.map(x=>x.action).join(' · '),tools:[...new Set(all.map(x=>x.tool).filter(Boolean))].join(' · '),status:data.status,notes,tasks:all.map(x=>({task:x.action,tools:x.tool,owner:apPlanOwner(),timing_monitoraggio:'',checkpoints:apChecksToCheckpoints(x.action,data.checks,oldTasks)}))};
   if(old)actionPlanDraftObjectives[index]=obj;else actionPlanDraftObjectives.push(obj);
   if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}
   close();
@@ -201,16 +264,24 @@ function apAlertColor(diff){
  return {hue,bg:'hsl('+hue+' 70% 91%)',fg:'hsl('+hue+' 62% 27%)'};
 }
 function apAlertsExpired(alerts,today=apToday()){return (Array.isArray(alerts)?alerts:[]).filter(a=>a.date&&a.date<=today).slice().sort((a,b)=>b.date.localeCompare(a.date))}
+/* Storico: tutti gli alert, dal piu' recente. Quelli scaduti hanno il colore
+   della distanza dal CHECK; quelli futuri sono neutri (in programma). */
 function apAlertsHtml(data){
  const today=apToday(),latest=apAlertLatest(data.alerts),expired=apAlertsExpired(data.alerts,today),open=!!data.alertHistoryOpen;
- const storico=expired.map(a=>{const m=apAlertMatch(a.date,data.checks),c=apAlertColor(m?.diff);
-  return '<li class="ap-alert-row" style="background:'+c.bg+';color:'+c.fg+'"><strong>ALERT '+apCheckDateLabel(a.date)+'</strong><span>'+(m&&Math.abs(m.diff)<=AP_ALERT_WINDOW_DAYS?'CHECK '+apCheckDateLabel(m.date)+(m.diff===0?' · stesso giorno':' · '+(m.diff>0?'+':'−')+Math.abs(m.diff)+' gg'):'Nessun CHECK entro '+AP_ALERT_WINDOW_DAYS+' giorni')+'</span></li>'}).join('');
+ const all=(data.alerts||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+ const storico=all.map(a=>{const due=a.date<=today,m=due?apAlertMatch(a.date,data.checks):null,c=due?apAlertColor(m?.diff):{bg:'#f1f3f5',fg:'#44505d'};
+  const esito=!due?'In programma':m&&Math.abs(m.diff)<=AP_ALERT_WINDOW_DAYS?'CHECK '+apCheckDateLabel(m.date)+(m.diff===0?' · stesso giorno':' · '+(m.diff>0?'+':'−')+Math.abs(m.diff)+' gg'):'Nessun CHECK entro '+AP_ALERT_WINDOW_DAYS+' giorni';
+  return '<li class="ap-alert-row'+(due?'':' is-future')+'" style="background:'+c.bg+';color:'+c.fg+'"><div class="ap-alert-row-head"><strong>ALERT '+apCheckDateLabel(a.date)+'</strong><span>'+esito+'</span></div>'
+   +'<div class="ap-alert-row-next"><b>NEXT STEPS:</b> '+(a.next_steps?esc(a.next_steps):'—')+'</div>'
+   +'<div class="ap-alert-row-by">Inserito da '+esc(a.by||'—')+(a.set_at?' · '+esc(apCheckStamp(a.set_at)):'')+'</div></li>'}).join('');
  return '<section class="ap-alert-box"><div class="ap-alert-head"><h5>IMPOSTA ALERT PROSSIMO CHECK</h5>'
   +'<span class="ap-alert-current'+(latest&&latest<=today?' is-due':'')+'">'+(latest?(latest<today?'Ultimo alert scaduto: ':latest===today?'Alert di oggi: ':'Prossimo alert: ')+apCheckDateLabel(latest):'Nessun alert impostato')+'</span></div>'
-  +'<div class="ap-alert-set"><input type="date" id="apAlertDate" min="'+today+'" aria-label="Data del prossimo check"><button type="button" class="btn small primary" id="apAlertSetBtn">IMPOSTA ALERT</button>'
-  +'<button type="button" class="btn small" id="apAlertHistoryBtn" aria-expanded="'+open+'">STORICO ALERT ('+expired.length+')</button></div>'
+  +'<div class="ap-alert-set"><label class="ap-alert-field">DATA<input type="date" id="apAlertDate" min="'+today+'" aria-label="Data del prossimo check"></label>'
+  +'<label class="ap-alert-field ap-alert-next">NEXT STEPS<textarea id="apAlertNext" rows="2" maxlength="500" placeholder="Cosa verificare al prossimo check"></textarea></label>'
+  +'<div class="ap-alert-buttons"><button type="button" class="btn small primary" id="apAlertSetBtn">IMPOSTA ALERT</button>'
+  +'<button type="button" class="btn small" id="apAlertHistoryBtn" aria-expanded="'+open+'">STORICO ALERT ('+all.length+')</button></div></div>'
   +'<p class="ap-alert-note">Il giorno dell’alert il negozio riceve un’email e vede il badge su ACTION PLAN. Gli alert non si possono cancellare.</p>'
-  +'<ul class="ap-alert-history'+(open?'':' hidden')+'">'+(storico||'<li class="ap-checks-empty">Nessun alert scaduto.</li>')+'</ul>'
+  +'<ul class="ap-alert-history'+(open?'':' hidden')+'">'+(storico||'<li class="ap-checks-empty">Nessun alert impostato.</li>')+'</ul>'
   +'</section>';
 }
 function apAlertsWire(editor,data,draw){
@@ -219,14 +290,15 @@ function apAlertsWire(editor,data,draw){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){toast('Indica la data del prossimo check.',true);return}
   if(d<apToday()){toast('La data dell’alert non può essere nel passato.',true);return}
   if(data.alerts.some(a=>a.date===d)){toast('Alert già impostato per questa data.',true);return}
-  data.checks=apChecksRead(editor);data.alerts.push({date:d,set_at:new Date().toISOString()});draw();toast('Alert impostato: '+apCheckDateLabel(d)+'. Salva l’Action Plan per attivarlo.')};
+  const next=editor.querySelector('#apAlertNext')?.value.trim()||'';if(!next){toast('Scrivi i NEXT STEPS dell’alert.',true);return}
+  data.checks=apChecksRead(editor);data.alerts.push({date:d,set_at:new Date().toISOString(),next_steps:next,by:apUserLabel()});draw();toast('Alert impostato: '+apCheckDateLabel(d)+'. Salva l’Action Plan per attivarlo.')};
  if(hist)hist.onclick=()=>{data.checks=apChecksRead(editor);data.alertHistoryOpen=!data.alertHistoryOpen;draw()};
 }
 /* Badge del menu ACTION PLAN (solo profilo NEGOZIO): conta gli obiettivi il cui
    alert piu' recente e' scaduto, cioe' ha data di oggi o passata e non ne e'
    stato impostato uno successivo. */
 function apAlertBadgeCount(plans,today=apToday()){
- let n=0;(Array.isArray(plans)?plans:[]).forEach(p=>{if(p&&p.active===false)return;(p?.objectives||[]).forEach(o=>{const latest=apAlertLatest(apGuidedMeta(o.notes)?.alerts);if(latest&&latest<=today)n++})});
+ let n=0;(Array.isArray(plans)?plans:[]).forEach(p=>{if(p&&p.active===false)return;(p?.objectives||[]).forEach(o=>{if(apObjDisabled(o))return;const latest=apAlertLatest(apGuidedMeta(o.notes)?.alerts);if(latest&&latest<=today)n++})});
  return n;
 }
 function apUpdateAlertBadge(){
@@ -328,7 +400,7 @@ function apCheckHtml(c,i,coppie){
    +'</div>';
  }).join('');
  return '<div class="ap-check ap-check-open" data-ap-check="'+i+'">'
-  +'<div class="ap-check-head"><label>DATA CHECK<input type="date" data-ap-check-date value="'+esc(c.date||'')+'"></label></div>'
+  +'<div class="ap-check-head"><label>DATA CHECK<input type="date" data-ap-check-date min="'+esc(apCheckMinDate(c))+'" value="'+esc(c.date||'')+'"></label></div>'
   +'<div class="ap-check-actions">'+(righe||'<p class="ap-checks-empty">Nessuna azione selezionata al passo 2.</p>')+'</div>'
   +'<label class="ap-check-note">NOTE<textarea rows="2" data-ap-check-note placeholder="Cosa è emerso da questo check">'+esc(c.note||'')+'</textarea></label>'
   +(storico.length?'<div class="ap-check-history"><strong>MODIFICHE DOPO IL PRIMO SALVATAGGIO</strong><ul>'+storico.map(h=>'<li><b>'+esc(apCheckStamp(h.at))+'</b> · '+(h.changes||[]).map(esc).join(' · ')+'</li>').join('')+'</ul></div>':'')
@@ -418,8 +490,12 @@ function apChecksWire(editor,data,draw){
  });
 }
 
-function apCheckValidate(c){
+/* La DATA CHECK non puo' essere precedente a oggi (data del dispositivo
+   dell'utente). Un CHECK gia' salvato puo' tenere la sua data originale. */
+function apCheckMinDate(c,today=apToday()){const orig=c?.snapshot?.date||'';return orig&&orig<today?orig:today}
+function apCheckValidate(c,today=apToday()){
  if(!c.date)return 'Indica la DATA CHECK.';
+ if(c.date<today&&!(c.snapshot&&c.snapshot.date===c.date))return 'La DATA CHECK non può essere precedente a oggi.';
  if(!c.rows.length)return 'Non ci sono azioni da monitorare.';
  if(c.rows.some(r=>!r.light))return 'Assegna un semaforo a ogni azione.';
  if(c.rows.some(r=>r.light==='RED'&&!r.newAction))return 'Con il semaforo rosso indica la nuova azione da monitorare.';

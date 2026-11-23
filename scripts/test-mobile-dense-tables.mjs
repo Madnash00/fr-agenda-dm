@@ -57,8 +57,10 @@ for(const t of tabelle){
 const estrai=inizio=>{const k=righe.findIndex(x=>x.startsWith(inizio));assert.notEqual(k,-1,`Manca ${inizio}`);
  for(let n=1;n<=60;n++){const f=righe.slice(k,k+n).join('\n');try{new vm.Script(f);return f}catch{}}
  assert.fail(`Frammento non compilabile: ${inizio}`)};
-const ctx={Number,String,Math,Array,JSON,Object,Date,console,app:{stores:[]}};
+const ctx={Number,String,Math,Array,JSON,Object,Date,console,app:{stores:[]},atob,btoa,encodeURIComponent,decodeURIComponent};
 vm.createContext(ctx);
+/* La tabella esclude dai conteggi gli obiettivi disattivati (modulo guidato). */
+{const g=readFileSync('assets/js/action-plan-guided.js','utf8');for(const n of ['function apGuidedMeta(','function apObjDisabled(','function apObjActive('])vm.runInContext(g.slice(g.indexOf(n),g.indexOf('\n',g.indexOf(n))),ctx);}
 for(const n of ['function esc(','function overtimeNum(','function overtimeFmt(','function overtimeCoverageState(',
  'function overtimeMetricDisplay(','function overtimeDetailCells(','const OVERTIME_METRIC_HEAD=',
  'function overtimeStoresTableMarkup(','function overtimeEmployeesTableMarkup(','function actionPlanStore(',
