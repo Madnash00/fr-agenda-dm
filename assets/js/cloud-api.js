@@ -83,6 +83,8 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
      l'app ferma su CARICAMENTO DATI. Le letture riprovano una volta (al secondo
      colpo Apps Script ha di solito la cache pronta); le scritture mai, perche'
      potrebbero essere gia' state registrate. */
+  /* anche se fetch o json ignorano l'annullamento, l'attesa termina */
+  const raceAbort=(p,signal)=>signal?Promise.race([p,new Promise((_,rej)=>{if(signal.aborted)rej(new Error('aborted'));else signal.addEventListener('abort',()=>rej(new Error('aborted')),{once:true})})]):p;
   const timeoutMs=Number(data.__timeout)||(isRead?AGENDA_READ_TIMEOUT_MS:action==='login'?AGENDA_LOGIN_TIMEOUT_MS:AGENDA_WRITE_TIMEOUT_MS),attempts=isRead?2:1;let controller=null;
   const task=(async()=>{
    if(emitBusy&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-busy-start',{detail:{action}}));if(emitPageLoad&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('agenda-page-loading-start',{detail:{action}}));
@@ -93,8 +95,8 @@ function createAgendaApi({endpoint,fetchFn=globalThis.fetch,getToken=()=>'',onSe
      let timedOut=false,cancelled=false;const timer=controller?setTimeout(()=>{timedOut=true;controller.abort()},timeoutMs):null;
      if(controller)controller.signal.addEventListener('abort',()=>{if(!timedOut)cancelled=true});
      try{
-      let response;try{response=await fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})})}catch(_){assertCurrentSession();if(cancelled)throw new AgendaApiError('STALE_SESSION','Richiesta annullata.');const e=timedOut?new AgendaApiError('API_UNAVAILABLE',isRead?'Il servizio non risponde. Riprova tra qualche istante.':'Il servizio non ha confermato in tempo: aggiorna la sezione per verificare se il salvataggio è avvenuto prima di riprovare.'):new AgendaApiError('API_UNAVAILABLE',AGENDA_NETWORK_ERROR_TEXT);e.timeout=timedOut;e.retryable=true;throw e}
-      assertCurrentSession();try{body=await response.json()}catch(_){assertCurrentSession();if(cancelled)throw new AgendaApiError('STALE_SESSION','Richiesta annullata.');const e=new AgendaApiError('API_UNAVAILABLE',timedOut?'Il servizio non risponde. Riprova tra qualche istante.':'Risposta API non valida.');e.timeout=timedOut;e.retryable=timedOut;throw e}
+      let response;try{response=await raceAbort(fetchFn(endpoint,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,token:sessionToken,...payload}),redirect:'follow',...(controller?{signal:controller.signal}:{})}),controller?.signal)}catch(_){assertCurrentSession();if(cancelled)throw new AgendaApiError('STALE_SESSION','Richiesta annullata.');const e=timedOut?new AgendaApiError('API_UNAVAILABLE',isRead?'Il servizio non risponde. Riprova tra qualche istante.':'Il servizio non ha confermato in tempo: aggiorna la sezione per verificare se il salvataggio è avvenuto prima di riprovare.'):new AgendaApiError('API_UNAVAILABLE',AGENDA_NETWORK_ERROR_TEXT);e.timeout=timedOut;e.retryable=true;throw e}
+      assertCurrentSession();try{body=await raceAbort(response.json(),controller?.signal)}catch(_){assertCurrentSession();if(cancelled)throw new AgendaApiError('STALE_SESSION','Richiesta annullata.');const e=new AgendaApiError('API_UNAVAILABLE',timedOut?'Il servizio non risponde. Riprova tra qualche istante.':'Risposta API non valida.');e.timeout=timedOut;e.retryable=timedOut;throw e}
       break;
      }catch(e){if(!(e?.retryable&&attempt<attempts))throw e}
      finally{clearTimeout(timer);if(controller)inflightControllers.delete(controller)}

@@ -25,4 +25,7 @@ const hanging=(calls,answerOn)=>async(_u,o)=>{const a=JSON.parse(o.body).action;
 {const calls=[],api=env.makeApi({endpoint:'https://example.invalid/x',fetchFn:hanging(calls,0),getToken:()=>'t'});
  const p=api.request('getActionPlans',{__timeout:5000});await new Promise(r=>setTimeout(r,10));api.clearCache();
  await assert.rejects(p,e=>e.code==='STALE_SESSION');assert.equal(calls.length,1,'annullata dal cambio sessione: nessun nuovo tentativo');}
+{const calls=[],deaf=async(_u,o)=>{calls.push(1);return new Promise(()=>{})};/* fetch che ignora l'annullamento */
+ const api=env.makeApi({endpoint:'https://example.invalid/x',fetchFn:deaf,getToken:()=>'t'});
+ await assert.rejects(api.request('getActionPlans',{__timeout:30}),e=>e.timeout===true);assert.equal(calls.length,2,'anche se fetch ignora l annullamento la richiesta finisce');}
 console.log('PASS: timeout e nuovo tentativo delle richieste');
