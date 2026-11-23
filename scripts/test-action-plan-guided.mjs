@@ -4,7 +4,7 @@ import vm from 'node:vm';
 const app=fs.readFileSync('assets/js/app.js','utf8');
 const guided=fs.readFileSync('assets/js/action-plan-guided.js','utf8');
 const calc=app.slice(app.indexOf('const AP_YTD_DEF='),app.indexOf('function apYtdEuro(x)'));
-const funcs=guided.slice(guided.indexOf('function apGuidedMeta('),guided.indexOf('function apGuidedChoiceHtml('));
+const funcs=guided.slice(guided.indexOf('function apGuidedMeta('),guided.indexOf('function apGuidedPairsFromMeta('));
 assert.ok(calc.startsWith('const AP_YTD_DEF=')&&funcs.startsWith('function apGuidedMeta('),'KPI extraction changed');
 const ctx={Number,String,JSON,Array,Math,RegExp,Error,isFinite,atob,btoa,encodeURIComponent,decodeURIComponent};
 vm.createContext(ctx);
@@ -20,7 +20,12 @@ for(const [name,target] of scenarios){
  assert.ok(Math.abs(result.delta-10000)<1e-5,'Impatto KPI errato per '+name);
 }
 assert.equal(apGuidedProjection('upt',v.upt,v).delta,0,'Nessuna variazione richiesta');
-assert.equal(apGuidedProjection('ms',60,v).forecast,null,'MS non ha proiezione causalmente determinabile');
+/* MS in euro (richiesta 23/11/2026): T=1000 scontrini, UPT 2 e MS 40% -> uno
+   scontrino multiplo ha k=(2-0,6)/0,4=3,5 pezzi; ogni scontrino che diventa
+   multiplo vale (3,5-1)x50=125 EUR; da 40% a 60% sono 200 scontrini = +25.000 EUR. */
+assert.ok(Math.abs(apGuidedProjection('ms',60,v).forecast-125000)<1e-6,'MS: proiezione con la regola degli scontrini multipli');
+assert.equal(apGuidedProjection('ms',101,v),null,'MS oltre 100% non valido');
+assert.equal(apGuidedProjection('ms',60,{...v,ms:0}).forecast,null,'Senza scontrini multipli in AC la MS non e stimabile');
 assert.equal(apGuidedProjection('ms',60,v).base,40,'MS baseline AC');
 for(const [k,target] of [['cr',101],['cr',0],['visits',5500.5],['upt',-1],['atv',0],['nonexistent',10]])assert.equal(apGuidedProjection(k,target,v),null,'Target non valido: '+k);
 const meta={kpi:'cr',target:22,actions:['Accogliere'],tools:['Scheda cliente'],otherAction:'Invio promemoria',otherTool:'Altro sistema'};
@@ -30,13 +35,13 @@ assert.equal(apGuidedNotes(stored),nextSteps,'NEXT STEPS non ripristinati');
 assert.equal(JSON.stringify(apGuidedMeta(stored)),JSON.stringify(meta),'Metadati KPI non ripristinati');
 assert.equal(apGuidedNotes('Nota storica'), 'Nota storica','Note legacy alterate');
 assert.equal(apGuidedMeta('Nota storica'),null,'Nota legacy erroneamente trattata come wizard');
-assert.ok(guided.includes("length>3"),'Limite 3 selezioni mancante');
+assert.ok(guided.includes('const AP_GUIDED_MAX_ACTIONS=3;')&&guided.includes('if(data.pairs.length>=AP_GUIDED_MAX_ACTIONS)'),'Limite di 3 azioni mancante');
 assert.ok(guided.includes("if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}"),'Confermare un obiettivo deve avanzare la revisione del form NEGOZIO');
 assert.ok(app.includes('actionPlanStoreRevision!==submittedRevision'),'Salvataggi in volo non devono perdere modifiche successive');
 /* Il TIMING a frequenza fissa e stato sostituito dalle sessioni di CHECK:
    il monitoraggio si fissa a date scelte, non a cadenza dichiarata. */
 assert.ok(!guided.includes("['SETTIMANALE','BISETTIMANALE','MENSILE','BIMESTRALE']"),'Le frequenze TIMING non devono tornare');
-assert.ok(guided.includes('apAddCheckBtn'),'Il monitoraggio avviene ora per sessioni di CHECK');
+assert.ok(guided.includes('apAddCheckBtn')&&guided.includes('>EFFETTUA CHECK</button>'),'Il monitoraggio avviene con EFFETTUA CHECK');
 for(const name of ['sales','visits','cr','upt','asp','atv','ms']){
  const pattern=new RegExp('(?:^|\\n) '+name+':\\{actions:\\[(.*?)\\],tools:\\[(.*?)\\]\\}', 's');
  const match=guided.match(pattern);assert.ok(match,'Mancano idee per '+name);
