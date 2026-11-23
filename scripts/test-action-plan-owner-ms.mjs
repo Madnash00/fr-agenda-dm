@@ -34,9 +34,11 @@ const grafico=estrai(app,'function apYtdImpactChart(');
 assert.ok(grafico.includes("amount=(value>0?'+':'')+apYtdEuro(value);"),
  'Nel grafico d impatto anche la MS si legge in euro');
 assert.ok(!grafico.includes('apYtdPercent'),'Nessuna formattazione percentuale nel grafico d impatto');
-assert.ok(app.includes("const v=unit==='ms'?num(val,0):num(val/1000,1)+'k';"),
- 'Anche nel PDF la colonna MS resta un importo');
-assert.ok(app.includes("'Impatto vs AP (k EUR); MS: EUR'"),'E la didascalia del PDF lo dichiara');
+/* Dal 23/11/2026 la MS e un impatto in euro come gli altri KPI (scontrini
+   multipli x pezzi in piu x ASP): nel PDF stessa scala e stessa unita. */
+assert.ok(app.includes("const v=num(val/1000,1)+'k';")&&app.includes("const denom=Math.max(1,...vals.map(z=>Math.abs(z[1])||0));"),
+ 'Nel PDF anche la colonna MS e in migliaia di euro, sulla stessa scala');
+assert.ok(app.includes("'Impatto vs AP (k EUR)'"),'E la didascalia del PDF lo dichiara');
 assert.ok(!app.includes('function apYtdPercent('),
  'Il formattatore percentuale non serve piu: lasciarlo sarebbe codice morto');
 
@@ -55,7 +57,7 @@ assert.ok(salvataggio.indexOf("owner:$('#apOwner')")<salvataggio.indexOf('is_dra
 // --- la schermata 3/3 dell obiettivo non chiede piu il referente ---
 assert.ok(!guided.includes('apGuidedOwner'),'Il campo OWNER va eliminato dalla schermata 3/3');
 assert.ok(!/Compila OWNER/.test(guided),'E non deve piu essere richiesto nella validazione');
-assert.ok(guided.includes("if(!data.nextSteps)"),'NEXT STEPS resta obbligatorio');
+assert.ok(!guided.includes('apGuidedNextSteps')&&!guided.includes('data.nextSteps'),'NEXT STEPS e stato eliminato (richiesta 23/11/2026)');
 /* Le azioni conservano un referente: quello del piano. Senza, il PDF
    stamperebbe un trattino al posto del nome. */
 assert.ok(guided.includes('owner:apPlanOwner()'),'Le azioni ereditano il referente del piano');
@@ -65,14 +67,6 @@ assert.ok(guided.includes("document.getElementById('apOwner')"),
 // --- le due domande guida ---
 /* La domanda su TIMING e caduta insieme al campo. */
 assert.ok(!guided.includes('apGuidedTiming'),'Il campo TIMING va eliminato dalla scheda obiettivo');
-assert.ok(guided.includes('Quali sono i prossimi passi che mi possono portare al raggiungimento dell\\\'obiettivo?'),
- 'E NEXT STEPS la propria');
-/* Devono stare dentro la label del campo giusto, non in fondo alla schermata. */
-const schermata=guided.slice(guided.indexOf('3. MONITORAGGIO'));
-const posNext=schermata.indexOf('Quali sono i prossimi passi'),posArea=schermata.indexOf('id="apGuidedNextSteps"');
-assert.ok(posNext>=0&&posArea>posNext,'La domanda su NEXT STEPS precede il suo campo');
-assert.ok(schermata.includes('class="ap-guided-hint"'),'Le domande devono avere la classe che le rende piccole');
-assert.ok(css.includes('.ap-guided-hint{'),'Manca lo stile delle domande guida');
-assert.ok(/\.ap-guided-hint\{[^}]*font-size:10px/.test(css),'Le domande vanno in piccolo, come richiesto');
+assert.ok(!guided.includes('Quali sono i prossimi passi'),'Con il campo sparisce anche la sua domanda guida');
 
-console.log('PASS: MS in euro nei grafici, OWNER sul piano, TIMING rimosso e domanda su NEXT STEPS');
+console.log('PASS: MS in euro nei grafici e nel PDF, OWNER sul piano, TIMING e NEXT STEPS rimossi');

@@ -39,6 +39,7 @@ execFileSync(process.execPath,['scripts/test-ferie-dm-calendar-sync.mjs'],{stdio
 execFileSync(process.execPath,['scripts/test-store-multi-dm-contract.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-profile-exceptions.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-weekly-revenue.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-action-plan-alerts.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
@@ -214,7 +215,8 @@ const calc=new Function(calcCode+';return apYtdCalculate;')();
 const base=calc({sales:100000,salesD:-10,visD:-10,cr:20,crD:-5,upt:2,uptD:-5,asp:50,aspD:-5,atv:100,atvD:-5,ms:40,msD:-5});
 assert.ok(base&&base.ticketsAC===1000&&base.visitsAC===5000,'AC ticket / visit derivation incorrect');
 assert.ok(Math.abs(base.visitsAP-5000/.9)<1e-8&&Math.abs(base.ticketsAP-5000/.9*.2/.95)<1e-8,'AP ticket / visit derivation incorrect');
-assert.ok(base.levers.length===7&&base.levers[6][1]===null,'MS must not have an invented value');
+/* MS in euro (23/11/2026): scontrini multipli in meno x pezzi in piu (k-1) x ASP; k=(UPT-(1-MS))/MS. */
+{const msAP=40/.95,k=(2-.6)/.4,atteso=(40-msAP)/100*1000*(k-1)*50;assert.ok(base.levers.length===7&&Math.abs(base.levers[6][1]+atteso)<1e-6&&Math.abs(base.impacts[6][1]-atteso)<1e-6,'MS must follow the documented multi-piece ticket rule');}
 
 // Action Plan: standalone period-analysis step must not overwrite historical YTD input.
 assert.ok(app.includes("periodSaved=saved.period&&typeof saved.period==='object'?saved.period:{}"),'Legacy YTD plans must open with a blank action-period analysis');
@@ -269,8 +271,8 @@ assert.ok(app.includes("review.id='ap-review-charts'")&&app.includes('id="ap-obj
 assert.ok(guided.includes('function openApGuidedObjective(')&&guided.includes('KPI E TARGET')&&guided.includes('AZIONI E STRUMENTI')&&guided.includes('MONITORAGGIO'),'Tre schermate del wizard guidato');
 assert.ok(guided.includes('function apGuidedProjection(')&&guided.includes('VARIAZIONE POTENZIALE'),'Stima economica KPI');
 assert.ok(guided.includes('AP_CHECK_LIGHTS')&&guided.includes('SALVA CHECK'),'Sessioni di CHECK con semaforo');
-assert.ok(guided.includes('length>3'),'Massimo tre azioni o strumenti selezionabili');
-const ideas=guided.slice(guided.indexOf('const AP_GUIDED_IDEAS='),guided.indexOf('function apGuidedMeta('));
+assert.ok(guided.includes('const AP_GUIDED_MAX_ACTIONS=3;'),'Massimo tre azioni, ciascuna con il suo strumento');
+const ideas=guided.slice(guided.indexOf('const AP_GUIDED_IDEAS='),guided.indexOf('const AP_GUIDED_ACTION_TOOLS='));
 for(const kpi of ['sales','visits','cr','upt','asp','atv','ms']) {
  const match=ideas.match(new RegExp('(?:^|\\n) '+kpi+':\\{actions:\\[(.*?)\\],tools:\\[(.*?)\\]\\}', 's'));
  assert.ok(match,'Proposte KPI mancanti: '+kpi);

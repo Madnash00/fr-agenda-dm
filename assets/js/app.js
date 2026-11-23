@@ -337,7 +337,7 @@ function agendaIdlePrefetch(){
   if(storePageEnabled('holidays'))out.push(async()=>{const d=await api.request('getHolidayPlanning',{store_id:sid,year:y,__silent:true});if(prefetchActive()&&currentUser?.role==='STORE'){holidayPlanningCache=d;indexHolidayPlanningCache()}});
   if(storePageEnabled('holidayconsolidated'))out.push(async()=>{const d=await api.request('getHolidayConsolidated',{store_id:sid,__silent:true});if(prefetchActive()&&currentUser?.role==='STORE')holidayConsolidatedCache=d});
   if(storePageEnabled('overtimecheck'))out.push(async()=>{const d=await api.request('getStoreOvertimeCheck',{store_id:sid,__silent:true});if(prefetchActive()&&currentUser?.role==='STORE')overtimeCheckCache=d});
-  if(storePageEnabled('actionplans'))out.push(async()=>{const d=await api.request('getActionPlans',{__silent:true});if(prefetchActive()&&currentUser?.role==='STORE')actionPlanCache=d});
+  if(storePageEnabled('actionplans'))out.push(async()=>{const d=await api.request('getActionPlans',{__silent:true});if(prefetchActive()&&currentUser?.role==='STORE'){actionPlanCache=d;apUpdateAlertBadge()}});
   return out;
  })();
  const tasks=currentUser.role==='ADMIN'?adminTasks:storeTasks;let i=0;
@@ -1997,6 +1997,23 @@ function apYtdValidation(v){
  if(v.cr/(1+v.crD/100)>100)return 'CR AP ricostruito supera il 100%: verifica CR AC e D CR vs AP.';
  return '';
 }
+/* MS in euro. MS = quota di scontrini con piu di un pezzo (57% = 57 scontrini
+   su 100 multipli, 43 da un pezzo). Con UPT e MS si ricavano i pezzi medi di
+   uno scontrino multiplo: k = (UPT - (1 - MS)) / MS. Uno scontrino singolo vale
+   ASP, uno multiplo k x ASP: ogni scontrino che passa da singolo a multiplo
+   aggiunge (k - 1) x ASP. L'impatto e' quindi
+   (MS AC - MS AP) x scontrini AC x (k - 1) x ASP AC,
+   a parita di scontrini, ASP e pezzi per scontrino multiplo (scenario
+   indipendente come per gli altri KPI). msFrom/msTo in punti percentuali;
+   k si ricava da kMs (di norma la MS AC) con l'UPT indicato (di norma l'AC). */
+function apYtdMsImpact(v,ticketsAC,msFrom,msTo,kMs,uptRef){
+ const m=(Number.isFinite(kMs)?kMs:msFrom)/100,upt=Number.isFinite(uptRef)?uptRef:v.upt;
+ if(!(ticketsAC>0)||!(v.asp>0)||!Number.isFinite(msFrom)||!Number.isFinite(msTo))return null;
+ const deltaTickets=(msTo-msFrom)/100*ticketsAC;
+ if(!(m>0))return {value:0,k:null,extraPerTicket:0,singleAtv:v.asp,multiAtv:null,deltaTickets,consistent:true};
+ const k=(upt-(1-m))/m,extra=Math.max(0,k-1)*v.asp;
+ return {value:deltaTickets*extra,k,extraPerTicket:extra,singleAtv:v.asp,multiAtv:k*v.asp,deltaTickets,consistent:k>=2-1e-9};
+}
 function apYtdCalculate(v){
  if(apYtdValidation(v))return null;
   const factor=k=>1+v[k]/100,ticketsAC=v.sales/v.atv,visitsAC=ticketsAC/(v.cr/100),visitsAP=visitsAC/factor('visD'),crAP=v.cr/factor('crD'),ticketsAP=visitsAP*crAP/100,salesAP=v.sales/factor('salesD'),atvAP=v.atv/factor('atvD');
@@ -2009,9 +2026,21 @@ function apYtdCalculate(v){
   ['UPT',(v.upt-v.upt/factor('uptD'))*ticketsAC*v.asp,'ricavi'],
   ['ASP',(v.asp-v.asp/factor('aspD'))*ticketsAC*v.upt,'ricavi'],
   ['ATV',(v.atv-atvAP)*ticketsAC,'ricavi'],
-  ['MS',v.ms-v.ms/factor('msD'),'ms']
+  ['MS',0,'ricavi']
  ];
- return {ticketsAC,visitsAC,ticketsAP,visitsAP,salesAP,levers,impacts,warning:Math.abs(ticketsAP*atvAP-salesAP)/salesAP>.03||Math.abs(v.upt*v.asp-v.atv)/v.atv>.03};
+ const msAP=v.ms/factor('msD'),uptAP=v.upt/factor('uptD');
+ let ms;
+ if(v.ms>0)ms=apYtdMsImpact(v,ticketsAC,msAP,v.ms,v.ms);
+ else if(msAP>0){const base=apYtdMsImpact(v,ticketsAC,msAP,0,msAP,uptAP);ms=base&&{...base,k:null}}
+ else ms=apYtdMsImpact(v,ticketsAC,0,0);
+ if(ms){impacts[6][1]=ms.value;levers[6]=['MS',Math.max(0,-ms.value)]}
+ return {ticketsAC,visitsAC,ticketsAP,visitsAP,salesAP,msAP,ms,levers,impacts,warning:Math.abs(ticketsAP*atvAP-salesAP)/salesAP>.03||Math.abs(v.upt*v.asp-v.atv)/v.atv>.03};
+}
+function apYtdMsExplain(v,d){
+ const m=d&&d.ms;if(!m)return '';
+ const pct=x=>Number(x).toLocaleString('it-IT',{maximumFractionDigits:1})+'%',capi=x=>Number(x).toLocaleString('it-IT',{maximumFractionDigits:2});
+ if(m.k===null)return '<p class="apy-explain apy-ms-explain"><strong>MS in euro.</strong> Nessuno scontrino multiplo in AC'+(d.msAP>0?': rispetto all’AP ('+pct(d.msAP)+') mancano '+apYtdInt(-m.deltaTickets)+' scontrini multipli, '+apYtdEuro(m.extraPerTicket)+' in meno ciascuno: impatto '+apYtdEuro(m.value)+'.':'.')+'</p>';
+ return '<p class="apy-explain apy-ms-explain"><strong>MS in euro.</strong> MS '+pct(v.ms)+' = '+pct(v.ms)+' degli scontrini con più di un pezzo, '+pct(100-v.ms)+' con un pezzo solo. Con UPT '+capi(v.upt)+' uno scontrino multiplo contiene in media '+capi(m.k)+' pezzi: ATV '+apYtdEuro(m.multiAtv)+' contro '+apYtdEuro(m.singleAtv)+' (= ASP) di uno scontrino singolo, cioè +'+apYtdEuro(m.extraPerTicket)+' per ogni scontrino che diventa multiplo. Rispetto all’AP (MS '+pct(d.msAP)+') gli scontrini multipli sono '+(m.deltaTickets>=0?'+':'')+apYtdInt(m.deltaTickets)+' su '+apYtdInt(d.ticketsAC)+': impatto '+(m.value>=0?'+':'')+apYtdEuro(m.value)+'.'+(m.consistent?'':' <span class="apy-warning-inline">Attenzione: con questo UPT uno scontrino multiplo avrebbe meno di 2 pezzi, quindi MS e UPT non sono coerenti: verifica i dati.</span>')+'</p>';
 }
 function apYtdEuro(x){return Number(x).toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0})}
 function apYtdInt(x){return Math.round(x).toLocaleString('it-IT')}
@@ -2036,7 +2065,7 @@ function apYtdRender(prefix='apy-'){
  const v=apYtdRead(prefix),reason=apYtdValidation(v),d=reason?null:apYtdCalculate(v),target=document.getElementById(prefix+'output'),next=document.getElementById(prefix+'next');if(next)next.disabled=!d;if(!target)return;
  for(const [key] of AP_YTD_DEF){const field=document.getElementById(prefix+key)?.closest('.apy-field');if(field){field.classList.toggle('positive',key.endsWith('D')&&v[key]>0);field.classList.toggle('negative',key.endsWith('D')&&v[key]<0)}}
  if(!d){target.innerHTML='<p class="apy-help" role="status">'+esc(reason||'Verifica i valori inseriti: non è possibile ricostruire i KPI AP.')+'</p>';return}
- target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4>'+apYtdImpactChart(d)+'<p class="apy-explain">Verde sopra lo zero: incremento · Rosso sotto lo zero: decremento. Ogni KPI è uno scenario controfattuale indipendente sui volumi AC: gli impatti non si sommano. MS rappresenta la variazione monetaria del relativo indicatore, non un contributo all’incassato.</p>'+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
+ target.innerHTML='<div class="apy-summary"><div><small>INCASSATO AP RICOSTRUITO</small><strong>'+apYtdEuro(d.salesAP)+'</strong></div>'+[['SCONTRINI AC',d.ticketsAC],['SCONTRINI AP',d.ticketsAP],['INGRESSI AC',d.visitsAC],['INGRESSI AP',d.visitsAP]].map(x=>'<div><small>'+x[0]+'</small><strong>'+apYtdInt(x[1])+'</strong></div>').join('')+'</div><h4>Impatto economico del delta KPI rispetto ad AP</h4>'+apYtdImpactChart(d)+'<p class="apy-explain">Verde sopra lo zero: incremento · Rosso sotto lo zero: decremento. Ogni KPI è uno scenario controfattuale indipendente sui volumi AC: gli impatti non si sommano.</p>'+apYtdMsExplain(v,d)+(d.warning?'<p class="apy-warning">Attenzione: i KPI inseriti non ricostruiscono valori coerenti entro il 3%. Verifica periodo e arrotondamenti.</p>':'');
  if(typeof apFitActionPlanStage==='function')requestAnimationFrame(apFitActionPlanStage);
 }
 /* Adatta un solo step per volta all'altezza reale della maschera. Layout leggibile
@@ -2158,7 +2187,7 @@ function initActionPlanControls(){
 }
 function syncActionPlanReportStoreOptions(){const sel=$('#actionPlanReportStore');if(!sel)return;const prev=sel.value,region=$('#actionPlanReportRegion')?.value||'';const stores=(app?.stores||[]).filter(s=>s.active&&(!region||s.region===region)).sort((a,b)=>a.name.localeCompare(b.name));sel.innerHTML='<option value="">Tutti i negozi</option>'+stores.map(s=>`<option value="${s.id}">${esc(s.code||'—')} · ${esc(s.name)}</option>`).join('');if([...sel.options].some(o=>o.value===prev))sel.value=prev}
 let actionPlanLoadSequence=0;
-async function loadActionPlans(force=false){const seq=++actionPlanLoadSequence;try{const data=await window.agendaCloudApi.request('getActionPlans',{__force:force});if(seq!==actionPlanLoadSequence)return;actionPlanCache=data;initActionPlanControls();renderActionPlans()}catch(err){if(seq===actionPlanLoadSequence)toast(err.message||'Impossibile caricare gli Action Plan',true)}}
+async function loadActionPlans(force=false){const seq=++actionPlanLoadSequence;try{const data=await window.agendaCloudApi.request('getActionPlans',{__force:force});if(seq!==actionPlanLoadSequence)return;actionPlanCache=data;initActionPlanControls();renderActionPlans();apUpdateAlertBadge()}catch(err){if(seq===actionPlanLoadSequence)toast(err.message||'Impossibile caricare gli Action Plan',true)}}
 /* Tabella Action Plan: una sola implementazione per i profili DM, NEGOZIO e RM.
    Il profilo RM e' in sola consultazione, quindi non ha il tasto Apri: tutto il
    resto, colonne e righe, deve restare identico a quello che vede il DM. */
@@ -2284,7 +2313,7 @@ function apCaptureOpenObjectiveDraft(){
  else if(next.objective_text||next.actions||next.tools||next.notes||next.tasks.length)actionPlanDraftObjectives.push(next);
 }
 function openActionObjectiveDraft(index=null){const old=Number.isInteger(index)?actionPlanDraftObjectives[index]:null;if((currentUser?.role==='STORE'||(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'))&&(!Number.isInteger(index)||apGuidedMeta(old?.notes)))return openApGuidedObjective(index);const editor=$('#actionObjectiveEditor');if(!editor)return;if(currentUser?.role==='STORE'&&!editor.classList.contains('hidden')){apCaptureOpenObjectiveDraft();renderActionPlanObjectivesDraft();}const existing=Number.isInteger(index)?actionPlanDraftObjectives[index]:null,status=actionPlanStatusKey(existing?.status);editor.classList.remove('hidden');editor.innerHTML=`<div id="actionObjectiveForm" class="form-grid">${currentUser?.role==='STORE'?`<label class="ap-obj-short-field">DATO / OBJ<input id="apObjText" type="text" maxlength="15" placeholder="Max 15 caratteri" value="${esc(existing?.objective_text||'')}" required><small>Indicatore o obiettivo sintetico · max 15 caratteri</small></label>`:`<label class="full">Dato / Obiettivo<textarea id="apObjText" rows="3" required>${esc(existing?.objective_text||'')}</textarea></label>`}<label class="full">${currentUser?.role==='STORE'?'STRATEGIA':'AZIONI'}<textarea id="apObjActions" rows="4" required>${esc(existing?.actions||'')}</textarea></label>${currentUser?.role==='STORE'?'':`<label class="full">STRUMENTI<textarea id="apObjTools" rows="3" required>${esc(existing?.tools||'')}</textarea></label>`}<label>${currentUser?.role==='STORE'?'STATO OBIETTIVO':'Stato OBJ'}<select id="apObjStatus"><option value="IN_PROGRESS" ${status==='IN_PROGRESS'?'selected':''}>In corso</option><option value="ACHIEVED" ${status==='ACHIEVED'?'selected':''}>Raggiunto</option><option value="NOT_ACHIEVED" ${status==='NOT_ACHIEVED'?'selected':''}>Non Raggiunto</option></select></label><label class="full">Note<textarea id="apObjNotes" rows="3" placeholder="Note sullo stato, avanzamento o motivazioni (facoltative)">${esc(existing?.notes||'')}</textarea></label><div class="full" style="display:flex;justify-content:flex-end;gap:6px"><button type="button" id="cancelActionObjectiveBtn" class="btn">Annulla</button><button type="button" id="saveActionObjectiveBtn" class="btn primary">${currentUser?.role==='STORE'?'SALVA OBJ':(existing?'Aggiorna OBJ':'Aggiungi OBJ')}</button></div></div>`;apTasksOpen(existing,index);$('#cancelActionObjectiveBtn').onclick=()=>{editor.classList.add('hidden');editor.innerHTML=''};$('#saveActionObjectiveBtn').onclick=()=>{const obj={objective_id:existing?.objective_id||'',objective_text:$('#apObjText').value.trim(),actions:$('#apObjActions').value.trim(),tools:$('#apObjTools')?.value.trim()||existing?.tools||'',status:actionPlanStatusKey($('#apObjStatus').value),notes:$('#apObjNotes').value.trim(),tasks:currentUser?.role==='STORE'?apTaskRead():(existing?.tasks||[])};if(currentUser?.role==='STORE'&&obj.tasks.some(t=>!t.task.trim()||!String(t.tools||'').trim()||!t.owner.trim()||!AP_TIMING_OPTIONS.includes(String(t.timing_monitoraggio||''))||t.checkpoints.some(c=>(!!c.date||!!String(c.note||'').trim()||!!c.contingency)&&(!c.date||!String(c.note||'').trim()||!c.contingency)))){toast('Completa Azione, Strumenti, Owner, Timing e ogni checkpoint inserito; oppure salva la bozza dall’Action Plan.',true);return}if(!obj.objective_text||!obj.actions||(currentUser?.role!=='STORE'&&!obj.tools)){toast(currentUser?.role==='STORE'?'Compila Dato/Obiettivo e Strategia':'Compila Dato/Obiettivo, Azioni e Strumenti',true);return}if(existing)actionPlanDraftObjectives[index]=obj;else actionPlanDraftObjectives.push(obj);editor.classList.add('hidden');editor.innerHTML='';renderActionPlanObjectivesDraft();toast(existing?'OBJ aggiornato':'OBJ aggiunto')}}
-async function saveActionPlanForm(e,planId,isDraft=false){e.preventDefault();if(actionPlanStoreSaving)return;if(document.querySelector('#actionObjectiveEditor .ap-guided-objective')){toast('Conferma o chiudi l’obiettivo prima di salvare.',true);return}if(currentUser?.role==='STORE')apCaptureOpenObjectiveDraft();if(!isDraft&&!String($('#apPremise')?.value||'').trim()){toast('Compila ANALISI prima di salvare.',true);return}if(!isDraft&&!actionPlanDraftObjectives.length){toast('Inserisci almeno un OBJ',true);return}const payload={plan_id:planId||'',store_id:actionPlanDraftStoreId,plan_date:$('#apDate').value,period_year:Number($('#apYear').value),period_fraction:$('#apFraction').value,owner:$('#apOwner')?.value.trim()||'',premise:(currentUser?.role==='STORE'||(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'&&apYtdCalculate(apYtdRead())&&apYtdCalculate(apYtdRead('app-'))))?($('#apPremise').value.trim()+'\n[APYTD1:'+btoa(JSON.stringify({...apYtdRead(),period:apYtdRead('app-')}))+']'):$('#apPremise').value.trim(),is_draft:!!isDraft,objectives:actionPlanDraftObjectives.map(o=>({objective_id:o.objective_id||'',objective_text:o.objective_text,actions:o.actions,tools:o.tools,status:actionPlanStatusKey(o.status),notes:o.notes||'',tasks:o.tasks===undefined?undefined:o.tasks}))};if(currentUser?.role==='STORE'&&(!apYtdCalculate(apYtdRead())||!apYtdCalculate(apYtdRead('app-')))){toast('Completa correttamente sia la PRE-ANALISI YTD sia l’ANALISI PERIODO ACTION PLAN prima di salvare.',true);return}if(!isDraft&&!payload.premise){toast(currentUser?.role==='STORE'?'Inserisci l’ANALISI':'Inserisci la PREMESSA',true);return}if(!isDraft&&currentUser?.role==='STORE'){if(payload.objectives.some(o=>!o.objective_text?.trim()||!o.actions?.trim())){toast('Compila Dato/Obiettivo e Strategia o usa SALVA BOZZA.',true);return}if(payload.objectives.some(o=>!(o.tasks||[]).length||(o.tasks||[]).some(t=>!String(t.task||'').trim()||!String(t.tools||'').trim()||!String(t.owner||'').trim()||!AP_TIMING_OPTIONS.includes(String(t.timing_monitoraggio||''))||(t.checkpoints||[]).some(c=>(!!c.date||!!String(c.note||'').trim()||!!c.contingency)&&(!c.date||!String(c.note||'').trim()||!c.contingency))))){toast('Ogni obiettivo richiede almeno un’azione completa. Completa eventuali checkpoint (data, note, contingenza) oppure usa SALVA BOZZA.',true);return}}if(currentUser?.role==='ADMIN'&&!(await actionPlanDmConfirm(planId?'MODIFICARE':'CREARE',payload.store_id)))return;const editorForm=$('#actionPlanForm'),submittedRevision=actionPlanStoreRevision,buttons=[...(editorForm?.querySelectorAll('.modal-actions button')||[])];actionPlanStoreSaving=true;const savingButtons=buttons.map(b=>({b,text:b.textContent}));buttons.forEach(b=>b.disabled=true);
+async function saveActionPlanForm(e,planId,isDraft=false){e.preventDefault();if(actionPlanStoreSaving)return;if(document.querySelector('#actionObjectiveEditor .ap-guided-objective')){toast('Conferma o chiudi l’obiettivo prima di salvare.',true);return}if(currentUser?.role==='STORE')apCaptureOpenObjectiveDraft();if(!isDraft&&!String($('#apPremise')?.value||'').trim()){toast('Compila ANALISI prima di salvare.',true);return}if(!isDraft&&!actionPlanDraftObjectives.length){toast('Inserisci almeno un OBJ',true);return}const payload={plan_id:planId||'',store_id:actionPlanDraftStoreId,plan_date:$('#apDate').value,period_year:Number($('#apYear').value),period_fraction:$('#apFraction').value,owner:$('#apOwner')?.value.trim()||'',premise:(currentUser?.role==='STORE'||(currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'&&apYtdCalculate(apYtdRead())&&apYtdCalculate(apYtdRead('app-'))))?($('#apPremise').value.trim()+'\n[APYTD1:'+btoa(JSON.stringify({...apYtdRead(),period:apYtdRead('app-')}))+']'):$('#apPremise').value.trim(),is_draft:!!isDraft,objectives:actionPlanDraftObjectives.map(o=>({objective_id:o.objective_id||'',objective_text:o.objective_text,actions:o.actions,tools:o.tools,status:actionPlanStatusKey(o.status),notes:o.notes||'',tasks:o.tasks===undefined?undefined:o.tasks}))};if(currentUser?.role==='STORE'&&(!apYtdCalculate(apYtdRead())||!apYtdCalculate(apYtdRead('app-')))){toast('Completa correttamente sia la PRE-ANALISI YTD sia l’ANALISI PERIODO ACTION PLAN prima di salvare.',true);return}if(!isDraft&&!payload.premise){toast(currentUser?.role==='STORE'?'Inserisci l’ANALISI':'Inserisci la PREMESSA',true);return}if(!isDraft&&currentUser?.role==='STORE'){if(payload.objectives.some(o=>!o.objective_text?.trim()||!o.actions?.trim())){toast('Compila Dato/Obiettivo e Strategia o usa SALVA BOZZA.',true);return}if(payload.objectives.some(o=>!(o.tasks||[]).length||(o.tasks||[]).some(t=>!String(t.task||'').trim()||!String(t.tools||'').trim()||(t.checkpoints||[]).some(c=>(!!c.date||!!String(c.note||'').trim()||!!c.contingency)&&(!c.date||!c.contingency))))){toast('Ogni obiettivo richiede almeno un’azione con il suo strumento. Completa eventuali CHECK (data ed esito) oppure usa SALVA BOZZA.',true);return}}if(currentUser?.role==='ADMIN'&&!(await actionPlanDmConfirm(planId?'MODIFICARE':'CREARE',payload.store_id)))return;const editorForm=$('#actionPlanForm'),submittedRevision=actionPlanStoreRevision,buttons=[...(editorForm?.querySelectorAll('.modal-actions button')||[])];actionPlanStoreSaving=true;const savingButtons=buttons.map(b=>({b,text:b.textContent}));buttons.forEach(b=>b.disabled=true);
 const saveButton=buttons.find(b=>b.matches?.('.btn.primary'))||buttons.find(b=>b.type==='submit');
 if(saveButton){saveButton.classList.add('ap-save-working');saveButton.setAttribute('aria-busy','true');saveButton.textContent=isDraft?'Salvataggio bozza…':'Salvataggio Action Plan…'}
 try{const saved=await window.agendaCloudApi.request('saveActionPlan',payload);
@@ -2359,16 +2388,16 @@ function buildActionPlanPdfBytes(plan){
   text(x+8,top+38,7.1,'INCASSATO AP: '+money(valid.salesAP),'F1',MUTED);
   text(x+8,top+51,6.7,'CR '+num(panel.title.startsWith('YTD')?previous.cr:period.cr)+'%  |  UPT '+num(panel.title.startsWith('YTD')?previous.upt:period.upt,2)+'  |  ATV '+money(panel.title.startsWith('YTD')?previous.atv:period.atv),'F1',MUTED);
   const plotTop=top+66,barH=29,bas=plotTop+barH,plotW=w-15,step=plotW/7;
-  const denom=Math.max(1,...vals.slice(0,6).map(z=>Math.abs(z[1])||0));
+  const denom=Math.max(1,...vals.map(z=>Math.abs(z[1])||0));
   line(x+8,bas,x+w-7,bas,[158,166,171],.65);
   vals.forEach(([label,val,unit],i)=>{
    const cx=x+8+step*(i+.5),m=Math.min(barH-2,(Math.abs(val)||0)/denom*(barH-2));
    if(val!==0)rect(cx-3,val>0?bas-m:bas,6,Math.max(.7,m),val>0?GREEN:RED);
    text(cx-step*.43,top+103,5.4,label==='INCASSATO'?'INC':label,'F2',MUTED);
-   const v=unit==='ms'?num(val,0):num(val/1000,1)+'k';
+   const v=num(val/1000,1)+'k';
    text(cx-step*.43,top+114,5.25,(val>0?'+':'')+v,'F1',val<0?RED:GREEN);
   });
-  text(x+8,top+130,5.6,'Impatto vs AP (k EUR); MS: EUR','F1',MUTED);
+  text(x+8,top+130,5.6,'Impatto vs AP (k EUR)','F1',MUTED);
  }
  // Layout elastico in una sola pagina: nessun testo viene eliminato.
  function buildBlocks(font,columns){

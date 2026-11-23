@@ -2013,6 +2013,12 @@ body.agenda-store-profile #page-actionplans .action-plan-list-card{border:1px so
 #actionPlanForm #ap-details-step .apy-footer button{font-size:12px;padding:10px 15px}
 #actionPlanForm .apy-hero .apy-source-caption{font-size:10px!important;color:#59636c!important;font-style:italic;max-width:100%;margin-top:5px}
 #actionPlanForm .apy-panel-traffic .apy-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* CR AC sotto INGRESSI AC vs AP, con D CR vs AP a fianco */
+#actionPlanForm .apy-panel-traffic .apy-grid>.apy-field:nth-child(1){grid-column:1;grid-row:1}
+#actionPlanForm .apy-panel-traffic .apy-grid>.apy-field:nth-child(2){grid-column:1;grid-row:2}
+#actionPlanForm .apy-panel-traffic .apy-grid>.apy-field:nth-child(3){grid-column:2;grid-row:2}
+#actionPlanForm .apy-ms-explain{font-size:11px;line-height:1.45}
+#actionPlanForm .apy-warning-inline{color:#a15c00;font-weight:750}
 #actionPlanForm .apy-impact-chart{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:5px!important;align-items:start;padding:4px 0;overflow:visible!important}
 #actionPlanForm .apy-impact-col{min-width:0;display:flex;flex-direction:column;align-items:center;gap:0;font-size:9px}
 #actionPlanForm .apy-impact-up,#actionPlanForm .apy-impact-down{height:38px;width:82%;display:flex;background:#f6f7f8}
@@ -2792,3 +2798,37 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 .weekly-rev-result.ok{background:#eef8f1;border:1px solid #bfe3cb;color:#1d5c32}
 .weekly-rev-result.error{background:#fdeeee;border:1px solid #f2c1c1;color:#9b1c1c}
 .weekly-rev-missing{background:#fff4dc;border-radius:8px;padding:6px 9px;color:#6b4a00;font-size:12px}
+
+/* ACTION PLAN · obiettivo: azioni con strumento, alert prossimo check, CHECK */
+#actionPlanForm .ap-pairs{display:grid;gap:9px;margin:4px 0 10px}
+#actionPlanForm .ap-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px 12px;padding:10px 12px;border:1px solid #e1e6eb;border-radius:10px;background:#f9fafb}
+#actionPlanForm .ap-pair-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+#actionPlanForm .ap-pair-head strong{font-size:11px;letter-spacing:.04em;color:#7a2f52}
+#actionPlanForm .ap-pair label{display:grid;gap:5px;font-size:10.5px;font-weight:800;color:#44505d;min-width:0}
+#actionPlanForm .ap-pair select,#actionPlanForm .ap-pair input{width:100%;box-sizing:border-box;padding:8px;border:1px solid #cfd8de;border-radius:7px;font-size:12px;background:#fff}
+#actionPlanForm .ap-pair-col{display:grid;gap:6px;align-content:start;min-width:0}
+#actionPlanForm .ap-pairs-count{margin-left:10px;font-size:11px;color:#6b7680;font-weight:700}
+#actionPlanForm .ap-alert-box{border:1px solid #e4c9d6;background:#fff8fb;border-radius:10px;padding:11px 12px;margin:4px 0 12px}
+#actionPlanForm .ap-alert-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#actionPlanForm .ap-alert-head h5{margin:0;font-size:11px;letter-spacing:.04em;color:#7a2f52}
+#actionPlanForm .ap-alert-current{font-size:11.5px;font-weight:800;color:#44505d}
+#actionPlanForm .ap-alert-current.is-due{color:#b3261e}
+#actionPlanForm .ap-alert-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
+#actionPlanForm .ap-alert-set input{width:180px!important;flex:none;padding:7px 8px;border:1px solid #cfd8de;border-radius:7px;font-size:12px}
+#actionPlanForm .ap-alert-note{margin:7px 0 0;font-size:10.5px;color:#6b7680}
+#actionPlanForm .ap-alert-history{list-style:none;margin:9px 0 0;padding:0;display:grid;gap:5px}
+#actionPlanForm .ap-alert-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:6px 10px;border-radius:8px;font-size:11.5px}
+#actionPlanForm .ap-alert-row strong{font-weight:850}
+#actionPlanForm .ap-check-new{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+#actionPlanForm .ap-check-new label{display:grid;gap:5px}
+#actionPlanForm .ap-check-action-text small,#actionPlanForm .ap-check-mini small{color:#6b7680;font-weight:650}
+#actionPlanForm .ap-check-edited{font-size:10.5px;font-weight:750;color:#8a5a00;background:#fff4dc;border-radius:999px;padding:2px 8px}
+#actionPlanForm .ap-check-mini{list-style:none;margin:7px 0 0;padding:0;display:grid;gap:3px;font-size:11px;color:#2c3640}
+#actionPlanForm .ap-check-mini em{font-style:normal;color:#5a6670;font-weight:700}
+#actionPlanForm .ap-check-mini-note{margin:6px 0 0;font-size:10.5px;color:#5a6670}
+#actionPlanForm .ap-check-history{margin-top:10px;padding:8px 10px;border-radius:8px;background:#f4f6f8;font-size:10.5px;color:#44505d}
+#actionPlanForm .ap-check-history ul{margin:5px 0 0;padding-left:16px;display:grid;gap:3px}
+#actionPlanForm .ap-check-foot{gap:8px}
+@media screen and (max-width:720px){#actionPlanForm .ap-pair,#actionPlanForm .ap-check-new{grid-template-columns:minmax(0,1fr)}}
+/* badge alert sulla voce ACTION PLAN (profilo NEGOZIO) */
+.nav .nav-btn .nav-alert-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:6px;padding:0 4px;border-radius:999px;background:#d32f2f;color:#fff;font-size:9.5px;font-weight:900;line-height:1;vertical-align:1px}

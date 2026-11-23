@@ -18,7 +18,7 @@ const estrai=inizio=>{const r=guided.split('\n'),i=r.findIndex(x=>x.startsWith(i
 
 const ctx={String,Number,Array,Object,Map,console,esc:s=>String(s==null?'':s)};
 vm.createContext(ctx);
-for(const n of ['const AP_CHECK_LIGHTS=','function apChecksFromTasks(','function apChecksAllActions(',
+for(const n of ['const AP_CHECK_LIGHTS=','function apChecksFromTasks(','function apChecksAllPairs(','function apChecksAllActions(','function apCheckRowLabel(','function apCheckStamp(',
  'function apChecksToCheckpoints(','function apCheckValidate(','function apCheckDateLabel(','function apCheckHtml('])
  vm.runInContext(estrai(n),ctx);
 
@@ -83,34 +83,37 @@ assert.ok(/rosso/i.test(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:'a'
 assert.equal(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:'a',light:'RED',newAction:'Nuova'}]}),'',
  'Compilato, il CHECK si salva');
 
-// --- la scheda del CHECK ---
-const html=ctx.apCheckHtml({date:'2026-11-20',note:'',rows:[{action:'Accoglienza',light:'RED',newAction:'Nuova'}]},0,['Accoglienza']);
-assert.ok(html.includes('DATA MONITORAGGIO')&&html.includes('type="date"'),
- 'La data si inserisce da calendario o a mano');
-assert.ok(html.includes('>Accoglienza<'),'Le azioni scelte prima vanno elencate');
+// --- la scheda del CHECK: prima la DATA CHECK, poi ogni azione con il suo strumento ---
+const coppie=[{action:'Accoglienza',tool:'Checklist accoglienza'}];
+const html=ctx.apCheckHtml({date:'2026-11-20',note:'',rows:[{action:'Accoglienza',tool:'Checklist accoglienza',light:'RED',newAction:'Nuova'}]},0,coppie);
+assert.ok(html.includes('DATA CHECK')&&html.includes('type="date"'),'La data si inserisce da calendario o a mano');
+assert.ok(html.indexOf('DATA CHECK')<html.indexOf('Accoglienza'),'La prima informazione e la DATA CHECK');
+assert.ok(html.includes('Accoglienza <small>· Checklist accoglienza</small>'),'Ogni azione compare con il proprio strumento');
 for(const etichetta of ['Consolida','Intensifica','Inserisci nuova azione'])
  assert.ok(html.includes(etichetta),`Manca l esito ${etichetta}`);
-assert.ok(html.includes('NOTE')&&html.includes('data-ap-check-note'),'Sotto le azioni serve il campo NOTE');
-assert.ok(html.indexOf('data-ap-check-note')>html.indexOf('>Accoglienza<'),'Che sta sotto le azioni, non sopra');
-assert.ok(html.includes('SALVA CHECK'),'Serve il comando di salvataggio');
-/* Col rosso il campo della nuova azione e aperto; negli altri casi e chiuso. */
-assert.ok(/class="ap-check-new"[^>]*>NUOVA AZIONE/.test(html),'Col rosso il campo nuova azione deve essere visibile');
-const verde=ctx.apCheckHtml({date:'',note:'',rows:[{action:'A',light:'GREEN'}]},0,['A']);
+assert.ok(html.includes('SALVA CHECK')&&html.includes('data-ap-check-cancel'),'Salva e annulla');
+assert.ok(/class="ap-check-new"[^>]*><label>NUOVA AZIONE/.test(html)&&html.includes('data-ap-check-new-tool'),'Col rosso: nuova azione con il suo strumento');
+const verde=ctx.apCheckHtml({date:'',note:'',rows:[{action:'A',light:'GREEN'}]},0,[{action:'A',tool:''}]);
 assert.ok(verde.includes('class="ap-check-new hidden"'),'Senza rosso il campo nuova azione resta chiuso');
-const salvato=ctx.apCheckHtml({date:'2026-11-20',saved:true,rows:[{action:'A',light:'GREEN'}]},0,['A']);
-assert.ok(salvato.includes('20/11/2026'),'Una sessione salvata mostra la data in forma leggibile');
-assert.ok(salvato.includes('data-ap-check-edit'),'E si puo riaprire: le sessioni vengono riviste dalla SM');
+const salvato=ctx.apCheckHtml({date:'2026-11-20',saved:true,rows:[{action:'A',tool:'T',light:'GREEN'},{action:'B',tool:'U',light:'RED',newAction:'C',newTool:'V'}],history:[{at:'2026-11-21T10:00:00Z',changes:['A: Intensifica → Consolida']}]},0,[]);
+assert.ok(salvato.includes('20/11/2026')&&salvato.includes('data-ap-check-edit'),'Il CHECK salvato mostra la data e si puo modificare');
+assert.ok(salvato.includes('🟢</span> A <small>· T</small> · <em>Consolida</em>')&&salvato.includes('→ <b>C</b> <small>· V</small>'),'La riga salvata riporta in piccolo azioni, strumenti e semafori');
+assert.ok(salvato.includes('modificato 1 volta'),'E segnala le modifiche successive al primo salvataggio');
+assert.ok(!salvato.includes('data-ap-check-remove'),'Un CHECK salvato non si cancella');
+const riaperto=ctx.apCheckHtml({date:'2026-11-20',saved:false,rows:[],history:[{at:'2026-11-21T10:00:00Z',changes:['A: Intensifica → Consolida']}]},0,[{action:'A',tool:'T'}]);
+assert.ok(riaperto.includes('MODIFICHE DOPO IL PRIMO SALVATAGGIO')&&riaperto.includes('A: Intensifica → Consolida'),'Dentro il CHECK c e il recap delle modifiche');
+
+// --- coppie: il rosso porta anche lo strumento ---
+assert.deepEqual(ctx.apChecksAllPairs([{action:'A',tool:'T'}],[{date:'x',saved:true,rows:[{action:'A',light:'RED',newAction:'N',newTool:'S'}]}]).map(x=>x.action+'|'+x.tool),['A|T','N|S'],'La nuova azione eredita lo strumento indicato');
 
 // --- aggancio e stile ---
-assert.ok(guided.includes('id="apAddCheckBtn"'),'Serve il tasto AGGIUNGI CHECK');
-assert.ok(estrai('function apChecksHtml(').includes('+ AGGIUNGI CHECK'),'Con la sua etichetta');
+assert.ok(guided.includes('id="apAddCheckBtn"'),'Serve il tasto EFFETTUA CHECK');
+assert.ok(estrai('function apChecksHtml(').includes('>EFFETTUA CHECK</button>'),'Con la sua etichetta');
 const passo3=guided.slice(guided.indexOf('3. MONITORAGGIO'));
-assert.ok(passo3.includes('apChecksHtml(data)'),'La sezione CHECK deve stare nella scheda obiettivo');
-/* L'aggancio va cercato nella chiamata, non nella definizione della funzione,
-   che comparirebbe comunque piu avanti nel file e farebbe passare il controllo. */
+assert.ok(passo3.includes('apAlertsHtml(data)+apChecksHtml(data)'),'Sotto l alert c e il CHECK');
 const chiamata=passo3.slice(0,passo3.indexOf('function apChecksWire('));
-assert.ok(chiamata.includes('apChecksWire(editor,data,draw);'),
- 'La sezione va agganciata dentro il disegno del passo 3: senza, i tasti esisterebbero senza fare nulla');
+assert.ok(chiamata.includes('apChecksWire(editor,data,draw);')&&chiamata.includes('apAlertsWire(editor,data,draw);'),
+ 'Le sezioni vanno agganciate dentro il disegno del passo 3');
 assert.ok(guided.includes("if(data.checks.some(c=>!c.saved))"),
  'Un CHECK lasciato aperto non deve sparire in silenzio alla conferma dell obiettivo');
 assert.ok(guided.includes("timing_monitoraggio:''"),'Il TIMING non viene piu scritto sulle azioni');
@@ -120,4 +123,4 @@ for(const c of ['.ap-check-green.selected','.ap-check-yellow.selected','.ap-chec
 assert.ok(/max-width:720px\)\{[\s\S]*ap-check-light\{[^}]*min-height:36px/.test(css),
  'Sul telefono i semafori devono restare toccabili');
 
-console.log('PASS: CHECK con semaforo per azione, nuova azione dal rosso e note di sessione');
+console.log('PASS: CHECK con data, azione+strumento, semafori, nuova azione dal rosso e storico modifiche');
