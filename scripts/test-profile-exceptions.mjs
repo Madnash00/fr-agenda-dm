@@ -28,5 +28,5 @@ const save=estrai('async function saveStoreMenuSettings(');
 assert.ok(save.includes("request('saveProfileMenuConfig',{enabled,user_overrides:profileOverridesDraft||{}})")&&save.includes('profileOverridesDraft=null'),'Le eccezioni si salvano con lo stesso pulsante, poi si rilegge il salvato');
 assert.ok(estrai('function profileMenuAllowed(').includes('profileMenuConfig?.enabled?.[role]?.[page]'),'Il menu dell utente usa la configurazione gia personalizzata dal backend');
 assert.ok(/\.profile-exc-row\.is-exception\{/.test(css),'Le eccezioni sono evidenziate');
-assert.ok(/EXPECTED_BACKEND_BUILD='2026-11-23-login-veloce-v26'/.test(api),'Attende il backend corrente');
+assert.ok(/EXPECTED_BACKEND_BUILD='2026-11-23-audit-v27'/.test(api),'Attende il backend corrente');
 console.log('PASS: Gestione Profili, eccezioni per singolo utente nella maschera ADMIN');

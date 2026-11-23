@@ -41,6 +41,7 @@ execFileSync(process.execPath,['scripts/test-profile-exceptions.mjs'],{stdio:'in
 execFileSync(process.execPath,['scripts/test-weekly-revenue.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-action-plan-alerts.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-action-plan-disable.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-api-timeout.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');

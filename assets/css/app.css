@@ -2861,3 +2861,8 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 #actionPlanForm .ap-alert-row-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 #actionPlanForm .ap-alert-row-next{font-size:11px}
 #actionPlanForm .ap-alert-row-by{font-size:10px;opacity:.8}
+/* Audit 23/11/2026 · telefono: card di sforamento leggibile, tasto menu piu' comodo */
+@media (max-width:480px){
+ #overtimeStoreBudgetPanel .store-budget-summary{grid-template-columns:minmax(0,1fr)!important}
+ .topbar .mobile-menu{min-width:40px;min-height:40px}
+}
