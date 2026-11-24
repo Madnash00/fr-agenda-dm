@@ -32,7 +32,7 @@ function isoWeekInfo(date){const d=new Date(Date.UTC(date.getFullYear(),date.get
 const IT_FIXED_HOLIDAYS={'01-01':'Capodanno','01-06':'Epifania','04-25':'Festa della Liberazione','05-01':'Festa del Lavoro','06-02':'Festa della Repubblica','08-15':'Ferragosto','11-01':'Ognissanti','12-08':'Immacolata Concezione','12-25':'Natale','12-26':'Santo Stefano'};
 const itEasterCache=new Map();
 function itEasterSunday(year){if(itEasterCache.has(year))return itEasterCache.get(year);const a=year%19,b=Math.floor(year/100),c=year%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1,date=new Date(year,month-1,day);itEasterCache.set(year,date);return date}
-function itHolidayName(date){if(!date||typeof date.getTime!=='function'||isNaN(date.getTime()))return'';const pad=n=>String(n).padStart(2,'0'),key=pad(date.getMonth()+1)+'-'+pad(date.getDate());if(IT_FIXED_HOLIDAYS[key])return IT_FIXED_HOLIDAYS[key];const easter=itEasterSunday(date.getFullYear());if(date.getMonth()===easter.getMonth()&&date.getDate()===easter.getDate())return'Pasqua';const monday=new Date(easter.getFullYear(),easter.getMonth(),easter.getDate()+1);if(date.getMonth()===monday.getMonth()&&date.getDate()===monday.getDate())return'Lunedì dell\'Angelo';return''}
+function itHolidayName(date){if(!date||typeof date.getTime!=='function'||isNaN(date.getTime()))return'';const pad=n=>String(n).padStart(2,'0'),key=pad(date.getMonth()+1)+'-'+pad(date.getDate());if(IT_FIXED_HOLIDAYS[key])return IT_FIXED_HOLIDAYS[key];if(key==='10-04'&&date.getFullYear()>=2026)return 'San Francesco d\'Assisi';const easter=itEasterSunday(date.getFullYear());if(date.getMonth()===easter.getMonth()&&date.getDate()===easter.getDate())return'Pasqua';const monday=new Date(easter.getFullYear(),easter.getMonth(),easter.getDate()+1);if(date.getMonth()===monday.getMonth()&&date.getDate()===monday.getDate())return'Lunedì dell\'Angelo';return''}
 const IT_HOLIDAY_SHORT={'Festa della Liberazione':'Liberazione','Festa del Lavoro':'Festa Lavoro','Festa della Repubblica':'Repubblica','Immacolata Concezione':'Immacolata','Santo Stefano':'S. Stefano',"Lunedì dell'Angelo":'Lunedì Angelo'};
 function itHolidayShort(name){return IT_HOLIDAY_SHORT[name]||name}
 window.itHolidayName=itHolidayName;
@@ -644,12 +644,12 @@ function renderCalendar(){
   h+=regionSpans.map((x,i)=>`<th class="region-band band-${i%2?'b':'a'}" colspan="${x.span}" style="--region-tint:${esc(x.color)}">${esc(x.region||'—')}</th>`).join('')+'</tr>';
   h+='<tr>'+stores.map(st=>{const own=currentUser.role==='STORE'&&String(st.id)===String(currentUser.store_id);return `<th class="store-head store-tint ${regionStartIds.has(st.id)?'region-edge':''} ${own?'own-store-col':''}" style="--region-tint:${esc(regionColor(st.region))}" ${currentUser.role==='ADMIN'?`data-store-stats-id="${esc(st.id)}"`:`title="${esc(st.name)}${own?' · Il tuo negozio':' · Attività DM'}"`}><span class="store-name-vertical">${esc(st.name)}</span></th>`}).join('')+'</tr></thead><tbody>';
   dates.forEach((d,di)=>{
-    const ds=isoDate(d),isWeekend=[0,6].includes(d.getDay()),isSunday=d.getDay()===0,isToday=ds===today,dayMeta={ds,isWeekend,isSunday,isToday};
+    const ds=isoDate(d),isWeekend=[0,6].includes(d.getDay()),isSunday=d.getDay()===0,isToday=ds===today,dayMeta={ds,isWeekend,isSunday,isToday},holidayName=itHolidayName(d);
     const monthRun=monthForDay.get(di),weekRun=weekForDay.get(di),isWeekStart=di===weekRun.start;
     const tracks=[['DM','dm'],['SM','sm'],['NOTE','note']];
     tracks.forEach(([track,cls],ti)=>{
       const globalRow=di*3+ti;
-      const rowClasses=[`track-${cls}`,isWeekend?'weekend-row':'',isSunday?'sunday-row':'',isToday?'today-group':'',ti===0?'day-start':'',ti===2?'day-end':'',isWeekStart&&ti===0?'week-start-row':''].filter(Boolean).join(' ');
+      const rowClasses=[`track-${cls}`,isWeekend?'weekend-row':'',isSunday?'sunday-row':'',holidayName?'holiday-row':'',isToday?'today-group':'',ti===0?'day-start':'',ti===2?'day-end':'',isWeekStart&&ti===0?'week-start-row':''].filter(Boolean).join(' ');
       h+=`<tr class="${rowClasses}" data-date="${ds}" data-track="${track}">`;
       const monthLabel=globalRow===monthRun.centerRow?`<span class="group-label-vertical">${esc(monthRun.label)}</span>`:'';
       const isMonthEnd=di===monthRun.start+monthRun.days-1&&ti===2;
@@ -657,7 +657,7 @@ function renderCalendar(){
       const dayLabel=ti===1?`<strong>${DAYS[d.getDay()]}</strong><span>${d.getDate()}</span>`:'';
       h+=`<td class="date-month band-${monthRun.index%2?'b':'a'} ${monthLabel?'has-group-label':''} ${isMonthEnd?'month-end':''}">${monthLabel}</td>`;
       h+=`<td class="date-week band-${weekRun.index%2?'b':'a'} ${weekLabel?'has-group-label':''}">${weekLabel}</td>`;
-      h+=`<td class="date-day ${isWeekend?'weekend':''} ${isSunday?'sunday':''} ${isToday?'today':''}">${dayLabel}</td>`;
+      h+=`<td class="date-day ${isWeekend?'weekend':''} ${isSunday?'sunday':''} ${holidayName?'holiday':''} ${isToday?'today':''}"${holidayName?` title="${esc(holidayName)}"`:''}>${dayLabel}</td>`;
       h+=`<td class="key-point-cell"><span class="track-label ${cls}">${track==='NOTE'?'NOTE':track}</span></td>`;
       h+=renderTransposedDmCell(d,idx,track,dayMeta);
       for(const st of stores)h+=renderTransposedStoreCell(st,d,idx,track,regionStartIds.has(st.id),dayMeta);
