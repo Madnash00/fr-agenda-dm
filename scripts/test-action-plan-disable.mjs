@@ -34,7 +34,7 @@ assert.ok(app.includes("['OBJ',String(activeObjs.length)]")&&app.includes("apObj
 assert.ok(!app.includes('data-ap-obj-remove')&&app.includes('data-ap-obj-disable')&&app.includes('>DISATTIVA</button>'),'ELIMINA diventa DISATTIVA');
 assert.ok(app.includes("apConfirmDisable('OBJ '"),'Con finestra di conferma');
 assert.ok(guided.includes("ok.disabled=input.value.trim()!=='DISATTIVA'")&&guided.includes("if(input.value.trim()!=='DISATTIVA')return"),'Conferma solo scrivendo DISATTIVA');
-assert.ok(app.includes('>Consulta</button>'),'Il disattivato si consulta');
+assert.ok(guided.includes('>Consulta</button>')&&guided.includes("closed||off?(meta.kpi?"),'Il disattivato (o il piano chiuso) si consulta');
 assert.ok(guided.includes("x.id!=='apAlertHistoryBtn')x.disabled=true"),'In sola lettura, storico alert consultabile');
 
 // --- 2. storico modifiche ---

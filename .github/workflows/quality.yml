@@ -92,6 +92,8 @@ jobs:
         run: node scripts/test-api-timeout.mjs
       - name: Barra contestuale, prefetch unico, RM aggregato, uniformita
         run: node scripts/test-snello.mjs
+      - name: Action Plan piena pagina, catalogo azioni, CHECK, chiusura
+        run: node scripts/test-action-plan-chiusura.mjs
       - name: Gestione Profili · voci, collegamenti e descrizioni
         run: node scripts/test-gestione-profili.mjs
       - name: Synthetic client cache benchmark
