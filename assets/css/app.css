@@ -3014,3 +3014,9 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 #modalRoot .modal.ap-fullpage #actionPlanForm #ap-objectives-page.ap-guided-editing>.modal-actions{display:none!important}
 #modalRoot .modal.ap-fullpage #actionPlanForm .ap-guided-footer{position:sticky;bottom:0;z-index:2;background:rgba(255,255,255,.96);padding:12px 0;margin-top:12px;border-top:1px solid #e3e6ea}
 .ap-check-window-body{padding-bottom:24px!important}
+
+/* Calendario DM: festività nazionali evidenziate su tutta la riga (come sabato/domenica). */
+.calendar.transposed tr.holiday-row :is(.store-cell,.dm-absence-cell,.id-track,.key-point-cell),
+.calendar.transposed tr.holiday-row .date-day,
+.calendar.transposed .date-day.holiday{background:#eef8f0}
+.calendar.transposed tr.holiday-row .cell-click:hover{background-color:#e0f2e4}
