@@ -81,7 +81,9 @@ assert.ok(/semaforo/i.test(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:
  'Ogni azione deve avere un semaforo');
 assert.ok(/rosso/i.test(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:'a',light:'RED',newAction:''}]})),
  'Il rosso senza nuova azione non si salva: resterebbe senza seguito');
-assert.equal(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:'a',light:'RED',newAction:'Nuova'}]}),'',
+/* dal 24/11/2026 la nuova azione richiede anche il suo strumento */
+assert.ok(/STRUMENTO/.test(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:'a',light:'RED',newAction:'Nuova'}]})),'Rosso senza strumento della nuova azione: non si salva');
+assert.equal(ctx.apCheckValidate({date:'2026-11-20',rows:[{action:'a',light:'RED',newAction:'Nuova',newTool:'Strumento'}]}),'',
  'Compilato, il CHECK si salva');
 
 // --- la scheda del CHECK: prima la DATA CHECK, poi ogni azione con il suo strumento ---

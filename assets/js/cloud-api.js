@@ -1,7 +1,7 @@
 
 /* CONFIGURAZIONE: dopo il deploy di Apps Script incolla qui l'URL che termina con /exec */
 const AGENDA_API_ENDPOINT='https://script.google.com/macros/s/AKfycbx5aIQzE7YEwyctRMtTHPMMOxVw3vpIq2YQeayCW8LiFvKQfGf-tT98DvTU5oAJONwt0w/exec';
-const EXPECTED_BACKEND_BUILD='2026-11-23-snello-v28';
+const EXPECTED_BACKEND_BUILD='2026-11-24-action-plan-chiusura-v29';
 const STORE_CALENDAR_POLICY=Object.freeze({id:'STORE_DM_CONTEXT_OWN_SM_WRITE_V6',scope:'DM_FULL',view:'STORE_DM_ONLY_OTHER_STORES_V3',contractVersion:6,editableTrack:'SM',hideOtherStoreStoreAuthored:true,protected:true});
 class AgendaApiError extends Error{constructor(code,message,requestId){super(message||code);this.name='AgendaApiError';this.code=code;this.requestId=requestId||null}}
 const AgendaSession={TOKEN_KEY:'agenda.dm.token',USER_KEY:'agenda.dm.user',_token:'',_user:null,
@@ -28,7 +28,7 @@ const AGENDA_CACHE_INVALIDATION_BY_WRITE=Object.freeze({
  createEvent:['calendar','audit'],updateEvent:['calendar','audit'],deleteEvent:['calendar','audit'],setStoreVisitVisibility:['calendar','audit'],
  saveDmHolidayPlan:['calendar','audit'],addCompanyClosure:['calendar','audit'],removeCompanyClosure:['calendar','audit'],saveDmHolidayQuadro:['audit'],
  saveHolidayPeriods:['holidayPeriods','audit'],importStoreWeeklyRevenue:['holiday','audit'],createHolidayEmployee:['holiday','audit'],updateHolidayEmployee:['holiday','audit'],saveHolidayEmployeeOrder:['holiday','audit'],deleteHolidayEmployee:['holiday','audit'],saveHolidayPlanBatch:['holiday','audit'],
- importHolidayConsolidated:['holidayConsolidated','audit'],importStoreOvertimeCheck:['overtime','audit'],importPersonnelWorkHoursYtd:['overtime','audit'],saveActionPlan:['actionPlan','audit'],deleteActionPlan:['actionPlan','audit'],recordExport:['audit'],
+ importHolidayConsolidated:['holidayConsolidated','audit'],importStoreOvertimeCheck:['overtime','audit'],importPersonnelWorkHoursYtd:['overtime','audit'],saveActionPlan:['actionPlan','audit'],closeActionPlan:['actionPlan','audit'],deleteActionPlan:['actionPlan','audit'],recordExport:['audit'],
  createAdmin:['directory','audit'],saveStoreMenuConfig:['directory','audit'],saveProfileMenuConfig:['directory','audit'],setProfileAdminFlag:['directory','audit'],createStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],updateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],deactivateStore:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],resetStorePassword:['directory','audit'],updateRegion:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit'],commitStoreImport:['directory','calendar','holiday','holidayConsolidated','overtime','actionPlan','audit']
 });
 const AGENDA_SOFT_BUSY_ACTIONS=new Set(['getCalendar','getStoreCalendarContext','getAgendaEvents','getReportData','getHolidayPlanning','getHolidayPlanningAudit','getHolidayPeriods','getHolidayReport','getHolidayConsolidated','getHolidayConsolidatedReport','getStoreOvertimeCheck','getActionPlans','getActionPlanReport','getAuditBundle','listStores','listUsers','getRegions','getProfileDirectory','getRMCalendar','getRMHolidayPlanning','getRMHolidayReport','getRMHolidayConsolidated','getRMHolidayConsolidatedReport','getRMOvertime','getRMActionPlans','getRMActionPlanReport','createEvent','updateEvent','deleteEvent','saveHolidayPlanBatch','saveActionPlan']);

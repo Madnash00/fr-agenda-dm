@@ -40,18 +40,19 @@ assert.ok(guided.includes("AP_GUIDED_KPIS.filter(k=>AP_GUIDED_SELECTABLE.include
 assert.equal(ctx.AP_GUIDED_KPIS.find(k=>k.id==='ms').unit,'%','La MS obiettivo e una percentuale come MS AC');
 
 // --- 4. azioni con strumento ---
-for(const k of ctx.AP_GUIDED_SELECTABLE){const acts=ctx.AP_GUIDED_IDEAS[k].actions,map=ctx.AP_GUIDED_ACTION_TOOLS[k];
- assert.deepEqual(Object.keys(map).sort(),[...acts].sort(),`Ogni azione proposta per ${k} ha i suoi strumenti`);
- for(const a of acts)assert.ok(map[a].length>=2,`${k}: almeno due strumenti per ${a}`);}
-assert.deepEqual([...ctx.apGuidedToolsFor('cr','Scritta a mano')],[...ctx.AP_GUIDED_IDEAS.cr.tools],'Per un azione scritta a mano si propongono tutti gli strumenti del KPI');
-const h=ctx.apGuidedPairsHtml('cr',[{action:'Accogliere tempestivamente la cliente',tool:'Checklist accoglienza'},{action:'Mia azione',tool:'Mio strumento'}]);
-assert.ok(h.includes('AZIONE 1')&&h.includes('AZIONE 2')&&h.includes('+ AGGIUNGI AZIONE')&&h.includes('2 / 3'),'Elenco azioni con tasto Aggiungi');
-assert.ok(h.includes('<option value="__manual" selected>Altro: scrivi l’azione</option>')&&h.includes('value="Mia azione"'),'Azione manuale');
-assert.ok(h.includes('<option value="__manual" selected>Altro: scrivi lo strumento</option>')&&h.includes('value="Mio strumento"'),'Strumento manuale');
-assert.ok(h.includes('<option value="Checklist accoglienza" selected>'),'Strumento proposto selezionato');
+/* 24/11/2026: azioni e strumenti dal file "Piani di azione CR, ASP + AVT, UPT + MS" (vedi test-action-plan-chiusura.mjs). */
+for(const k of ctx.AP_GUIDED_SELECTABLE){const acts=ctx.apCatalogFor(k);
+ assert.equal(acts.length,6,`${k}: le 6 azioni del suo piano`);
+ for(const a of acts)assert.ok(a.how.length>=2&&a.tools.length>=2,`${k}: COME e strumenti per ${a.action}`);}
+assert.ok(ctx.apGuidedToolsFor('cr','Scritta a mano').length>=15,'Per un azione scritta a mano si propongono tutti gli strumenti del gruppo KPI');
+const h=ctx.apGuidedPairsHtml('cr',[{action:'Aggancio e accoglienza',tools:['Role play al briefing di apertura']},{action:'Mia azione',manualAction:true,how:['Fare X'],tools:['Mio strumento']}]);
+assert.ok(h.includes('AZIONE 1')&&h.includes('AZIONE 2')&&h.includes('+ AGGIUNGI AZIONE')&&h.includes('2 / 3 azioni'),'Elenco azioni con tasto Aggiungi');
+assert.ok(h.includes('<option value="__manual" selected>Altro: scrivi l’azione</option>')&&h.includes('value="Mia azione"')&&h.includes('data-ap-pair-how'),'Azione manuale con il suo COME');
+assert.ok(h.includes('value="Mio strumento" checked'),'Strumento manuale');
+assert.ok(h.includes('value="Role play al briefing di apertura" checked'),'Strumento proposto selezionato');
 const tre=ctx.apGuidedPairsHtml('cr',[{action:'a'},{action:'b'},{action:'c'}].map(x=>({...x,tool:''})));
 assert.ok(tre.includes('id="apAddPairBtn" disabled'),'Massimo 3 azioni');
-assert.ok(ctx.apGuidedPairsHtml('cr',[{action:'',tool:''}]).includes('data-ap-pair-tool disabled'),'Lo strumento si sceglie dopo l azione');
+assert.ok(ctx.apGuidedPairsHtml('cr',[{action:'',tool:''}]).includes('Gli strumenti si scelgono dopo l’azione'),'Lo strumento si sceglie dopo l azione');
 assert.deepEqual(ctx.apGuidedPairsFromMeta({actions:['A','B'],tools:['T1'],otherAction:'C'}).map(p=>p.action+'|'+p.tool),['A|T1','B|','C|'],'Vecchi obiettivi: azioni recuperate, strumento da completare');
 assert.ok(!guided.includes('apGuidedNextSteps'),'NEXT STEPS eliminato');
 

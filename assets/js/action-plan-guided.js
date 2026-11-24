@@ -58,8 +58,21 @@ const AP_GUIDED_ACTION_TOOLS={
   'Verificare la coerenza delle proposte':['Schede prodotto','Report mix venduto','Briefing commerciale'],
   'Monitorare settimanalmente MS':['Cruscotto MS','Report Store Review','Briefing commerciale']}
 };
-const AP_GUIDED_MAX_ACTIONS=3;
-function apGuidedToolsFor(kpi,action){const m=AP_GUIDED_ACTION_TOOLS[kpi]?.[action];return m&&m.length?m:(AP_GUIDED_IDEAS[kpi]?.tools||[])}
+/* Catalogo azioni dei "Piani di azione CR, ASP + AVT, UPT + MS" (Fiorella
+   Rubino, novembre 2026): per ogni KPI le 6 azioni del suo gruppo, ciascuna con
+   il COME (azioni concrete), gli strumenti e il KPI di verifica.
+   ★ = strumento da preparare in negozio. */
+const AP_PPT_ACTIONS=[{"n":1,"g":"cr","action":"Planning orario sui flussi","how":["Incrociare ingressi (per giorno e fascia oraria) con le vendite della singola venditrice","Risorse più performanti nelle fasce di picco","Obiettivo individuale: n° scontrini per ora","Se SPH alto e CR basso: il DM valuta con RM 1 testa/stage in più"],"tools":["Statistiche ingressi per fascia oraria","Report vendite per dipendente","Planning orario settimanale","Tabella obiettivi sc/h ★"],"verify":"CR per fascia oraria, sc/h"},{"n":2,"g":"cr","action":"Aggancio e accoglienza","how":["Saluto e contatto visivo su ogni ingresso, approccio Autogrill","Presidio di welcome area e zone visibili","Fidelity proposta già in aggancio per rompere il ghiaccio (brand, prodotto, vantaggi loyalty)","Chiamate promo compleanno e teleselling solo se previsti da campagna"],"tools":["My T. n°5 (aggancio)","Role play al briefing di apertura","Obiettivo individuale nuove fidelity","Liste clienti CRM per le chiamate"],"verify":"CR, n° nuove fidelity"},{"n":3,"g":"cr","action":"Esplorazione delle esigenze","how":["Domande aperte su occasione d'uso, stile e guardaroba della cliente","Ascolto attivo prima di proporre: niente proposta senza indagine","Proposta legata al CVB emerso dall'indagine"],"tools":["My T. esplorazione delle esigenze","Card tascabile “domande che aprono” ★","Esercitazione a coppie venditrice/cliente"],"verify":"CR per venditrice"},{"n":4,"g":"cr","action":"Selling ceremony in camerino","how":["Accompagnare sempre in camerino e preparare la cabina","Portare già la taglia alternativa, chiedere riscontro sul capo indossato","Curare parole, tono e corpo; congedo con “mi faccia sapere…”"],"tools":["Checklist cerimoniale di camerino ★","“Modella per un giorno”","Affiancamento SM con scheda di osservazione ★"],"verify":"CR, prove chiuse in acquisto"},{"n":5,"g":"cr","action":"Gestione delle obiezioni","how":["Raccogliere le obiezioni più frequenti del negozio (prezzo, vestibilità, “ci penso”)","Per ognuna, una risposta con storytelling convincente sul prodotto","Metodo: accogliere, riformulare, rispondere"],"tools":["Scheda obiezioni-risposte del negozio ★","Pillole prodotto e racconto del Tema","10 minuti di allenamento al briefing"],"verify":"CR per venditrice"},{"n":6,"g":"cr","action":"Allestimento e disponibilità taglie","how":["Nelle giornate di alta affluenza esporre una taglia in più, in modo bilanciato","Con l'ufficio Visual: focus prodotto con esposizione dedicata (stand prezzo civetta)","Vetrine, welcome e zone visibili sempre in ordine"],"tools":["Report ingressi per individuare le giornate di picco","Confronto con ufficio Visual","Check-list visual di apertura ★"],"verify":"CR nelle giornate di picco"},{"n":7,"g":"asp","action":"Proposta dal prezzo più alto","how":["Ascoltare e rispettare la richiesta della cliente","Proporre sempre per primo l'articolo dal prezzo più alto della stessa base","Scendere di prezzo solo se la cliente lo chiede"],"tools":["Lista settimanale “top capi ASP alto” per base ★","Esercitazione in vendita"],"verify":"ASP per venditrice"},{"n":8,"g":"asp","action":"Comunicare il valore del capo","how":["Glossario corretto: tessuti, vestibilità, lavorazioni","Da caratteristica a vantaggio; la cliente deve toccare il prodotto","Gestire in anticipo l'obiezione sul prezzo"],"tools":["Pillole formative e storytelling prodotto","Info clothes","Quiz prodotto settimanale ★"],"verify":"ASP, AVT"},{"n":9,"g":"asp","action":"Esercizio a carrello","how":["Costruire look per occasioni d'uso partendo dai capi più cari","Mettere dal più caro al meno caro","Replicare la stessa proposta in vendita"],"tools":["Carrello di esercitazione","Foto dei look su Workplace","“Modella per un giorno”"],"verify":"AVT"},{"n":10,"g":"asp","action":"Visual a valore","how":["Tenere in appeso i capi di maggior valore","Con il Visual, creare frontali con ASP alto","Se bisogna togliere merce dalla sala, mandare in magazzino i capi ad ASP basso"],"tools":["Confronto con ufficio Visual","Foto dei frontali di riferimento","Check-list visual di apertura ★"],"verify":"ASP"},{"n":11,"g":"asp","action":"Magazzino a semaforo","how":["Piegato: prezzo più alto ad altezza di presa, prezzo più basso agli estremi","Appeso: dal modello più caro al meno caro","Il primo capo che si prende è sempre il più caro"],"tools":["Bollini colore per fascia di prezzo ★","Mappa del magazzino"],"verify":"ASP"},{"n":12,"g":"asp","action":"Obiettivi individuali e coaching","how":["Obiettivi individuali su categoria merceologica o qualità scontrino (AVT e ASP)","Chi ha ASP più alto prepara info clothes per chi lo ha più basso","Comporre lo scontrino con il giusto mix di sconti, monitorando il MD"],"tools":["Report KPI per venditrice","Tabellone obiettivi in retro ★","Report sconti/MD"],"verify":"AVT, ASP, MD"},{"n":13,"g":"upt","action":"Camerino “+1”","how":["In camerino portare sempre un capo complementare a quello in prova","La cabina è il momento della proposta, non solo della prova"],"tools":["My T. n°3 (fase proposta e gestione camerino)","Checklist camerino ★ (la stessa del CR)"],"verify":"UPT"},{"n":14,"g":"upt","action":"Indagine per la proposta aggiuntiva","how":["Chiedere cosa la cliente abbina già, per quale occasione, cosa le manca","Proposta argomentata, con descrizione evocativa e funzionale"],"tools":["My T. indagine per proposta aggiuntiva","Card tascabile domande ★"],"verify":"UPT, % vendite multiple"},{"n":15,"g":"upt","action":"Total look pronti","how":["Preparare in anticipo total look per le occasioni d'uso, con più soluzioni possibili","Usarli in vendita e in welcome area","Ruotare la welcome area con il Visual quando è poco efficace"],"tools":["Workplace: condivisione dei look con la rete","Book foto look del negozio ★","Confronto con ufficio Visual"],"verify":"UPT"},{"n":16,"g":"upt","action":"Capo eroe e contest","how":["Ogni settimana un capo eroe con i suoi abbinamenti pronti","Contest di team sul capo eroe"],"tools":["Pillola sul capo eroe","Classifica contest in retro ★","Report vendite per articolo"],"verify":"Pezzi capo eroe, UPT"},{"n":17,"g":"upt","action":"Accessori e acquisto d'impulso","how":["Accessori avancasse (solo se presente il barbieri)","Proposta in cassa prima della chiusura dello scontrino","Obiettivi individuali sugli accessori"],"tools":["Esposizione avancasse","Obiettivo accessori per venditrice","Report vendite accessori"],"verify":"Pezzi accessori"},{"n":18,"g":"upt","action":"Obiettivi pezzi, MS e promo","how":["Obiettivi individuali su media pezzi e vendita multipla (pezzi e MLP)","Usare promo multipezzo e punti fidelity come argomento per il secondo capo"],"tools":["Report UPT/MS per venditrice","Tabellone obiettivi in retro ★","Meccaniche promo e punti attive"],"verify":"UPT, % vendite multiple"}];
+const AP_KPI_GROUP={cr:'cr',asp:'asp',atv:'asp',upt:'upt',ms:'upt'};
+const AP_KPI_GROUP_LABEL={cr:'CR · Tasso di conversione',asp:'ASP + AVT · Prezzo medio e scontrino medio',upt:'UPT + MS · Pezzi per scontrino e vendite multiple'};
+const AP_GUIDED_MAX_ACTIONS=3,AP_GUIDED_MAX_TOOLS=3;
+function apCatalogFor(kpi){const g=AP_KPI_GROUP[kpi];return g?AP_PPT_ACTIONS.filter(a=>a.g===g):[]}
+function apCatalogAction(kpi,name){return apCatalogFor(kpi).find(a=>a.action===name)||null}
+/* Strumenti proposti: quelli dell'azione del catalogo; per un'azione scritta a
+   mano tutti gli strumenti del gruppo KPI. Si puo' sempre aggiungerne uno a mano. */
+function apGuidedToolsFor(kpi,action){const c=apCatalogAction(kpi,action);if(c)return c.tools;const all=[];apCatalogFor(kpi).forEach(a=>a.tools.forEach(t=>{if(!all.includes(t))all.push(t)}));return all.length?all:(AP_GUIDED_IDEAS[kpi]?.tools||[])}
+function apPairTools(p){if(Array.isArray(p?.tools))return p.tools.map(String).filter(Boolean);return String(p?.tool||'').split(' · ').map(x=>x.trim()).filter(Boolean)}
+function apPairHow(kpi,p){if(Array.isArray(p?.how))return p.how;if(typeof p?.how==='string'&&p.how.trim())return p.how.split('\n').map(x=>x.trim()).filter(Boolean);return apCatalogAction(kpi,p?.action)?.how||[]}
 function apGuidedMeta(raw){const m=String(raw||'').match(/\n?\[APOBJ2:([A-Za-z0-9+/=]+)\]\s*$/);if(!m)return null;try{return JSON.parse(decodeURIComponent(atob(m[1])))}catch(_){return null}}
 function apGuidedNotes(raw){return String(raw||'').replace(/\n?\[APOBJ2:[A-Za-z0-9+/=]+\]\s*$/,'').trim()}
 function apGuidedNotesWithMeta(text,meta){return (String(text||'').trim()?String(text).trim()+'\n':'')+'[APOBJ2:'+btoa(encodeURIComponent(JSON.stringify(meta)))+']'}
@@ -127,36 +140,47 @@ function apGuidedProjection(kpi,target,v){
 }
 /* Coppie azione/strumento: dai metadati nuovi, oppure ricostruite dai vecchi
    obiettivi (azioni e strumenti scelti in liste separate). */
+/* Coppia azione/strumenti: {action, how:[...], tools:[max 3], tool:"a · b"}.
+   'tool' (stringa) resta per CHECK, task, PDF e backend. */
+function apPairNorm(kpi,p){const tools=apPairTools(p).slice(0,AP_GUIDED_MAX_TOOLS),action=String(p?.action||''),manual=!!p?.manualAction||(!!action&&!apCatalogAction(kpi,action)),how=apPairHow(kpi,p);
+ /* coppie salvate prima del catalogo: l'azione resta 'scritta a mano' con i suoi strumenti; il COME non e' obbligatorio */
+ return {action,how,tools,tool:tools.join(' · '),manualAction:manual,legacy:manual&&!how.length}}
 function apGuidedPairsFromMeta(meta,old){
- if(Array.isArray(meta?.pairs))return meta.pairs.map(p=>({action:String(p.action||''),tool:String(p.tool||'')}));
+ const kpi=meta?.kpi||'';
+ if(Array.isArray(meta?.pairs))return meta.pairs.map(p=>apPairNorm(kpi,p));
  const acts=[...(meta?.actions||[]),...(meta?.otherAction?[meta.otherAction]:[])],tools=[...(meta?.tools||[]),...(meta?.otherTool?[meta.otherTool]:[])];
- if(acts.length)return acts.slice(0,AP_GUIDED_MAX_ACTIONS).map((a,i)=>({action:a,tool:tools[i]||''}));
- return (Array.isArray(old?.tasks)?old.tasks:[]).slice(0,AP_GUIDED_MAX_ACTIONS).map(t=>({action:String(t.task||''),tool:String(t.tools||'')}));
+ if(acts.length)return acts.slice(0,AP_GUIDED_MAX_ACTIONS).map((a,i)=>apPairNorm(kpi,{action:a,tool:tools[i]||''}));
+ return (Array.isArray(old?.tasks)?old.tasks:[]).slice(0,AP_GUIDED_MAX_ACTIONS).map(t=>apPairNorm(kpi,{action:String(t.task||''),tool:String(t.tools||'')}));
 }
 function apGuidedPairsHtml(kpi,pairs){
- const acts=AP_GUIDED_IDEAS[kpi]?.actions||[];
+ const cat=apCatalogFor(kpi);
  const rows=pairs.map((p,i)=>{
-  const manualA=p.action&&!acts.includes(p.action)||p.manualAction,tools=manualA?(AP_GUIDED_IDEAS[kpi]?.tools||[]):apGuidedToolsFor(kpi,p.action),manualT=p.tool&&!tools.includes(p.tool)||p.manualTool;
-  const taken=pairs.filter((x,j)=>j!==i).map(x=>x.action);
-  return '<div class="ap-pair" data-ap-pair="'+i+'"><div class="ap-pair-head"><strong>AZIONE '+(i+1)+'</strong><button type="button" class="ap-check-remove" data-ap-pair-remove="'+i+'" aria-label="Togli azione '+(i+1)+'">×</button></div>'
-   +'<div class="ap-pair-col"><label>AZIONE<select data-ap-pair-action><option value="">Seleziona un’azione</option>'+acts.map(a=>'<option value="'+esc(a)+'"'+(!manualA&&p.action===a?' selected':'')+(taken.includes(a)?' disabled':'')+'>'+esc(a)+'</option>').join('')+'<option value="__manual"'+(manualA?' selected':'')+'>Altro: scrivi l’azione</option></select></label>'
-   +(manualA?'<input type="text" maxlength="160" data-ap-pair-action-text value="'+esc(p.action||'')+'" placeholder="Scrivi l’azione">':'')+'</div>'
-   +'<div class="ap-pair-col"><label>STRUMENTO<select data-ap-pair-tool'+(p.action||manualA?'':' disabled')+'><option value="">'+(p.action||manualA?'Seleziona lo strumento':'Prima scegli l’azione')+'</option>'+(p.action||manualA?tools.map(t=>'<option value="'+esc(t)+'"'+(!manualT&&p.tool===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'<option value="__manual"'+(manualT?' selected':'')+'>Altro: scrivi lo strumento</option>':'')+'</select></label>'
-   +(manualT?'<input type="text" maxlength="160" data-ap-pair-tool-text value="'+esc(p.tool||'')+'" placeholder="Scrivi lo strumento">':'')+'</div>'
-   +'</div>';
+  const c=apCatalogAction(kpi,p.action),manualA=!!p.action&&!c||!!p.manualAction,picked=apPairTools(p),proposte=(p.action||manualA)?apGuidedToolsFor(kpi,manualA?'':p.action):[];
+  const extra=picked.filter(t=>!proposte.includes(t)),taken=pairs.filter((x,j)=>j!==i).map(x=>x.action),full=picked.length>=AP_GUIDED_MAX_TOOLS;
+  const how=manualA?'<label class="ap-pair-how-edit">COME · AZIONI CONCRETE<textarea rows="3" maxlength="900" data-ap-pair-how placeholder="Una riga per ogni azione concreta">'+esc((Array.isArray(p.how)?p.how:[]).join('\n'))+'</textarea></label>'
+   :(c?'<div class="ap-pair-how"><span>COME · AZIONI CONCRETE</span><ul>'+c.how.map(h=>'<li>'+esc(h)+'</li>').join('')+'</ul>'+(c.verify?'<p class="ap-pair-verify"><b>Verifica:</b> '+esc(c.verify)+'</p>':'')+'</div>':'<p class="ap-pair-hint">Scegli l’azione: qui comparirà il COME.</p>');
+  const toolBox=(p.action||manualA)?'<fieldset class="ap-pair-tools"><legend>STRUMENTI <small>'+picked.length+' / '+AP_GUIDED_MAX_TOOLS+' · scegline fino a '+AP_GUIDED_MAX_TOOLS+'</small></legend>'
+   +[...proposte,...extra].map(t=>{const on=picked.includes(t);return '<label class="ap-tool-chip'+(on?' selected':'')+'"><input type="checkbox" data-ap-pair-toolbox value="'+esc(t)+'"'+(on?' checked':'')+(!on&&full?' disabled':'')+'> '+esc(t)+'</label>'}).join('')
+   +'<div class="ap-tool-add"><input type="text" maxlength="160" data-ap-pair-tool-new placeholder="Altro strumento: scrivilo e premi AGGIUNGI"'+(full?' disabled':'')+'><button type="button" class="btn small" data-ap-pair-tool-add="'+i+'"'+(full?' disabled':'')+'>AGGIUNGI</button></div></fieldset>'
+   :'<p class="ap-pair-hint">Gli strumenti si scelgono dopo l’azione.</p>';
+  return '<article class="ap-pair" data-ap-pair="'+i+'"><header class="ap-pair-head"><strong>AZIONE '+(i+1)+(c?' <small>· n° '+c.n+' del piano</small>':'')+'</strong><button type="button" class="ap-check-remove" data-ap-pair-remove="'+i+'" aria-label="Togli azione '+(i+1)+'">×</button></header>'
+   +'<div class="ap-pair-body"><div class="ap-pair-col"><label>AZIONE<select data-ap-pair-action><option value="">Seleziona un’azione</option>'+cat.map(a=>'<option value="'+esc(a.action)+'"'+(!manualA&&p.action===a.action?' selected':'')+(taken.includes(a.action)?' disabled':'')+'>'+a.n+'. '+esc(a.action)+'</option>').join('')+'<option value="__manual"'+(manualA?' selected':'')+'>Altro: scrivi l’azione</option></select></label>'
+   +(manualA?'<input type="text" maxlength="160" data-ap-pair-action-text value="'+esc(p.action||'')+'" placeholder="Scrivi l’azione">':'')+how+'</div>'
+   +'<div class="ap-pair-col">'+toolBox+'</div></div></article>';
  }).join('');
- return '<div class="ap-pairs">'+(rows||'<p class="ap-checks-empty">Nessuna azione. Aggiungine una: per ciascuna sceglierai lo strumento.</p>')+'</div>'
-  +'<button type="button" class="btn small" id="apAddPairBtn"'+(pairs.length>=AP_GUIDED_MAX_ACTIONS?' disabled':'')+'>+ AGGIUNGI AZIONE</button>'
-  +'<span class="ap-pairs-count">'+pairs.length+' / '+AP_GUIDED_MAX_ACTIONS+'</span>';
+ return '<div class="ap-pairs">'+(rows||'<p class="ap-checks-empty">Nessuna azione. Aggiungine una: per ciascuna vedrai il COME e sceglierai fino a '+AP_GUIDED_MAX_TOOLS+' strumenti.</p>')+'</div>'
+  +'<div class="ap-pairs-foot"><button type="button" class="btn small primary" id="apAddPairBtn"'+(pairs.length>=AP_GUIDED_MAX_ACTIONS?' disabled':'')+'>+ AGGIUNGI AZIONE</button>'
+  +'<span class="ap-pairs-count">'+pairs.length+' / '+AP_GUIDED_MAX_ACTIONS+' azioni</span><span class="ap-pairs-legend">★ strumento da preparare in negozio</span></div>';
 }
-function apGuidedPairsRead(root,pairs){
+function apGuidedPairsRead(root,pairs,kpi){
  return [...root.querySelectorAll('[data-ap-pair]')].map(n=>{
-  const i=Number(n.dataset.apPair),prev=pairs[i]||{},sa=n.querySelector('[data-ap-pair-action]')?.value||'',st=n.querySelector('[data-ap-pair-tool]')?.value||'';
+  const i=Number(n.dataset.apPair),prev=pairs[i]||{},sa=n.querySelector('[data-ap-pair-action]')?.value||'';
   const manualAction=sa==='__manual',action=manualAction?(n.querySelector('[data-ap-pair-action-text]')?.value.trim()??''):sa;
-  const manualTool=st==='__manual',tool=manualTool?(n.querySelector('[data-ap-pair-tool-text]')?.value.trim()??''):st;
-  /* cambiando azione lo strumento scelto prima non vale piu' */
-  const sameAction=action===prev.action&&manualAction===!!prev.manualAction;
-  return {action,manualAction,tool:sameAction||manualTool?tool:'',manualTool};
+  /* cambiando azione gli strumenti e il COME scelti prima non valgono piu' */
+  const same=action===prev.action&&manualAction===!!prev.manualAction||(manualAction&&prev.manualAction);
+  const tools=same?[...n.querySelectorAll('[data-ap-pair-toolbox]:checked')].map(x=>x.value).slice(0,AP_GUIDED_MAX_TOOLS):[];
+  const howBox=n.querySelector('[data-ap-pair-how]'),how=manualAction?(howBox?howBox.value.split('\n').map(x=>x.trim()).filter(Boolean):[]):(apCatalogAction(kpi,action)?.how||[]);
+  return {action,manualAction,how,tools,tool:tools.join(' · '),legacy:!!(same&&prev.legacy&&action===prev.action)};
  });
 }
 function openApGuidedObjective(index=null){
@@ -175,7 +199,7 @@ function openApGuidedObjective(index=null){
  const close=()=>{editor.innerHTML='';editor.classList.add('hidden');page?.classList.remove('ap-guided-editing');renderActionPlanObjectivesDraft();requestAnimationFrame(apFitActionPlanStage)};
  const collect=()=>{
   if(step===0){data.kpi=editor.querySelector('#apGuidedKpi')?.value||'';data.target=editor.querySelector('#apGuidedTarget')?.value||''}
-  if(step===1)data.pairs=apGuidedPairsRead(root,data.pairs);
+  if(step===1)data.pairs=apGuidedPairsRead(root,data.pairs,data.kpi);
   if(step===2)data.checks=apChecksRead(editor);
  };
  const preview=()=>{
@@ -193,11 +217,14 @@ function openApGuidedObjective(index=null){
    const update=()=>{const k=AP_GUIDED_KPIS.find(x=>x.id===editor.querySelector('#apGuidedKpi').value);editor.querySelector('#apGuidedUnit').textContent=k?'('+k.unit+')':'';preview()};
    editor.querySelector('#apGuidedKpi').onchange=update;editor.querySelector('#apGuidedTarget').oninput=preview;update();
   }else if(step===1){
-   root.innerHTML='<h4>2. AZIONI E STRUMENTI</h4><p class="muted">Inserisci fino a '+AP_GUIDED_MAX_ACTIONS+' azioni: per ciascuna scegli una delle 6 proposte o scrivila, poi seleziona il suo strumento.</p>'+apGuidedPairsHtml(data.kpi,data.pairs);
-   const redraw=()=>{data.pairs=apGuidedPairsRead(root,data.pairs);draw()};
-   root.querySelectorAll('[data-ap-pair-action],[data-ap-pair-tool]').forEach(x=>x.onchange=redraw);
-   root.querySelectorAll('[data-ap-pair-remove]').forEach(b=>b.onclick=()=>{data.pairs=apGuidedPairsRead(root,data.pairs);data.pairs.splice(Number(b.dataset.apPairRemove),1);draw()});
-   const add=root.querySelector('#apAddPairBtn');if(add)add.onclick=()=>{data.pairs=apGuidedPairsRead(root,data.pairs);if(data.pairs.length>=AP_GUIDED_MAX_ACTIONS){toast('Massimo '+AP_GUIDED_MAX_ACTIONS+' azioni.',true);return}data.pairs.push({action:'',tool:''});draw()};
+   root.innerHTML='<h4>2. AZIONI E STRUMENTI</h4><p class="muted">'+esc(AP_KPI_GROUP_LABEL[AP_KPI_GROUP[data.kpi]]||'')+' · fino a '+AP_GUIDED_MAX_ACTIONS+' azioni: scegli tra le 6 del piano d’azione o scrivila tu; per ciascuna leggi il COME e seleziona fino a '+AP_GUIDED_MAX_TOOLS+' strumenti.</p>'+apGuidedPairsHtml(data.kpi,data.pairs);
+   const read=()=>{data.pairs=apGuidedPairsRead(root,data.pairs,data.kpi)},redraw=()=>{read();draw()};
+   root.querySelectorAll('[data-ap-pair-action],[data-ap-pair-toolbox]').forEach(x=>x.onchange=redraw);
+   root.querySelectorAll('[data-ap-pair-action-text],[data-ap-pair-how]').forEach(x=>x.onchange=read);
+   root.querySelectorAll('[data-ap-pair-tool-add]').forEach(b=>b.onclick=()=>{const n=b.closest('[data-ap-pair]'),t=n.querySelector('[data-ap-pair-tool-new]')?.value.trim()||'';read();const pr=data.pairs[Number(b.dataset.apPairToolAdd)];if(!t){toast('Scrivi lo strumento da aggiungere.',true);return}if(pr.tools.length>=AP_GUIDED_MAX_TOOLS){toast('Massimo '+AP_GUIDED_MAX_TOOLS+' strumenti per azione.',true);return}if(!pr.tools.includes(t))pr.tools.push(t);pr.tool=pr.tools.join(' · ');draw()});
+   root.querySelectorAll('[data-ap-pair-tool-new]').forEach(x=>x.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();x.closest('[data-ap-pair]').querySelector('[data-ap-pair-tool-add]')?.click()}});
+   root.querySelectorAll('[data-ap-pair-remove]').forEach(b=>b.onclick=()=>{read();data.pairs.splice(Number(b.dataset.apPairRemove),1);draw()});
+   const add=root.querySelector('#apAddPairBtn');if(add)add.onclick=()=>{read();if(data.pairs.length>=AP_GUIDED_MAX_ACTIONS){toast('Massimo '+AP_GUIDED_MAX_ACTIONS+' azioni.',true);return}data.pairs.push({action:'',how:[],tools:[],tool:''});draw()};
   }else{
    root.innerHTML='<h4>3. MONITORAGGIO</h4>'+apAlertsHtml(data)+apChecksHtml(data);
    apAlertsWire(editor,data,draw);apChecksWire(editor,data,draw);
@@ -220,12 +247,14 @@ function openApGuidedObjective(index=null){
   if(step===1){
    if(!data.pairs.length){toast('Aggiungi almeno una AZIONE.',true);return}
    if(data.pairs.some(p=>!p.action)){toast('Scegli o scrivi ogni AZIONE.',true);return}
-   if(data.pairs.some(p=>!p.tool)){toast('Seleziona lo STRUMENTO di ogni azione.',true);return}
+   if(data.pairs.some(p=>p.manualAction&&!p.legacy&&!(p.how||[]).length)){toast('Scrivi il COME dell’azione inserita a mano.',true);return}
+   if(data.pairs.some(p=>!(p.tools||[]).length)){toast('Seleziona almeno uno STRUMENTO per ogni azione.',true);return}
+   if(data.pairs.some(p=>(p.tools||[]).length>AP_GUIDED_MAX_TOOLS)){toast('Massimo '+AP_GUIDED_MAX_TOOLS+' strumenti per azione.',true);return}
    if(new Set(data.pairs.map(p=>p.action.toLowerCase())).size!==data.pairs.length){toast('La stessa azione è inserita due volte.',true);return}
    step=2;draw();return}
   if(data.checks.some(c=>!c.saved)){toast('Salva o annulla il CHECK aperto prima di confermare l obiettivo.',true);return}
   const def=AP_GUIDED_KPIS.find(x=>x.id===data.kpi),p=apGuidedProjection(data.kpi,Number(data.target),v);if(!def||!p){toast('KPI non valido: verifica il valore target.',true);return}
-  const basePairs=data.pairs.map(x=>({action:x.action,tool:x.tool})),all=apChecksAllPairs(basePairs,data.checks);
+  const basePairs=data.pairs.map(x=>({action:x.action,how:x.how||[],tools:x.tools||[],tool:(x.tools||[]).join(' · ')})),all=apChecksAllPairs(basePairs,data.checks);
   const checks=data.checks.map(c=>({id:c.id,date:c.date,note:c.note||'',rows:(c.rows||[]).map(r=>({action:r.action,tool:r.tool||'',light:r.light,newAction:r.newAction||'',newTool:r.newTool||''})),created_at:c.created_at||'',history:c.history||[]}));
   const metadata={kpi:data.kpi,target:data.target,ac:p.base,baselineSales:p.sales,projectedSales:p.forecast,projectedDelta:p.delta,pairs:basePairs,actions:basePairs.map(x=>x.action),tools:basePairs.map(x=>x.tool),alerts:data.alerts,checks};
   const objectiveText=def.label+' '+apGuidedAmount(data.target,def.unit),editAt=new Date().toISOString(),editBy=apUserLabel();
@@ -298,16 +327,26 @@ function apAlertsWire(editor,data,draw){
    alert piu' recente e' scaduto, cioe' ha data di oggi o passata e non ne e'
    stato impostato uno successivo. */
 function apAlertBadgeCount(plans,today=apToday()){
- let n=0;(Array.isArray(plans)?plans:[]).forEach(p=>{if(p&&p.active===false)return;(p?.objectives||[]).forEach(o=>{if(apObjDisabled(o))return;const latest=apAlertLatest(apGuidedMeta(o.notes)?.alerts);if(latest&&latest<=today)n++})});
+ let n=0;(Array.isArray(plans)?plans:[]).forEach(p=>{if(p&&p.active===false||p?.closed||p?.is_draft)return;(p?.objectives||[]).forEach(o=>{if(apObjDisabled(o))return;const latest=apAlertLatest(apGuidedMeta(o.notes)?.alerts);if(latest&&latest<=today)n++})});
  return n;
 }
+/* DM: Action Plan da verificare e chiudere = salvati, non chiusi, propri, con
+   data di FINE oggi o gia' passata. */
+function apCloseBadgeCount(plans,today=apToday(),adminId=String(currentUser?.admin_id||'')){
+ return (Array.isArray(plans)?plans:[]).filter(p=>p&&p.active!==false&&!p.is_draft&&!p.closed&&p.end_date&&p.end_date<=today&&(!p.admin_id||!adminId||String(p.admin_id)===adminId)).length;
+}
+/* Badge su ACTION PLAN: sia sulla voce del sottomenu sia su quella principale.
+   NEGOZIO: alert scaduti. DM: Action Plan da chiudere. */
 function apUpdateAlertBadge(){
- const btn=document.querySelector('.nav-btn[data-page="actionplans"]');if(!btn)return;
- const n=currentUser?.role==='STORE'?apAlertBadgeCount(actionPlanCache?.plans):0;
- let b=btn.querySelector('.nav-alert-badge');
- if(!n){if(b)b.remove();btn.removeAttribute('data-alerts');return}
- if(!b){b=document.createElement('span');b.className='nav-alert-badge';btn.appendChild(b)}
- b.textContent=String(n);b.setAttribute('aria-label',n+(n===1?' alert scaduto':' alert scaduti'));btn.setAttribute('data-alerts',String(n));
+ const store=currentUser?.role==='STORE',dm=currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM';
+ const n=store?apAlertBadgeCount(actionPlanCache?.plans):dm?apCloseBadgeCount(actionPlanCache?.plans):0;
+ const label=store?(n===1?' alert scaduto':' alert scaduti'):(n===1?' Action Plan da chiudere':' Action Plan da chiudere');
+ [document.querySelector('.nav-btn[data-page="actionplans"]'),document.querySelector('.nav-group-btn[data-nav-group="action-plans"]')].forEach(btn=>{
+  if(!btn)return;let b=btn.querySelector('.nav-alert-badge');
+  if(!n){if(b)b.remove();btn.removeAttribute('data-alerts');return}
+  if(!b){b=document.createElement('span');b.className='nav-alert-badge'+(dm?' nav-close-badge':'');(btn.querySelector('span')&&btn.classList.contains('nav-group-btn')?btn.querySelector('span'):btn).appendChild(b)}
+  b.textContent=String(n);b.setAttribute('aria-label',n+label);b.title=n+label;btn.setAttribute('data-alerts',String(n));
+ });
 }
 
 /* ===========================================================================
@@ -352,6 +391,21 @@ function apChecksAllPairs(base,checks){
  });
  return out;
 }
+/* Azioni da monitorare in un CHECK: quelle scelte al passo 2, dove un semaforo
+   rosso dei CHECK precedenti SOSTITUISCE l'azione con la nuova scritta a mano
+   (l'azione superata non viene piu' riproposta). */
+function apChecksActivePairs(base,checks){
+ const out=(base||[]).map(p=>({action:p.action,tool:p.tool||apPairTools(p).join(' · ')}));
+ (Array.isArray(checks)?checks:[]).filter(c=>c.saved!==false).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.created_at||'').localeCompare(String(b.created_at||''))).forEach(c=>{
+  (c.rows||[]).forEach(r=>{
+   const nuova=String(r.newAction||'').trim();if(r.light!=='RED'||!nuova)return;
+   const i=out.findIndex(x=>x.action===r.action),rec={action:nuova,tool:String(r.newTool||'').trim()};
+   if(out.some(x=>x.action===nuova))return;
+   if(i>=0)out[i]=rec;else out.push(rec);
+  });
+ });
+ return out;
+}
 /* Compatibilita': elenco delle sole azioni. */
 function apChecksAllActions(base,checks){return apChecksAllPairs(base.map(a=>typeof a==='string'?{action:a,tool:''}:a),checks).map(x=>x.action)}
 
@@ -365,10 +419,11 @@ function apChecksToCheckpoints(task,checks,oldTasks){
  return dalleSessioni.length?dalleSessioni:vecchi;
 }
 
-function apChecksPairsFor(data){return apChecksAllPairs(data.pairs||[],data.checks)}
+function apChecksPairsFor(data){return apChecksActivePairs(data.pairs||[],data.checks)}
 function apChecksHtml(data){
- const coppie=apChecksPairsFor(data),aperto=(data.checks||[]).some(c=>!c.saved);
- const blocchi=(data.checks||[]).map((c,i)=>apCheckHtml(c,i,coppie)).join('');
+ const aperto=(data.checks||[]).some(c=>!c.saved);
+ /* il CHECK n mostra le azioni attive dopo i CHECK precedenti */
+ const blocchi=(data.checks||[]).map((c,i)=>apCheckHtml(c,i,apChecksActivePairs(data.pairs||[],(data.checks||[]).slice(0,i)))).join('');
  return '<section class="ap-checks"><div class="ap-checks-head"><h5>CHECK · MONITORAGGIO</h5>'
   +'<button type="button" class="btn small primary" id="apAddCheckBtn"'+(aperto?' disabled':'')+'>EFFETTUA CHECK</button></div>'
   +(blocchi||'<p class="ap-checks-empty">Nessun CHECK. Usa EFFETTUA CHECK per registrare l’esito delle azioni.</p>')
@@ -403,6 +458,7 @@ function apCheckHtml(c,i,coppie){
   +'<div class="ap-check-head"><label>DATA CHECK<input type="date" data-ap-check-date min="'+esc(apCheckMinDate(c))+'" value="'+esc(c.date||'')+'"></label></div>'
   +'<div class="ap-check-actions">'+(righe||'<p class="ap-checks-empty">Nessuna azione selezionata al passo 2.</p>')+'</div>'
   +'<label class="ap-check-note">NOTE<textarea rows="2" data-ap-check-note placeholder="Cosa è emerso da questo check">'+esc(c.note||'')+'</textarea></label>'
+  +(c.isNew?'<div class="ap-check-next-alert"><strong>PROSSIMO ALERT · obbligatorio</strong><p>Dopo ogni CHECK si fissa il successivo: data e cosa verificare.</p><div class="ap-check-next-grid"><label>DATA<input type="date" data-ap-check-alert-date min="'+esc(apToday())+'" value="'+esc(c.nextAlert?.date||'')+'"></label><label>NEXT STEPS<textarea rows="2" maxlength="500" data-ap-check-alert-next placeholder="Cosa verificare al prossimo check">'+esc(c.nextAlert?.next||'')+'</textarea></label></div></div>':'')
   +(storico.length?'<div class="ap-check-history"><strong>MODIFICHE DOPO IL PRIMO SALVATAGGIO</strong><ul>'+storico.map(h=>'<li><b>'+esc(apCheckStamp(h.at))+'</b> · '+(h.changes||[]).map(esc).join(' · ')+'</li>').join('')+'</ul></div>':'')
   +'<div class="ap-check-foot"><button type="button" class="btn small" data-ap-check-cancel="'+i+'">ANNULLA</button><button type="button" class="btn primary small" data-ap-check-save="'+i+'">SALVA CHECK</button></div>'
   +'</div>';
@@ -430,6 +486,7 @@ function apChecksRead(editor){
     light:r.querySelector('[data-ap-check-light]:checked')?.value||'',
     newAction:r.querySelector('[data-ap-check-new]')?.value.trim()||'',
     newTool:r.querySelector('[data-ap-check-new-tool]')?.value.trim()||''})),
+   ...(precedente.isNew?{nextAlert:{date:n.querySelector('[data-ap-check-alert-date]')?.value||'',next:n.querySelector('[data-ap-check-alert-next]')?.value.trim()||''}}:{}),
    saved:false};
  });
 }
@@ -482,11 +539,15 @@ function apChecksWire(editor,data,draw){
   if(!c)return;
   const errore=apCheckValidate(c);
   if(errore){toast(errore,true);return}
-  if(c.isNew){c.created_at=new Date().toISOString();delete c.isNew}
+  let nuovoAlert='';
+  if(c.isNew){c.created_at=new Date().toISOString();delete c.isNew;
+   const a=c.nextAlert;delete c.nextAlert;
+   if(a&&a.date&&Array.isArray(data.alerts)&&!data.alerts.some(x=>x.date===a.date)){data.alerts.push({date:a.date,set_at:new Date().toISOString(),next_steps:a.next,by:apUserLabel()});nuovoAlert=a.date}}
   else if(c.snapshot){const changes=apCheckChanges(c.snapshot,c);if(changes.length)(c.history=c.history||[]).push({at:new Date().toISOString(),changes})}
   delete c.snapshot;c.saved=true;
   draw();
-  toast('CHECK salvato');
+  toast(nuovoAlert?'CHECK salvato · prossimo alert '+apCheckDateLabel(nuovoAlert):'CHECK salvato');
+  if(typeof data.onCheckSaved==='function')data.onCheckSaved();
  });
 }
 
@@ -499,5 +560,132 @@ function apCheckValidate(c,today=apToday()){
  if(!c.rows.length)return 'Non ci sono azioni da monitorare.';
  if(c.rows.some(r=>!r.light))return 'Assegna un semaforo a ogni azione.';
  if(c.rows.some(r=>r.light==='RED'&&!r.newAction))return 'Con il semaforo rosso indica la nuova azione da monitorare.';
+ if(c.rows.some(r=>r.light==='RED'&&!r.newTool))return 'Con il semaforo rosso indica anche lo STRUMENTO della nuova azione.';
+ if(c.isNew){const a=c.nextAlert||{};
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(a.date||''))return 'Imposta la data del PROSSIMO ALERT.';
+  if(a.date<=c.date)return 'Il PROSSIMO ALERT deve essere successivo alla data del CHECK.';
+  if(!a.next)return 'Scrivi i NEXT STEPS del prossimo alert.';}
  return '';
 }
+
+/* ===========================================================================
+   BOX OBIETTIVO (pagina STEP 04 · OBIETTIVI) e finestra CHECK MONITORAGGIO
+   =========================================================================== */
+function apObjCardHtml(o,i,opts={}){
+ const meta=apGuidedMeta(o.notes)||{},off=apObjDisabled(o),def=AP_GUIDED_KPIS.find(k=>k.id===meta.kpi),closed=!!opts.closed;
+ const pairs=apChecksActivePairs(apGuidedPairsFromMeta(meta,o),(meta.checks||[]).map(c=>({...c,saved:true})));
+ const alerts=(meta.alerts||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))),today=apToday(),next=alerts.filter(a=>a.date>=today)[0],lastDue=alerts.filter(a=>a.date<today).pop();
+ const checks=(meta.checks||[]).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))),last=checks[0];
+ const due=!next&&lastDue;
+ return '<article class="action-obj-card ap-obj-card'+(off?' is-disabled':'')+'" data-ap-obj-card="'+i+'">'
+  +'<header class="ap-obj-card-head"><span class="ap-obj-num">OBJ '+(i+1)+'</span><strong>'+esc(o.objective_text||'')+'</strong><span class="action-status '+actionPlanStatusClass(o.status)+'">'+(off?'Disattivato':actionPlanStatusLabel(o.status))+'</span></header>'
+  +(off?'<p class="action-obj-disabled">DISATTIVATO il '+esc(apCheckStamp(off.at))+(off.by?' da '+esc(off.by):'')+' · escluso dai monitoraggi</p>':'')
+  +(def?'<div class="ap-obj-kpi"><div><small>AC PERIODO</small><b>'+apGuidedAmount(meta.ac,def.unit)+'</b></div><span aria-hidden="true">→</span><div><small>OBIETTIVO '+esc(def.label)+'</small><b>'+apGuidedAmount(meta.target,def.unit)+'</b></div></div>':'')
+  +'<ul class="ap-obj-actions">'+pairs.map(p=>'<li><b>'+esc(p.action)+'</b>'+(p.tool?'<small>'+esc(p.tool)+'</small>':'')+'</li>').join('')+'</ul>'
+  +'<div class="ap-obj-monitor"><span class="'+(due?'is-due':'')+'">⏰ '+(next?'Prossimo alert '+apCheckDateLabel(next.date):due?'Alert scaduto il '+apCheckDateLabel(lastDue.date):'Nessun alert')+'</span>'
+  +(next?.next_steps||due?.next_steps?'<span class="ap-obj-next">'+esc((next||due).next_steps)+'</span>':'')
+  +'<span>✔ '+(last?'Ultimo CHECK '+apCheckDateLabel(last.date):'Nessun CHECK')+'</span></div>'
+  +'<footer class="action-obj-actions">'+(closed||off?(meta.kpi?'<button type="button" class="btn small" data-ap-obj-edit="'+i+'">Consulta</button>':'')
+   :(meta.kpi&&!opts.draft?'<button type="button" class="btn small primary" data-ap-obj-check="'+i+'">EFFETTUA CHECK</button>':'')+'<button type="button" class="btn small" data-ap-obj-edit="'+i+'">Modifica</button><button type="button" class="btn small danger" data-ap-obj-disable="'+i+'">DISATTIVA</button>')+'</footer>'
+  +'</article>';
+}
+/* Aggiorna CHECK e alert di un obiettivo (e i task/checkpoint collegati) senza
+   toccare KPI, obiettivo e azioni scelte. */
+function apObjApplyMonitoring(o,checks,alerts){
+ const meta=apGuidedMeta(o.notes)||{},at=new Date().toISOString(),by=apUserLabel(),before={...meta};
+ const pairs=apGuidedPairsFromMeta(meta,o),base=pairs.map(x=>({action:x.action,how:x.how||[],tools:x.tools||[],tool:x.tool||''}));
+ meta.checks=checks.map(c=>({id:c.id,date:c.date,note:c.note||'',rows:(c.rows||[]).map(r=>({action:r.action,tool:r.tool||'',light:r.light,newAction:r.newAction||'',newTool:r.newTool||''})),created_at:c.created_at||'',history:c.history||[]}));
+ meta.alerts=alerts;
+ const types=apObjChangeTypes(o,before,o.objective_text,{...meta,pairs:meta.pairs||base});
+ meta.edits=[...(Array.isArray(meta.edits)?meta.edits:[]),...types.map(type=>({at,by,type}))];
+ const all=apChecksAllPairs(base,meta.checks.map(c=>({...c,saved:true})));
+ o.notes=apGuidedNotesWithMeta(apGuidedNotes(o.notes),meta);
+ o.actions=all.map(x=>x.action).join(' · ');o.tools=[...new Set(all.map(x=>x.tool).filter(Boolean))].join(' · ');
+ o.tasks=all.map(x=>({task:x.action,tools:x.tool,owner:apPlanOwner(),timing_monitoraggio:'',checkpoints:apChecksToCheckpoints(x.action,meta.checks.map(c=>({...c,saved:true})),o.tasks||[])}));
+ return o;
+}
+function apOpenCheckWindow(index){
+ const o=actionPlanDraftObjectives[index];if(!o)return;const meta=apGuidedMeta(o.notes);if(!meta?.kpi){toast('Il CHECK si fa sugli obiettivi del percorso guidato.',true);return}
+ document.querySelector('.ap-check-window')?.remove();
+ const pairs=apGuidedPairsFromMeta(meta,o);
+ const data={kpi:meta.kpi,pairs,alerts:(meta.alerts||[]).map(a=>({...a})),checks:(meta.checks||[]).map(c=>({...c,saved:true,rows:(c.rows||[]).map(r=>({...r}))})),alertHistoryOpen:false};
+ data.checks.push({id:'CHK'+Date.now().toString(36).toUpperCase(),date:apToday(),note:'',rows:[],saved:false,isNew:true,history:[]});
+ const box=document.createElement('div');box.className='ap-check-window';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
+ box.innerHTML='<div class="ap-check-window-inner"><header><div><small>CHECK MONITORAGGIO</small><h3>OBJ '+(index+1)+' · '+esc(o.objective_text||'')+'</h3></div><button type="button" class="icon-btn" data-ap-cw-close aria-label="Chiudi">×</button></header><div class="ap-check-window-body" id="apCheckWindowBody"></div></div>';
+ /* dentro il modulo Action Plan, cosi' eredita gli stili del monitoraggio */
+ (document.getElementById('actionPlanForm')||document.body).appendChild(box);
+ box.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName!=='TEXTAREA')e.preventDefault()});
+ const body=box.querySelector('#apCheckWindowBody'),close=()=>box.remove();
+ let saved=false;
+ const draw=()=>{body.innerHTML=apChecksHtml(data);apChecksWire(body,data,draw);
+  /* qui si registra un CHECK alla volta */
+  body.querySelectorAll('[data-ap-check-edit]').forEach(b=>b.remove());const add=body.querySelector('#apAddCheckBtn');if(add)add.remove();
+  if(saved){body.insertAdjacentHTML('afterbegin','<p class="ap-check-window-ok">CHECK registrato. Salvataggio dell’Action Plan in corso…</p>')}
+ };
+ data.onCheckSaved=()=>{saved=true;apObjApplyMonitoring(o,data.checks.filter(c=>c.saved),data.alerts);if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}renderActionPlanObjectivesDraft();close();
+  /* salvataggio immediato; finche' non va a buon fine il CHECK resta 'da salvare' e chiudere chiede conferma */
+  actionPlanPendingMonitoring=true;apShowPendingMonitoring();
+  const form=document.getElementById('actionPlanForm');if(form)form.dispatchEvent(new Event('submit',{cancelable:true}))};
+ box.querySelector('[data-ap-cw-close]').onclick=()=>{if(!saved&&!window.confirm('Chiudere senza salvare il CHECK?'))return;close()};
+ draw();
+ box.querySelector('[data-ap-check-date]')?.focus();
+}
+
+/* ===========================================================================
+   CHIUDI ACTION PLAN (solo DM). Per ogni obiettivo attivo: valore consolidato,
+   delta rispetto all'obiettivo (in unita' e in %) ed emoji dell'esito; nota
+   finale e data di chiusura. NEGOZIO ed RM consultano in sola lettura.
+   Dopo la chiusura gli alert del piano non partono piu'.
+   =========================================================================== */
+const AP_CLOSE_SCALE=[[5,'🏆','Oltre l’obiettivo','top'],[0,'✅','Obiettivo raggiunto','ok'],[-5,'🤏','Quasi raggiunto','near'],[-15,'⚠️','Sotto l’obiettivo','warn'],[-Infinity,'❌','Lontano dall’obiettivo','ko']];
+function apCloseEsito(deltaPct){if(deltaPct===null||deltaPct===undefined||!Number.isFinite(Number(deltaPct)))return {emoji:'➖',label:'Senza obiettivo numerico',cls:'na'};const d=Number(deltaPct),r=AP_CLOSE_SCALE.find(x=>d>=x[0]);return {emoji:r[1],label:r[2],cls:r[3]}}
+function apCloseDelta(final,target){const f=Number(final),t=Number(target);if(!Number.isFinite(f)||!Number.isFinite(t)||target===''||target===null||target===undefined)return {delta:null,pct:null};return {delta:f-t,pct:t!==0?(f-t)/Math.abs(t)*100:null}}
+function apCloseFmtDelta(d,unit){if(d===null||d===undefined)return '—';const sign=d>0?'+':d<0?'−':'±',abs=Math.abs(d),n=abs.toLocaleString('it-IT',{minimumFractionDigits:unit==='€'&&abs>=100?0:2,maximumFractionDigits:2});return sign+n+(unit==='%'?' pt':unit==='€'?' €':unit==='capi/scontrino'?' pz':unit?' '+unit:'')}
+function apCloseRows(plan){
+ const saved=new Map((Array.isArray(plan?.close_results)?plan.close_results:[]).map(r=>[String(r.objective_id),r]));
+ return (plan?.objectives||[]).filter(apObjActive).map(o=>{const m=apGuidedMeta(o.notes)||{},def=AP_GUIDED_KPIS.find(k=>k.id===m.kpi),r=saved.get(String(o.objective_id));
+  return {o,meta:m,def,unit:def?.unit||'',ac:Number.isFinite(Number(m.ac))?Number(m.ac):null,target:m.target===''||m.target===undefined||m.target===null?null:Number(m.target),final:r?Number(r.final_value):null}});
+}
+function apCanClosePlan(plan){return currentUser?.role==='ADMIN'&&currentUser?.profile_role==='DM'&&!!plan&&!plan.is_draft&&(!plan.admin_id||String(plan.admin_id)===String(currentUser.admin_id))}
+function apOpenClosePage(plan,opts={}){
+ if(!plan){toast('Action Plan non disponibile.',true);return}
+ const edit=!opts.readOnly&&apCanClosePlan(plan),rows=apCloseRows(plan),today=apToday(),store=typeof actionPlanStoreLabel==='function'?actionPlanStoreLabel(plan.store_id,plan):'';
+ const row=(x,i)=>{const d=apCloseDelta(x.final,x.target),e=x.final===null||!Number.isFinite(x.final)?null:apCloseEsito(d.pct);
+  return '<tr data-ap-close-row="'+i+'"><td><b>OBJ '+(i+1)+'</b><br>'+esc(x.o.objective_text||'')+'</td><td>'+(x.ac===null?'—':esc(apGuidedAmount(x.ac,x.unit)))+'</td><td><b>'+(x.target===null?'—':esc(apGuidedAmount(x.target,x.unit)))+'</b></td>'
+   +'<td>'+(edit?'<input type="text" inputmode="decimal" data-ap-close-final value="'+(x.final===null||!Number.isFinite(x.final)?'':esc(String(x.final).replace('.',',')))+'" placeholder="Consolidato'+(x.unit?' ('+esc(x.unit)+')':'')+'" aria-label="Valore consolidato OBJ '+(i+1)+'">':'<b>'+(x.final===null||!Number.isFinite(x.final)?'—':esc(apGuidedAmount(x.final,x.unit)))+'</b>')+'</td>'
+   +'<td data-ap-close-delta class="'+(d.delta>0?'is-up':d.delta<0?'is-down':'')+'">'+(x.final===null?'—':esc(apCloseFmtDelta(d.delta,x.unit))+(d.pct!==null?' <small>('+(d.pct>=0?'+':'−')+Math.abs(d.pct).toLocaleString('it-IT',{maximumFractionDigits:1})+'%)</small>':''))+'</td>'
+   +'<td data-ap-close-esito>'+(e?'<span class="ap-close-esito ap-close-'+e.cls+'"><span aria-hidden="true">'+e.emoji+'</span> '+esc(e.label)+'</span>':'—')+'</td></tr>'};
+ const html='<div class="ap-close-page"><header class="apy-hero"><small>CHIUSURA ACTION PLAN</small><h3>'+(plan.closed?'Action Plan chiuso':'Verifica finale degli obiettivi')+'</h3><p>'+esc(store)+' · '+esc(actionPlanPeriodLabel(plan))+' · inizio '+esc(fmtDmy(plan.plan_date||''))+(plan.end_date?' · fine '+esc(fmtDmy(plan.end_date)):'')+(plan.closed?' · chiuso il '+esc(fmtDmy(plan.close_date||''))+(plan.closed_by?' da '+esc(plan.closed_by):''):'')+'</p></header>'
+  +(rows.length?'<div class="ap-close-table-wrap"><table class="data-table ap-close-table"><thead><tr><th>Obiettivo</th><th>AC iniziale</th><th>Obiettivo fissato</th><th>Consolidato</th><th>Delta vs obiettivo</th><th>Esito</th></tr></thead><tbody>'+rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">Nessun obiettivo attivo.</div>')
+  +'<p class="ap-close-legend">'+AP_CLOSE_SCALE.map(x=>x[1]+' '+x[2]+(Number.isFinite(x[0])?(x[0]>0?' (≥ +'+x[0]+'%)':x[0]===0?' (≥ 0%)':' (≥ '+x[0]+'%)'):' (oltre −15%)')).join(' · ')+'</p>'
+  +'<div class="ap-close-fields"><label>DATA DI CHIUSURA<input type="date" id="apCloseDate" value="'+esc(plan.close_date||today)+'" min="'+esc(plan.plan_date||'')+'"'+(edit?'':' disabled')+'></label>'
+  +'<label class="full">NOTA FINALE<textarea id="apCloseNote" rows="4" maxlength="4000" placeholder="Cosa ha funzionato, cosa portiamo nel prossimo Action Plan"'+(edit?'':' disabled')+'>'+esc(plan.close_note||'')+'</textarea></label></div>'
+  +(!plan.closed&&!edit?'<p class="ap-close-info">Il DM non ha ancora chiuso questo Action Plan.</p>':'')
+  +'<div class="modal-actions"><span class="spacer"></span><button type="button" class="btn" id="apCloseCancel">'+(edit?'Annulla':'Chiudi')+'</button>'+(edit?'<button type="button" class="btn primary" id="apCloseSave">'+(plan.closed?'AGGIORNA CHIUSURA':'CHIUDI ACTION PLAN')+'</button>':'')+'</div></div>';
+ showModal('Chiusura Action Plan · '+store,html,true);document.querySelector('#modalRoot .modal')?.classList.add('ap-fullpage','ap-close-modal');
+ document.getElementById('apCloseCancel').onclick=()=>closeModal();
+ if(!edit)return;
+ const refresh=tr=>{const i=Number(tr.dataset.apCloseRow),x=rows[i],v=apYtdParse(tr.querySelector('[data-ap-close-final]').value);x.final=Number.isFinite(v)?v:null;const d=apCloseDelta(x.final,x.target),e=x.final===null?null:apCloseEsito(d.pct),dc=tr.querySelector('[data-ap-close-delta]');
+  dc.className=d.delta>0?'is-up':d.delta<0?'is-down':'';dc.innerHTML=x.final===null?'—':esc(apCloseFmtDelta(d.delta,x.unit))+(d.pct!==null?' <small>('+(d.pct>=0?'+':'−')+Math.abs(d.pct).toLocaleString('it-IT',{maximumFractionDigits:1})+'%)</small>':'');
+  tr.querySelector('[data-ap-close-esito]').innerHTML=e?'<span class="ap-close-esito ap-close-'+e.cls+'"><span aria-hidden="true">'+e.emoji+'</span> '+esc(e.label)+'</span>':'—'};
+ document.querySelectorAll('[data-ap-close-row]').forEach(tr=>tr.querySelector('[data-ap-close-final]').addEventListener('input',()=>refresh(tr)));
+ document.getElementById('apCloseSave').onclick=async()=>{
+  document.querySelectorAll('[data-ap-close-row]').forEach(refresh);
+  const missing=rows.findIndex(x=>x.final===null);if(missing>=0){toast('Inserisci il valore consolidato di OBJ '+(missing+1)+'.',true);document.querySelectorAll('[data-ap-close-final]')[missing]?.focus();return}
+  const date=document.getElementById('apCloseDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Indica la data di chiusura.',true);return}
+  if(plan.plan_date&&date<plan.plan_date){toast('La data di chiusura non può precedere la data di inserimento.',true);return}
+  if(!plan.closed&&!window.confirm('Chiudere l’Action Plan di '+store+'?\n\nGli alert dei suoi obiettivi non partiranno più e il piano non sarà più modificabile.'))return;
+  const btn=document.getElementById('apCloseSave');btn.disabled=true;btn.textContent='Chiusura in corso…';
+  try{const saved=await window.agendaCloudApi.request('closeActionPlan',{plan_id:plan.plan_id,close_date:date,close_note:document.getElementById('apCloseNote').value.trim(),results:rows.map(x=>({objective_id:x.o.objective_id,final_value:x.final}))});
+   if(!saved?.plan_id)throw new Error('Il server non ha confermato la chiusura.');
+   actionPlanCache=actionPlanCache||{plans:[]};const k=actionPlanCache.plans.findIndex(p=>String(p.plan_id)===String(saved.plan_id));if(k>=0)actionPlanCache.plans[k]=saved;else actionPlanCache.plans.unshift(saved);actionPlanReportCache=null;
+   closeModal(true);renderActionPlans();apUpdateAlertBadge();toast(plan.closed?'Chiusura aggiornata.':'Action Plan chiuso.');
+  }catch(err){toast(err.message||'Chiusura non riuscita',true);if(btn.isConnected){btn.disabled=false;btn.textContent=plan.closed?'AGGIORNA CHIUSURA':'CHIUDI ACTION PLAN'}}
+ };
+}
+
+/* CHECK registrato ma Action Plan non ancora salvato (es. conferma DM annullata). */
+function apShowPendingMonitoring(){const page=document.getElementById('ap-objectives-page');if(!page)return;let b=page.querySelector('.ap-pending-banner');if(!actionPlanPendingMonitoring){b?.remove();return}
+ if(!b){b=document.createElement('div');b.className='ap-pending-banner';(page.querySelector('.apy-hero')||page.firstChild)?.after?.(b)}
+ b.innerHTML='<b>CHECK registrato ma non ancora salvato.</b> Premi SALVA ACTION PLAN per confermarlo.'}
+function apConfirmDiscardMonitoring(){return !actionPlanPendingMonitoring||window.confirm('Hai registrato un CHECK che non è ancora stato salvato. Chiudere e perderlo?')}

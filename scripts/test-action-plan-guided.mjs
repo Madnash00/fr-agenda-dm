@@ -35,7 +35,7 @@ assert.equal(apGuidedNotes(stored),nextSteps,'NEXT STEPS non ripristinati');
 assert.equal(JSON.stringify(apGuidedMeta(stored)),JSON.stringify(meta),'Metadati KPI non ripristinati');
 assert.equal(apGuidedNotes('Nota storica'), 'Nota storica','Note legacy alterate');
 assert.equal(apGuidedMeta('Nota storica'),null,'Nota legacy erroneamente trattata come wizard');
-assert.ok(guided.includes('const AP_GUIDED_MAX_ACTIONS=3;')&&guided.includes('if(data.pairs.length>=AP_GUIDED_MAX_ACTIONS)'),'Limite di 3 azioni mancante');
+assert.ok(guided.includes('const AP_GUIDED_MAX_ACTIONS=3,AP_GUIDED_MAX_TOOLS=3;')&&guided.includes('if(data.pairs.length>=AP_GUIDED_MAX_ACTIONS)'),'Limite di 3 azioni mancante');
 assert.ok(guided.includes("if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}"),'Confermare un obiettivo deve avanzare la revisione del form NEGOZIO');
 assert.ok(app.includes('actionPlanStoreRevision!==submittedRevision'),'Salvataggi in volo non devono perdere modifiche successive');
 /* Il TIMING a frequenza fissa e stato sostituito dalle sessioni di CHECK:

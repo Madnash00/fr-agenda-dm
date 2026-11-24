@@ -43,6 +43,7 @@ execFileSync(process.execPath,['scripts/test-action-plan-alerts.mjs'],{stdio:'in
 execFileSync(process.execPath,['scripts/test-action-plan-disable.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-api-timeout.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-snello.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-action-plan-chiusura.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
 assert.ok(Buffer.byteLength(html,'utf8')<100000, 'HTML must remain compact; keep application assets external');
@@ -274,7 +275,7 @@ assert.ok(app.includes("review.id='ap-review-charts'")&&app.includes('id="ap-obj
 assert.ok(guided.includes('function openApGuidedObjective(')&&guided.includes('KPI E TARGET')&&guided.includes('AZIONI E STRUMENTI')&&guided.includes('MONITORAGGIO'),'Tre schermate del wizard guidato');
 assert.ok(guided.includes('function apGuidedProjection(')&&guided.includes('VARIAZIONE POTENZIALE'),'Stima economica KPI');
 assert.ok(guided.includes('AP_CHECK_LIGHTS')&&guided.includes('SALVA CHECK'),'Sessioni di CHECK con semaforo');
-assert.ok(guided.includes('const AP_GUIDED_MAX_ACTIONS=3;'),'Massimo tre azioni, ciascuna con il suo strumento');
+assert.ok(guided.includes('const AP_GUIDED_MAX_ACTIONS=3,AP_GUIDED_MAX_TOOLS=3;'),'Massimo tre azioni, ciascuna con il suo strumento');
 const ideas=guided.slice(guided.indexOf('const AP_GUIDED_IDEAS='),guided.indexOf('const AP_GUIDED_ACTION_TOOLS='));
 for(const kpi of ['sales','visits','cr','upt','asp','atv','ms']) {
  const match=ideas.match(new RegExp('(?:^|\\n) '+kpi+':\\{actions:\\[(.*?)\\],tools:\\[(.*?)\\]\\}', 's'));
