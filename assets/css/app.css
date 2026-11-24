@@ -2996,3 +2996,4 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 .ap-close-page .modal-actions .btn.primary{background:#984266;border-color:#984266;color:#fff}
 .action-plan-row-actions{flex-wrap:wrap;justify-content:flex-end}
 .ap-check-window .ap-check-light input{width:auto}
+#actionPlanForm .ap-pending-banner{background:#fff4d6;border:1px solid #f0d58a;color:#6b4f00;border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:13px}

@@ -142,7 +142,9 @@ function apGuidedProjection(kpi,target,v){
    obiettivi (azioni e strumenti scelti in liste separate). */
 /* Coppia azione/strumenti: {action, how:[...], tools:[max 3], tool:"a · b"}.
    'tool' (stringa) resta per CHECK, task, PDF e backend. */
-function apPairNorm(kpi,p){const tools=apPairTools(p).slice(0,AP_GUIDED_MAX_TOOLS);return {action:String(p?.action||''),how:apPairHow(kpi,p),tools,tool:tools.join(' · '),manualAction:!!p?.manualAction}}
+function apPairNorm(kpi,p){const tools=apPairTools(p).slice(0,AP_GUIDED_MAX_TOOLS),action=String(p?.action||''),manual=!!p?.manualAction||(!!action&&!apCatalogAction(kpi,action)),how=apPairHow(kpi,p);
+ /* coppie salvate prima del catalogo: l'azione resta 'scritta a mano' con i suoi strumenti; il COME non e' obbligatorio */
+ return {action,how,tools,tool:tools.join(' · '),manualAction:manual,legacy:manual&&!how.length}}
 function apGuidedPairsFromMeta(meta,old){
  const kpi=meta?.kpi||'';
  if(Array.isArray(meta?.pairs))return meta.pairs.map(p=>apPairNorm(kpi,p));
@@ -178,7 +180,7 @@ function apGuidedPairsRead(root,pairs,kpi){
   const same=action===prev.action&&manualAction===!!prev.manualAction||(manualAction&&prev.manualAction);
   const tools=same?[...n.querySelectorAll('[data-ap-pair-toolbox]:checked')].map(x=>x.value).slice(0,AP_GUIDED_MAX_TOOLS):[];
   const howBox=n.querySelector('[data-ap-pair-how]'),how=manualAction?(howBox?howBox.value.split('\n').map(x=>x.trim()).filter(Boolean):[]):(apCatalogAction(kpi,action)?.how||[]);
-  return {action,manualAction,how,tools,tool:tools.join(' · ')};
+  return {action,manualAction,how,tools,tool:tools.join(' · '),legacy:!!(same&&prev.legacy&&action===prev.action)};
  });
 }
 function openApGuidedObjective(index=null){
@@ -245,7 +247,7 @@ function openApGuidedObjective(index=null){
   if(step===1){
    if(!data.pairs.length){toast('Aggiungi almeno una AZIONE.',true);return}
    if(data.pairs.some(p=>!p.action)){toast('Scegli o scrivi ogni AZIONE.',true);return}
-   if(data.pairs.some(p=>p.manualAction&&!(p.how||[]).length)){toast('Scrivi il COME dell’azione inserita a mano.',true);return}
+   if(data.pairs.some(p=>p.manualAction&&!p.legacy&&!(p.how||[]).length)){toast('Scrivi il COME dell’azione inserita a mano.',true);return}
    if(data.pairs.some(p=>!(p.tools||[]).length)){toast('Seleziona almeno uno STRUMENTO per ogni azione.',true);return}
    if(data.pairs.some(p=>(p.tools||[]).length>AP_GUIDED_MAX_TOOLS)){toast('Massimo '+AP_GUIDED_MAX_TOOLS+' strumenti per azione.',true);return}
    if(new Set(data.pairs.map(p=>p.action.toLowerCase())).size!==data.pairs.length){toast('La stessa azione è inserita due volte.',true);return}
@@ -558,6 +560,7 @@ function apCheckValidate(c,today=apToday()){
  if(!c.rows.length)return 'Non ci sono azioni da monitorare.';
  if(c.rows.some(r=>!r.light))return 'Assegna un semaforo a ogni azione.';
  if(c.rows.some(r=>r.light==='RED'&&!r.newAction))return 'Con il semaforo rosso indica la nuova azione da monitorare.';
+ if(c.rows.some(r=>r.light==='RED'&&!r.newTool))return 'Con il semaforo rosso indica anche lo STRUMENTO della nuova azione.';
  if(c.isNew){const a=c.nextAlert||{};
   if(!/^\d{4}-\d{2}-\d{2}$/.test(a.date||''))return 'Imposta la data del PROSSIMO ALERT.';
   if(a.date<=c.date)return 'Il PROSSIMO ALERT deve essere successivo alla data del CHECK.';
@@ -583,7 +586,7 @@ function apObjCardHtml(o,i,opts={}){
   +(next?.next_steps||due?.next_steps?'<span class="ap-obj-next">'+esc((next||due).next_steps)+'</span>':'')
   +'<span>✔ '+(last?'Ultimo CHECK '+apCheckDateLabel(last.date):'Nessun CHECK')+'</span></div>'
   +'<footer class="action-obj-actions">'+(closed||off?(meta.kpi?'<button type="button" class="btn small" data-ap-obj-edit="'+i+'">Consulta</button>':'')
-   :(meta.kpi?'<button type="button" class="btn small primary" data-ap-obj-check="'+i+'">EFFETTUA CHECK</button>':'')+'<button type="button" class="btn small" data-ap-obj-edit="'+i+'">Modifica</button><button type="button" class="btn small danger" data-ap-obj-disable="'+i+'">DISATTIVA</button>')+'</footer>'
+   :(meta.kpi&&!opts.draft?'<button type="button" class="btn small primary" data-ap-obj-check="'+i+'">EFFETTUA CHECK</button>':'')+'<button type="button" class="btn small" data-ap-obj-edit="'+i+'">Modifica</button><button type="button" class="btn small danger" data-ap-obj-disable="'+i+'">DISATTIVA</button>')+'</footer>'
   +'</article>';
 }
 /* Aggiorna CHECK e alert di un obiettivo (e i task/checkpoint collegati) senza
@@ -620,7 +623,9 @@ function apOpenCheckWindow(index){
   if(saved){body.insertAdjacentHTML('afterbegin','<p class="ap-check-window-ok">CHECK registrato. Salvataggio dell’Action Plan in corso…</p>')}
  };
  data.onCheckSaved=()=>{saved=true;apObjApplyMonitoring(o,data.checks.filter(c=>c.saved),data.alerts);if(currentUser?.role==='STORE'){actionPlanStoreDirty=true;++actionPlanStoreRevision}renderActionPlanObjectivesDraft();close();
-  const form=document.getElementById('actionPlanForm');if(form){if(typeof form.requestSubmit==='function')form.requestSubmit();else form.dispatchEvent(new Event('submit',{cancelable:true}))}};
+  /* salvataggio immediato; finche' non va a buon fine il CHECK resta 'da salvare' e chiudere chiede conferma */
+  actionPlanPendingMonitoring=true;apShowPendingMonitoring();
+  const form=document.getElementById('actionPlanForm');if(form)form.dispatchEvent(new Event('submit',{cancelable:true}))};
  box.querySelector('[data-ap-cw-close]').onclick=()=>{if(!saved&&!window.confirm('Chiudere senza salvare il CHECK?'))return;close()};
  draw();
  box.querySelector('[data-ap-check-date]')?.focus();
@@ -678,3 +683,9 @@ function apOpenClosePage(plan,opts={}){
   }catch(err){toast(err.message||'Chiusura non riuscita',true);if(btn.isConnected){btn.disabled=false;btn.textContent=plan.closed?'AGGIORNA CHIUSURA':'CHIUDI ACTION PLAN'}}
  };
 }
+
+/* CHECK registrato ma Action Plan non ancora salvato (es. conferma DM annullata). */
+function apShowPendingMonitoring(){const page=document.getElementById('ap-objectives-page');if(!page)return;let b=page.querySelector('.ap-pending-banner');if(!actionPlanPendingMonitoring){b?.remove();return}
+ if(!b){b=document.createElement('div');b.className='ap-pending-banner';(page.querySelector('.apy-hero')||page.firstChild)?.after?.(b)}
+ b.innerHTML='<b>CHECK registrato ma non ancora salvato.</b> Premi SALVA ACTION PLAN per confermarlo.'}
+function apConfirmDiscardMonitoring(){return !actionPlanPendingMonitoring||window.confirm('Hai registrato un CHECK che non è ancora stato salvato. Chiudere e perderlo?')}

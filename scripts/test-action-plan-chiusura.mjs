@@ -61,7 +61,11 @@ const card=ctx.apObjCardHtml(obj,0,{});
 assert.ok(card.includes('data-ap-obj-check="0"')&&card.includes('EFFETTUA CHECK')&&card.includes('Prossimo alert 01/12/2026')&&card.includes('Ultimo CHECK 20/11/2026'),'box con EFFETTUA CHECK, prossimo alert e ultimo check');
 assert.ok(!ctx.apObjCardHtml(obj,0,{closed:true}).includes('EFFETTUA CHECK'),'piano chiuso: niente CHECK');
 assert.ok(app.includes("root.querySelectorAll('[data-ap-obj-check]').forEach(b=>b.onclick=()=>apOpenCheckWindow("),'il tasto apre CHECK MONITORAGGIO');
-assert.ok(guided.includes("form.requestSubmit()"),'il CHECK registrato viene salvato con l Action Plan');
+assert.ok(guided.includes("if(form)form.dispatchEvent(new Event('submit',{cancelable:true}))")&&guided.includes('actionPlanPendingMonitoring=true'),'il CHECK registrato viene salvato con l Action Plan; se non va a buon fine resta segnalato');
+assert.ok(!ctx.apObjCardHtml(obj,0,{draft:true}).includes('EFFETTUA CHECK'),'bozza: il CHECK dal box non pubblica il piano');
+assert.match(ctx.apCheckValidate({date:'2026-11-24',rows:[{action:'A',light:'RED',newAction:'A2',newTool:''}],snapshot:{date:'2026-11-24'}},'2026-11-24'),/STRUMENTO/,'rosso: serve anche lo strumento');
+const old=ctx.apGuidedPairsFromMeta({kpi:'cr',pairs:[{action:'Accogliere tempestivamente la cliente',tool:'Checklist accoglienza'}]})[0];
+assert.ok(old.manualAction&&old.legacy&&old.tools[0]==='Checklist accoglienza','obiettivi salvati prima del catalogo: azione e strumenti restano');
 
 // --- badge ---
 const plans=[{objectives:[obj,{notes:enc({alerts:[{date:'2026-11-20'}]})}]},{closed:true,objectives:[{notes:enc({alerts:[{date:'2026-11-20'}]})}]}];
