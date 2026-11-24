@@ -2997,3 +2997,20 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 .action-plan-row-actions{flex-wrap:wrap;justify-content:flex-end}
 .ap-check-window .ap-check-light input{width:auto}
 #actionPlanForm .ap-pending-banner{background:#fff4d6;border:1px solid #f0d58a;color:#6b4f00;border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:13px}
+/* Piena pagina: il modulo segue il contenuto e scorre la pagina (prima era
+   bloccato all'altezza della finestra e tagliava card e pulsanti). */
+#modalRoot .modal.ap-fullpage #actionPlanForm.apy-workflow{height:auto!important;min-height:0;display:block!important;overflow:visible!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm .apy-step{overflow:visible!important;height:auto!important;max-height:none!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm .apy-step.hidden{display:none!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm :is(#apy-pre,#app-period-analysis):not(.hidden){display:grid!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm #ap-objectives-page:not(.hidden){display:flex!important;flex-direction:column;gap:14px}
+#modalRoot .modal.ap-fullpage #actionPlanForm #ap-objectives-page>.action-obj-section{min-height:auto!important;overflow:visible!important;padding:16px!important;background:#fff!important;border:1px solid #e3e6ea!important;border-radius:14px}
+#modalRoot .modal.ap-fullpage #actionPlanForm .action-obj-list{overflow:visible!important;max-height:none!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm #ap-details-step{justify-content:flex-start}
+/* una sola barra in basso nella pagina OBIETTIVI: TORNA ALL'ANALISI e i pulsanti di salvataggio insieme */
+#modalRoot .modal.ap-fullpage #actionPlanForm #ap-objectives-page>.modal-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 0!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm #ap-objectives-page>.apy-footer:empty{display:none}
+/* con un obiettivo aperto resta solo la barra del percorso guidato (INDIETRO / CONFERMA) */
+#modalRoot .modal.ap-fullpage #actionPlanForm #ap-objectives-page.ap-guided-editing>.modal-actions{display:none!important}
+#modalRoot .modal.ap-fullpage #actionPlanForm .ap-guided-footer{position:sticky;bottom:0;z-index:2;background:rgba(255,255,255,.96);padding:12px 0;margin-top:12px;border-top:1px solid #e3e6ea}
+.ap-check-window-body{padding-bottom:24px!important}

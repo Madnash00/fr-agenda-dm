@@ -2184,6 +2184,8 @@ function apYtdSetup(plan){
  const section=stage.querySelector('.action-obj-section');if(section)objectivePage.append(section);
  objectivePage.insertAdjacentHTML('beforeend','<footer class="apy-footer"><button type="button" class="btn apy-back-button" id="ap-objectives-back">← TORNA ALL’ANALISI</button></footer>');
  const actionButtons=stage.querySelector('.modal-actions');if(actionButtons)objectivePage.append(actionButtons);
+ /* TORNA ALL'ANALISI nella stessa barra dei pulsanti di salvataggio: due barre fisse in basso si sovrapponevano */
+ if(actionButtons){const backBtn=objectivePage.querySelector('#ap-objectives-back'),oldFooter=backBtn?.closest('.apy-footer');if(backBtn){actionButtons.prepend(backBtn);oldFooter?.remove()}}
  const nextAnalysis=document.createElement('footer');nextAnalysis.className='apy-footer';nextAnalysis.innerHTML='<button type="button" class="btn primary" id="ap-open-objectives">OBIETTIVI →</button>';stage.append(nextAnalysis);
  details.insertAdjacentHTML('afterbegin','<header class="apy-hero"><small>STEP 01 / 04 · DATI ACTION PLAN</small><h3>Informazioni iniziali dell’Action Plan</h3><p>Definisci il negozio, la data di inserimento, l’anno e il periodo di riferimento prima di passare all’analisi.</p></header>');
  details.insertAdjacentHTML('beforeend','<footer class="apy-footer"><button type="button" class="btn primary" id="ap-details-next">CONTINUA · PARTIAMO DAI NUMERI →</button></footer>');
