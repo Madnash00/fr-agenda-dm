@@ -82,4 +82,8 @@ assert.ok(ctx.apCanClosePlan({admin_id:'ADM1'})&&!ctx.apCanClosePlan({admin_id:'
 assert.ok(app.includes('data-action-plan-close="${p.plan_id}">CHIUDI ACTION PLAN</button>')&&app.includes('data-action-plan-esito="${p.plan_id}">ESITO</button>'),'tasti in riga: CHIUDI (DM) ed ESITO (tutti)');
 assert.ok(guided.includes("window.agendaCloudApi.request('closeActionPlan'")&&api.includes("closeActionPlan:['actionPlan','audit']"),'chiusura salvata e cache aggiornata');
 assert.ok(app.includes('function apApplyClosedReadOnly(plan)'),'piano chiuso in sola lettura');
+// --- 24/11 (2): la pagina scorre, niente barre sovrapposte ---
+assert.ok(css.includes('#modalRoot .modal.ap-fullpage #actionPlanForm.apy-workflow{height:auto!important;min-height:0;display:block!important;overflow:visible!important}'),'il modulo a piena pagina non e piu bloccato all altezza della finestra');
+assert.ok(css.includes('#modalRoot .modal.ap-fullpage #actionPlanForm .apy-step.hidden{display:none!important}'),'gli step nascosti restano nascosti');
+assert.ok(app.includes("if(backBtn){actionButtons.prepend(backBtn);oldFooter?.remove()}")&&css.includes('#ap-objectives-page.ap-guided-editing>.modal-actions{display:none!important}'),'una sola barra in basso');
 console.log('PASS: Action Plan a piena pagina, data di fine, catalogo azioni, CHECK, alert, chiusura');
