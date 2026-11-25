@@ -16,9 +16,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
 <link rel="stylesheet" href="./assets/css/app.css?v=742905208206884c">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
-<script defer src="./assets/js/cloud-api.js?v=f05b77f8f8a0d479"></script>
+<script defer src="./assets/js/cloud-api.js?v=37d72df0474de0e1"></script>
 <script defer src="./assets/js/action-plan-guided.js?v=cca7d1542b49d0ff"></script>
-<script defer src="./assets/js/app.js?v=27cefc56ee039cbf"></script>
+<script defer src="./assets/js/app.js?v=a505d211a9b369e0"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/ferie-dm.js?v=9b4e9ce0abcdce21"></script>
 <script defer src="./assets/js/personnel-hours.js?v=c73f5b2a4a224e50"></script>
@@ -56,7 +56,7 @@
    <button class="nav-group-btn" type="button" data-nav-group="store-holidays" aria-expanded="false"><span>FERIE NEGOZI</span><span class="nav-chevron">›</span></button>
    <div class="nav-submenu">
     <button class="nav-btn nav-sub-btn" data-page="holidays" data-store-menu-key="holidays">Planning Ferie</button>
-    <button class="nav-btn nav-sub-btn super-admin-only hidden" data-page="holidayperiods">Periodi Negozi</button>
+    <button class="nav-btn nav-sub-btn admin-only" data-page="holidayperiods">Periodi Negozi</button>
     <button class="nav-btn nav-sub-btn" data-page="holidayconsolidated" data-store-menu-key="holidayconsolidated">Ferie Consolidate</button>
     <button class="nav-btn nav-sub-btn admin-only" data-page="holidayreport">Report Ferie</button>
    </div>
@@ -351,7 +351,7 @@
   <div id="holidayPlanningAuditMore" class="hidden" style="display:flex;justify-content:center;padding-top:10px"><button type="button" class="btn small" id="loadMoreHolidayPlanningAudit">Carica altre attività</button></div>
  </div>
 </section>
-<section id="page-holidayperiods" class="page super-admin-only hidden">
+<section id="page-holidayperiods" class="page admin-only hidden">
  <div class="holiday-period-toolbar card">
   <button id="holidayPeriodPrevYear" type="button" class="btn" aria-label="Anno precedente">‹</button>
   <label>Anno<input id="holidayPeriodYear" type="number" min="2000" max="2100" step="1"></label>

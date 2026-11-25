@@ -25,7 +25,7 @@ const chiavi=r=>G[r].flatMap(g=>g[2].map(x=>x[0]));
 
 // --- l'audit: le voci visibili oggi sono tutte configurabili ---
 assert.deepEqual(chiavi('RM').filter(k=>!k.startsWith('link-')),['rmcalendar','dmholidays','rmholidays','rmovertime','rmactionplans'],'RM: le cinque voci del suo menu');
-assert.deepEqual(chiavi('DM').filter(k=>!k.startsWith('link-')),['calendar','agenda','dmoverview','dmholidays','report','holidays','holidayconsolidated','holidayreport','overtimecheck','actionplans','actionplanreport','stores','users','audit'],
+assert.deepEqual(chiavi('DM').filter(k=>!k.startsWith('link-')),['calendar','agenda','dmoverview','dmholidays','report','holidays','holidayperiods','holidayconsolidated','holidayreport','overtimecheck','actionplans','actionplanreport','stores','users','audit'],
  'DM: le voci del suo menu, Overview DM e Ferie DM comprese');
 assert.deepEqual(chiavi('NEGOZIO'),['calendar','holidays','holidayconsolidated','overtimecheck','actionplans','link-wopstore'],'NEGOZIO: le sue cinque voci e il WOP del negozio');
 assert.equal(G.RM[0][2][0][1],'Overview DM','La voce del RM porta il nome nuovo');

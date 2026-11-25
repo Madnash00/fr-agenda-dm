@@ -44,6 +44,7 @@ execFileSync(process.execPath,['scripts/test-action-plan-disable.mjs'],{stdio:'i
 execFileSync(process.execPath,['scripts/test-api-timeout.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-snello.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-calendario-festivita.mjs'],{stdio:'inherit'});
+execFileSync(process.execPath,['scripts/test-periodi-ferie-dm.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-action-plan-chiusura.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/test-gestione-profili.mjs'],{stdio:'inherit'});
 const html=read('index.html');
