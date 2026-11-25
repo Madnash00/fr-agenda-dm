@@ -96,6 +96,8 @@ jobs:
         run: node scripts/test-calendario-festivita.mjs
       - name: Periodi Ferie per il DM
         run: node scripts/test-periodi-ferie-dm.mjs
+      - name: Gestione Link
+        run: node scripts/test-gestione-link.mjs
       - name: Action Plan piena pagina, catalogo azioni, CHECK, chiusura
         run: node scripts/test-action-plan-chiusura.mjs
       - name: Gestione Profili · voci, collegamenti e descrizioni
