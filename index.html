@@ -14,11 +14,11 @@
 <link rel="manifest" href="./manifest.webmanifest?v=r35">
 <title>AGENDA DM · Fiorella Rubino</title>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-r35.png">
-<link rel="stylesheet" href="./assets/css/app.css?v=742905208206884c">
+<link rel="stylesheet" href="./assets/css/app.css?v=4f8fdccb84a9fbd1">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
-<script defer src="./assets/js/cloud-api.js?v=37d72df0474de0e1"></script>
+<script defer src="./assets/js/cloud-api.js?v=e67758145dcf92ee"></script>
 <script defer src="./assets/js/action-plan-guided.js?v=cca7d1542b49d0ff"></script>
-<script defer src="./assets/js/app.js?v=a505d211a9b369e0"></script>
+<script defer src="./assets/js/app.js?v=9a4e372b0ae6fc09"></script>
 <link rel="stylesheet" href="./assets/css/personnel-hours.css?v=cb3a6e4e680ccc68">
 <script defer src="./assets/js/ferie-dm.js?v=9b4e9ce0abcdce21"></script>
 <script defer src="./assets/js/personnel-hours.js?v=c73f5b2a4a224e50"></script>
@@ -86,6 +86,10 @@
     <button class="nav-btn nav-sub-btn" data-page="rmactionplans">Action Plan</button>
    </div>
   </div>
+  <div class="nav-section rm-only hidden" data-nav-section="rm-settings">
+   <button class="nav-group-btn" type="button" data-nav-group="rm-settings" aria-expanded="false"><span>IMPOSTAZIONI</span><span class="nav-chevron">›</span></button>
+   <div class="nav-submenu"><button class="nav-btn nav-sub-btn" data-page="links">Gestione Link</button></div>
+  </div>
  </nav>
  <div class="sidebar-foot"><button id="rmAdminProfileBtn" class="nav-btn hidden" type="button">Modalità ADMIN</button>
 <div class="nav-foot-label">Collegamenti</div>
@@ -103,6 +107,7 @@
     <button class="nav-btn nav-sub-btn" data-page="stores">Negozi</button>
     <button class="nav-btn nav-sub-btn" data-page="users">Account</button>
     <button class="nav-btn nav-sub-btn" data-page="audit">Audit &amp; Export</button>
+    <button class="nav-btn nav-sub-btn" data-page="links">Gestione Link</button>
     <button class="nav-btn nav-sub-btn super-admin-only" data-page="storemenu">Gestione Profili</button>
      <button class="nav-btn nav-sub-btn super-admin-only" data-page="parameters">Parametri</button>
    </div>
@@ -167,6 +172,16 @@
     </div>
     <p id="appParametersStatus" class="muted" role="status" aria-live="polite"></p>
    </div>
+  </form>
+ </div>
+</section>
+<section id="page-links" class="page">
+ <div class="card links-card">
+  <div class="section-head"><div><h3>Gestione Link</h3><p class="muted">Assegna a ogni tasto dei Collegamenti il link che si apre al click. Campo vuoto o &laquo;Ripristina&raquo; = link predefinito dell&rsquo;app.</p></div></div>
+  <div id="linksAccountBar" class="links-account hidden"><label>Account<select id="linksAccountSelect"></select></label></div>
+  <form id="linksForm" class="links-form" novalidate>
+   <div id="linksRows" class="links-rows"><div class="empty">Caricamento…</div></div>
+   <div class="links-actions"><span id="linksStatus" class="muted" role="status"></span><button type="button" id="linksReload" class="btn">Ricarica</button><button type="submit" id="linksSave" class="btn primary">Salva link</button></div>
   </form>
  </div>
 </section>

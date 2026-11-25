@@ -3020,3 +3020,21 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 .calendar.transposed tr.holiday-row .date-day,
 .calendar.transposed .date-day.holiday{background:#eef8f0}
 .calendar.transposed tr.holiday-row .cell-click:hover{background-color:#e0f2e4}
+
+/* IMPOSTAZIONI · Gestione Link (DM, RM, ADMIN). */
+#page-links .links-card{max-width:980px}
+#page-links .links-account{margin:4px 0 12px}
+#page-links .links-account label{display:grid;gap:4px;font-size:11px;font-weight:800;letter-spacing:.03em;max-width:340px}
+#page-links .links-rows{display:grid;gap:8px}
+#page-links .links-row{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line,#e5e5e5);border-radius:10px;background:var(--surface,#fff)}
+#page-links .links-name{display:grid;gap:2px;min-width:0}
+#page-links .links-name strong{font-size:12px;letter-spacing:.03em}
+#page-links .links-name span{font-size:10px;line-height:1.35}
+#page-links .links-row input{width:100%;min-width:0;font-size:12px;font-family:inherit}
+#page-links .links-row input.invalid{border-color:#c0392b;background:#fff5f4}
+#page-links .links-tag{font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:999px;background:#f1f1f1;color:#666;white-space:nowrap}
+#page-links .links-tag.own{background:#FFCBC9;color:#7a2e33}
+#page-links .links-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+#page-links .links-actions #linksStatus{margin-right:auto;font-size:11px}
+#page-links #linksStatus.error-text{color:#c0392b;font-weight:700}
+@media (max-width:760px){#page-links .links-row{grid-template-columns:1fr auto;gap:8px}#page-links .links-name{grid-column:1/-1}#page-links .links-row input{grid-column:1/-1}}
