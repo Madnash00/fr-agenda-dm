@@ -3038,3 +3038,10 @@ body:has(#loginView:not(.hidden)) #globalBusy{display:none!important}
 #page-links .links-actions #linksStatus{margin-right:auto;font-size:11px}
 #page-links #linksStatus.error-text{color:#c0392b;font-weight:700}
 @media (max-width:760px){#page-links .links-row{grid-template-columns:1fr auto;gap:8px}#page-links .links-name{grid-column:1/-1}#page-links .links-row input{grid-column:1/-1}}
+/* Gestione Link: predefinito per tutti i profili (solo ADMIN). */
+#page-links .links-tag.all{background:#1f2a2e;color:#fff}
+#page-links .links-admin-tools{grid-column:2/-1;display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:-2px}
+#page-links .links-all{display:inline-flex;gap:6px;align-items:center;font-size:11px;font-weight:700;cursor:pointer}
+#page-links .links-all input{width:auto;margin:0}
+#page-links .links-app-reset{border:0;background:none;padding:0;font:inherit;font-size:11px;color:#B5555A;text-decoration:underline;cursor:pointer}
+@media (max-width:760px){#page-links .links-admin-tools{grid-column:1/-1}}
